@@ -99,9 +99,9 @@ const appRouter = router({
                 throw new Error('Failed to fetch allcoins');
             }
         }),
-        
-// TODO: Add api for chart of a particular coin 
-// Will do with the front end implementation
     });
+
+// TODO: Add api for chart of a particular coin. Will do with the front end implementation
+// TODO: Use an API to fetch the 24H vol and liquidity of coin
 
 export type AppRouter = typeof appRouter;
