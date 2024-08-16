@@ -41,6 +41,9 @@ const appRouter = router({
             const response = await axios.get('https://price.jup.ag/v6/price', { params });
             return response.data;       
             } catch (error) {
+            if (axios.isAxiosError(error)) {
+                throw new Error(`Failed to fetch price: ${error.message}`);
+            }
             throw new Error('Failed to fetch price');
             }
         }),
