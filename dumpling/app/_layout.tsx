@@ -32,7 +32,15 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack>
           <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
-          <Stack.Screen name="modal" options={{ title: 'Modal', presentation: 'modal' }} />
+          <Stack.Screen
+            name="modal"
+            options={{ title: 'Modal', presentation: 'modal', headerShown: false }}
+          />
+          <Stack.Screen
+            name="moneyEx"
+            // component={DynamicScreen} // Reference the new screen component
+            options={{ title: 'moneyEx', headerShown: false }}
+          />
         </Stack>
       </GestureHandlerRootView>
     </TamaguiProvider>

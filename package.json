@@ -6,8 +6,7 @@
       "churro",
       "dumpling",
       "sushi",
-      "baklava",
-      "docs"
+      "baklava"
     ]
   },
   "devDependencies": {
