@@ -1,8 +1,6 @@
 /**
  * @file price/index.ts
- * @description This file defines the main tRPC router for the application, including
- *              procedures to interact with external APIs such as Jupiter Aggregator
- *              to fetch cryptocurrency prices.
+ * @description This file defines the main tRPC router for the application to fetch token data
  */
 
 import { publicProcedure, router } from '../trpc';
@@ -14,24 +12,19 @@ const appRouter = router({
 /**
  * @procedure fetchPrice
  * @description Fetches the current price of specified cryptocurrency tokens
- *              from the Jupiter API. The price can be retrieved 
- *              against a specified comparison token ticker or addresses.
+
  * @input 
- 
- *      - ids: A string or array of strings representing the token ticker or addresses.
- *      - vsToken: An optional string representing the comparison token ticker or addresses.
- * NOTE: addresses and token tickers are case-sensitive.
+ * Ticker & address are case-sensitive.
+ *      - ids: A string or array of ticker or addresses
+ *      - vsToken: (optional) comparison token ticker or addresses.
 
  * @returns 
- * An object containing the price information for the specified tokens.
- * The object contains the following fields:
+ * Object: 
  *  - id 
  *  - mintSymbol
  *  - vsToken
  *  - vsTokenSymbol
  *  - price
- 
- * @throws Error if the API request fails.
  */
     fetchPrice: publicProcedure
         .input(z.object({
@@ -54,16 +47,14 @@ const appRouter = router({
 
 /**
  * @procedure fetchMetadata
- * @description The fetchMetadata procedure retrieves metadata for 
- *              specified cryptocurrency tokens from the Jupiter. 
+ * @description retrieves metadata for specified token tickers or addresses. 
 
  * @input 
- *  - ids: A comma-separated string representing the token addresses 
- *         for which metadata is being requested.
- *  Note: The token addresses are case-sensitive.
+ * Ticker & address are case-sensitive.
+ *  - ids: A comma-separated string of the token addresses/tickers. 
 
  * @returns
- *   Array of token metadata objects. Each object contains the following fields:
+ *   Array of token metadata objects:
  *  - address
  *  - chainId
  *  - decimals
@@ -72,8 +63,6 @@ const appRouter = router({
  *  - logoURI
  *  - tags
  *  - extensions
-
- * @throws Error if the API request fails.
  */        
         fetchMetadata: publicProcedure
         .input(z.object({
@@ -92,17 +81,14 @@ const appRouter = router({
 
 /**
  * @procedure fetchAllcoins
- * @description The fetchAllcoins procedure retrieves the complete list 
- *              of all cryptocurrency tokens available from the Jupiter API.
+ * @description retrieves the complete list all cryptocurrency token on jupiter.
 
  * @returns 
- *   A large JSON object containing the entire list of tokens along with their metadata.
+ *   A large JSON object.
 
  * @todo
  *   Consider implementing caching using Redis for this large response 
  *   to improve performance, as fetching all coins from the API can be resource-intensive.
-
- * @throws Error if the API request fails.
  */        
         fetchAllcoins: publicProcedure
         .query(async () => {
@@ -113,7 +99,7 @@ const appRouter = router({
                 throw new Error('Failed to fetch allcoins');
             }
         }),
-
+        
 // TODO: Add api for chart of a particular coin 
 // Will do with the front end implementation
     });
