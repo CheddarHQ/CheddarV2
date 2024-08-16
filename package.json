@@ -1,0 +1,29 @@
+{
+  "name": "cheddar",
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "churro",
+      "dumpling",
+      "sushi",
+      "baklava",
+      "docs"
+    ]
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^12.1.1",
+    "@commitlint/config-conventional": "^12.1.1",
+    "commitizen": "^4.2.3",
+    "cz-conventional-changelog": "^3.3.0",
+    "husky": "^6.0.0",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "prepare": "husky install",
+    "commit": "cz",
+    "commit:signed": "cz -S",
+    "dev": "bun run dev",
+    "build": "bun run build",
+    "start": "bun run start"
+  }
+}
