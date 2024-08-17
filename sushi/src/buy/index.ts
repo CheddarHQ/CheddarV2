@@ -5,7 +5,7 @@
 
 import { publicProcedure, router } from '../trpc';
 import { z } from 'zod';
-import axios, { AxiosError } from 'axios';
+import axios from 'axios';
 import { Transaction, Connection, VersionedTransaction } from '@solana/web3.js';
 import { Wallet } from '@project-serum/anchor';
 
