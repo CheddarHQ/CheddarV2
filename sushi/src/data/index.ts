@@ -4,34 +4,23 @@
  */
 
 import { publicProcedure, router } from '../trpc';
- import { z } from 'zod';
+import { z } from 'zod';
 import axios from 'axios';
 
 const appRouter = router({
 
 /**
- * @procedure fetchPrice
  * @description Fetches the current price of specified cryptocurrency tokens
-
- * @input 
- * Ticker & address are case-sensitive.
- *      - ids: A string or array of ticker or addresses
- *      - vsToken: (optional) comparison token ticker or addresses.
-
- * @returns 
- * Object: 
- *  - id 
- *  - mintSymbol
- *  - vsToken
- *  - vsTokenSymbol
- *  - price
+ * @input ids: str or array of ticker or addresses
+ *        vsToken: (optional) comparison token ticker or addresses.
+ * @returns object containing token price against vsToken (if given) or against USDC.
  */
     fetchPrice: publicProcedure
         .input(z.object({
             ids: z.string().or(z.array(z.string())),        
             vsToken: z.string().optional(),
         }))
-        .query(async ({input}) => {
+        .query(async ({ input }) => {
         try {
             const idsParam = Array.isArray(input.ids) ? input.ids.join(',') : input.ids;
             const params: Record<string, string> = { ids: idsParam };
@@ -49,25 +38,11 @@ const appRouter = router({
         }),
 
 /**
- * @procedure fetchMetadata
  * @description retrieves metadata for specified token tickers or addresses. 
-
- * @input 
- * Ticker & address are case-sensitive.
- *  - ids: A comma-separated string of the token addresses/tickers. 
-
- * @returns
- *   Array of token metadata objects:
- *  - address
- *  - chainId
- *  - decimals
- *  - name
- *  - symbol
- *  - logoURI
- *  - tags
- *  - extensions
+ * @input ids: A comma-separated string of the token addresses/tickers. 
+ * @returns Array of token metadata objects.
  */        
-        fetchMetadata: publicProcedure
+    fetchMetadata: publicProcedure
         .input(z.object({
             ids: z.string().nonempty(),
         }))
@@ -83,21 +58,16 @@ const appRouter = router({
         }),
 
 /**
- * @procedure fetchAllcoins
  * @description retrieves the complete list all cryptocurrency token on jupiter.
-
- * @returns 
- *   A large JSON object.
-
- * @todo
- *   Consider implementing caching using Redis for this large response 
- *   to improve performance, as fetching all coins from the API can be resource-intensive.
+ * @returns A large JSON object.
+ * @todo Consider implementing caching using Redis for this large response to improve performance, as fetching all coins from the API can be resource-intensive.
  */        
-        fetchAllcoins: publicProcedure
+    fetchAllcoins: publicProcedure
         .query(async () => {
             try {
                 const response = await axios.get('https://token.jup.ag/all');
                 // TODO: Saves the whole response to a cache prob Redis as it is a really large response
+                return null;
             } catch (error) {
                 throw new Error('Failed to fetch allcoins');
             }
