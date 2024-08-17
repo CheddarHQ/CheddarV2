@@ -1,6 +1,11 @@
+/**
+ * @file buy/index.ts
+ * @description This file defines the main tRPC router for the application to buy tokens
+ */
+
 import { publicProcedure, router } from '../trpc';
 import { z } from 'zod';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { Transaction, Connection, VersionedTransaction } from '@solana/web3.js';
 import { Wallet } from '@project-serum/anchor';
 
@@ -38,6 +43,76 @@ export const appRouter = router({
             const quoteRes = response.data.json();
             return quoteRes;
             } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error(`Axios Error: ${error.message}`);
+            }
+                throw new Error('Failed to fetch quote');
+            }
+        }),
+
+// Separate procedures to reduce complexity 
+// same as getQuote but for SOL -> coin you wanna buy
+    getSolQuote: publicProcedure
+        .input(z.object({
+            inputMint: z.string(),
+            outputMint: z.string(),
+            amount: z.number(),
+            slippage: z.number().optional(),
+            platformFees: z.number(),
+        }))
+        .query(async ({ input }) => {
+        try {
+            const response = await axios.get('https://quote-api.jup.ag/v6/quote', { 
+                params: {
+                    inputMint: "So11111111111111111111111111111111111111112",
+                    outputMint: input.outputMint,
+                    amount: input.amount,
+                    slippage: input.slippage,
+                    platformFeeBps: input.platformFees,
+                  }
+            });
+            if (axios.isAxiosError(Error)) {
+                throw new Error(`Axios Error: ${Error.message}`);
+            }
+            const quoteRes = response.data.json();
+            return quoteRes;
+            } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error(`Axios Error: ${error.message}`);
+            }
+            throw new Error('Failed to fetch quote');
+            }
+        }),
+
+// same as getQuote but for USDC -> coin you wanna buy
+    getUSDCQuote: publicProcedure
+        .input(z.object({
+            inputMint: z.string(),
+            outputMint: z.string(),
+            amount: z.number(),
+            slippage: z.number().optional(),
+            platformFees: z.number(),
+        }))
+        .query(async ({ input }) => {
+        try {
+            const response = await axios.get('https://quote-api.jup.ag/v6/quote', { 
+                params: {
+                    inputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+                    outputMint: input.outputMint,
+                    amount: input.amount,
+                    slippage: input.slippage,
+                    platformFeeBps: input.platformFees,
+                    }
+            });
+            if (axios.isAxiosError(Error)) {
+                throw new Error(`Axios Error: ${Error.message}`);
+            }
+            const quoteRes = response.data.json();
+            return quoteRes;
+            } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error(`Axios Error: ${error.message}`);
+            }
             throw new Error('Failed to fetch quote');
             }
         }),
@@ -67,12 +142,15 @@ export const appRouter = router({
                         feeAccount: input.feeAccount,
                       }
                 });
+                if (axios.isAxiosError(Error)) {
+                    throw new Error(`Failed to serialize transaction: ${Error.message}`);
+                }
                 const serializeRes = response.data;
                 return serializeRes;
             } catch (error) {
                 if (axios.isAxiosError(error)) {
-                    throw new Error(`Failed to serialize transaction: ${error.message}`);
-                    }
+                    console.error(`Axios Error: ${error.message}`);
+                }
                 throw new Error('Failed to serialize swap');
                 }
             }),
@@ -94,6 +172,7 @@ export const appRouter = router({
             }),
             }))
             .mutation(async({ input }) => {  
+            try {
                 const swapTransaction = Buffer.from(input.serializedTransaction, 'base64');
                 var transaction = VersionedTransaction.deserialize(swapTransaction);
                 transaction.sign([input.wallet.payer]);
@@ -105,6 +184,10 @@ export const appRouter = router({
                 });
                 await connection.confirmTransaction(txId);
                 return `https://solscan.io/tx/${txId}`;
+            } catch (error) {
+                console.error(`Transaction Error: ${(error as Error).message}`);
+                throw new Error('Failed to submit transaction');
+            }
         }),
 });
 
