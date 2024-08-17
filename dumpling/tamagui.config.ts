@@ -26,7 +26,6 @@ const animations = createAnimations({
 });
 
 const headingFont = createInterFont();
-
 const bodyFont = createInterFont();
 
 export const Container = styled(YStack, {
@@ -41,12 +40,12 @@ export const Main = styled(YStack, {
 });
 
 export const Title = styled(H1, {
-  color: '#000',
+  color: '#FFFFFF', // White text
   size: '$12',
 });
 
 export const Subtitle = styled(SizableText, {
-  color: '#38434D',
+  color: '#FFFFFF', // White text
   size: '$9',
 });
 
@@ -61,8 +60,8 @@ export const Button = styled(ButtonTamagui, {
   },
   maxWidth: 500,
 
-  // Shaddows
-  shadowColor: '#000',
+  // Shadows
+  shadowColor: '#000000',
   shadowOffset: {
     height: 2,
     width: 0,
@@ -71,16 +70,16 @@ export const Button = styled(ButtonTamagui, {
   shadowRadius: 3.84,
 
   // Button text
-  color: '#FFFFFF',
-  fontWeight: '600', // Is not passed down to the text. Probably a bug in Tamagui: https://github.com/tamagui/tamagui/issues/1156#issuecomment-1802594930
+  color: '#FFFFFF', // White text
+  fontWeight: '600',
   fontSize: 16,
 });
 
 const config = createTamagui({
   light: {
     color: {
-      background: 'gray',
-      text: 'black',
+      background: '#000000', // Black background
+      text: '#FFFFFF', // White text
     },
   },
   defaultFont: 'body',
@@ -101,10 +100,10 @@ const config = createTamagui({
     lg: { maxWidth: 1280 },
     xl: { maxWidth: 1420 },
     xxl: { maxWidth: 1600 },
-    gtXs: { minWidth: 660 + 1 },
-    gtSm: { minWidth: 800 + 1 },
-    gtMd: { minWidth: 1020 + 1 },
-    gtLg: { minWidth: 1280 + 1 },
+    gtXs: { minWidth: 661 },
+    gtSm: { minWidth: 801 },
+    gtMd: { minWidth: 1021 },
+    gtLg: { minWidth: 1281 },
     short: { maxHeight: 820 },
     tall: { minHeight: 820 },
     hoverNone: { hover: 'none' },
@@ -113,9 +112,6 @@ const config = createTamagui({
 });
 
 type AppConfig = typeof config;
-
-// Enable auto-completion of props shorthand (ex: jc="center") for Tamagui templates.
-// Docs: https://tamagui.dev/docs/core/configuration
 
 declare module 'tamagui' {
   interface TamaguiCustomConfig extends AppConfig {}
