@@ -51,6 +51,9 @@ https://price.jup.ag/v6/price?ids=JUP&vsToken=Bonk
 
 ## Executing purchases
 
+## Alow users to swap coins from each other
+
 ## Facilitating swaps
+Simple solana to memecoin swap
 
 ## Adding fees

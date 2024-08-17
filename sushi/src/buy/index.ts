@@ -76,11 +76,13 @@ export const appRouter = router({
                 throw new Error('Failed to serialize swap');
                 }
             }),
+
  /**
   * @description deserializes, signs, and executes the transaction
   * @input serializedTransaction: the serialized transaction
   * @returns the transaction ID
   */
+
  // TODO - add wallet and signer
  // TODO - separate steps for deserializing, signing, and executing the transaction
     submitTransaction: publicProcedure
