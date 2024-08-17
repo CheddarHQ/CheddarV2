@@ -142,6 +142,7 @@ export const appRouter = router({
                         feeAccount: input.feeAccount,
                       }
                 });
+                
                 if (axios.isAxiosError(Error)) {
                     throw new Error(`Failed to serialize transaction: ${Error.message}`);
                 }
@@ -182,6 +183,7 @@ export const appRouter = router({
                     skipPreflight: true,
                     maxRetries: 2,
                 });
+
                 await connection.confirmTransaction(txId);
                 return `https://solscan.io/tx/${txId}`;
             } catch (error) {
@@ -191,3 +193,4 @@ export const appRouter = router({
         }),
 });
 
+// TODO - user balance & history -> frontend
