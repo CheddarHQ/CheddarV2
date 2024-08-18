@@ -3,8 +3,10 @@
   "version": "0.0.0",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240815.0",
+    "esbuild": "^0.17.19",
+    "hono": "^4.5.6",
     "typescript": "^5.5.4",
-    "wrangler": "3.72.0"
+    "wrangler": "^3.72.0"
   },
   "private": true,
   "scripts": {
@@ -12,12 +14,15 @@
     "deploy": "wrangler deploy"
   },
   "dependencies": {
+    "@hono/trpc-server": "^0.3.2",
+    "@hono/zod-validator": "^0.2.2",
     "@project-serum/anchor": "^0.26.0",
     "@solana/web3.js": "^1.95.2",
     "@trpc/client": "^10.45.2",
     "@trpc/server": "^10.45.2",
     "axios": "^1.7.4",
     "base64-js": "^1.5.1",
+    "tsc": "^2.0.4",
     "zod": "^3.23.8"
   }
 }
