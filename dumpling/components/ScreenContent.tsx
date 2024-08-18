@@ -1,3 +1,4 @@
+//@ts-ignore
 import { YStack, H2, Separator, Theme } from 'tamagui';
 
 import { EditScreenInfo } from './EditScreenInfo';
