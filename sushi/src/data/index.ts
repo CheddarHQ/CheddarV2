@@ -1,33 +1,28 @@
 /**
  * @file price/index.ts
- * @description This file defines the main tRPC router for the application to fetch token data
+ * @description This file defines the main router for the application to fetch token data
  */
 
-import { publicProcedure, router } from '../trpc';
 import { z } from 'zod';
 import axios from 'axios';
-import { ApiResponseQuery, ProcessedData, ProcessedDataQuery } from './interfaces';
-import { ApiResponse } from './interfaces';
+import { Hono } from "hono";
+import { zValidator } from "@hono/zod-validator";
 
-export const appRouter = router({
+export const dataRouter = new Hono()
+// https://api-v3.raydium.io/mint/price?mints=4Cnk9EPnW5ixfLZatCPJjDB1PUtcRpVVgTQukm9epump,So11111111111111111111111111111111111111112,43uhykFm8Y9gLvHrWs7r7w1HCKu6vikDi7j394FaSfNz,
 
 /**
- * @description retrieves the metadata for token(s) separated by commas 
- * @input ids: A comma-separated string of the token addresses (upto 30)
- * @returns Array of token metadata objects
+ * @description Fetches the metadata for the specified token ids
+ * @input ids: the ids of the tokens to fetch the metadata for
+ * @returns an object containing basic and detailed info for the specified tokens
  */
-    fetchMetadata: publicProcedure
-        .input(z.object({
-            ids: z.string(),
-        }))
-        .query(async ({ input }):Promise<ProcessedData> => {
+    .get("/fetchMetadata", zValidator("query", z.object({ ids: z.string() })), async (c) => {
+        const { ids } = c.req.query();
         try {
-            const idsParam = input.ids;
-            const params = { ids: idsParam }; 
+            const url = `https://api.dexscreener.io/latest/dex/pairs/solana/${ids}`;
+            // https://api.dexscreener.io/latest/dex/pairs/solana/DttubKhvxaS5KT9Gm61i6H2G68FaHtVJHQ1iS6rMAiBo
 
-            const response = await axios.get<ApiResponse>('https://api.dexscreener.com/latest/dex/pairs/solana', { params });
-
-// TODO: efficient handling on the frontend to display the data
+            const response = await axios.get(url);
             const data = {
                 basicInfo: response.data.pairs.map(pair => ({
                     baseAddress: pair.baseToken.address,
@@ -35,7 +30,9 @@ export const appRouter = router({
                     priceNative: pair.priceNative,
                     imageUrl: pair.info.imageUrl,
                     priceChange: pair.priceChange.h1,
-            })),
+                })),
+                // TODO: efficient handling on the frontend to display the data
+                // TODO: make typesafe
                 detailedInfo: response.data.pairs.map(pair => ({
                     baseAddress: pair.baseToken.address,
                     priceUsd: pair.priceUsd,
@@ -55,49 +52,35 @@ export const appRouter = router({
                     telegram: pair.info.socials.find(social => social.type === "telegram")?.url,
                 }))
             };
-            return data;
-            } catch (error) {
+            return c.json(data);
+        } catch (error) {
             if (axios.isAxiosError(error)) {
-                console.error(`Axios Error: ${error.message}`);
+                console.error(error.response?.data);
+                throw new Error('Failed to fetch data');
             }
-            throw new Error('Failed to fetch metadata');
+            throw error;
+        }
+    })
+
+    /**
+     * @description Fetches the query data for the specified query
+     * @input query: the query to fetch the data for
+     * @returns an object containing basic and detailed info for the specified query
+     */
+    .get("/fetchQuery", zValidator("query", z.object({ query: z.string() })), async (c) => {
+        const { query } = c.req.query();
+        try {
+            const response = await axios.get(`https://api.dexscreener.io/latest/dex/search?q=${query}`);
+            return c.json(response.data.pairs);
+        } catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error(error.response?.data);
+                throw new Error('Failed to fetch data');
             }
-        }),
-
-/**
- * @description retrieves metadata for queried token
- * @input query: A string to search for token metadata
- * @returns Array of token metadata objects
- */        
-
-// TODO: Fix all type safety issues
-    fetchQuery: publicProcedure
-        .input(z.object({
-            query: z.string(),
-        }))
-        .query(async ({ input }) => {
-            try {
-                const response = await axios.get<ApiResponseQuery>(`https://api.dexscreener.io/latest/dex/search?q=${input.query}`);
-                const pairs = response.data.pairs || [];
-
-                const data = pairs.map(pair => ({
-                    baseAddress: pair.baseToken?.address || 'null',
-                    priceUsd: pair.priceUsd || 'null',
-                    priceNative: pair.priceNative || 'null',
-                    imageUrl: pair.info?.imageUrl || 'null',
-                    priceChange: pair.priceChange?.h1 || 'null',
-                }));
-                return data;
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    console.error(`Axios Error: ${error.message}`);
-                }
-                throw new Error('Failed to fetch allcoins');
-            }
-        }),
+            throw error;
+        }
     });
 
-// TODO: Add api for chart of a particular coin. Will do with the front end implementation
-// TODO: Historical price data for a coin
 // TODO: sanitize the data before sending it to the frontend
 // TODO: Add a cache layer to store the data for a certain period of time
+export type DataRouter = typeof dataRouter;
