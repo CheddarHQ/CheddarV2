@@ -1,22 +1,30 @@
-import { useFonts } from 'expo-font';
-import { Stack, SplashScreen } from 'expo-router';
+import {
+  useFonts,
+  Poppins_100Thin,
+  Poppins_400Regular,
+  Poppins_700Bold,
+} from '@expo-google-fonts/poppins';
+import * as SplashScreen from 'expo-splash-screen'; // Add this if SplashScreen is not recognized
+import { Stack, SplashScreen as ExpoRouterSplashScreen } from 'expo-router';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+//@ts-ignore
 import { TamaguiProvider } from 'tamagui';
 
 import config from '../tamagui.config';
 
-SplashScreen.preventAutoHideAsync();
+ExpoRouterSplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: '(drawer)',
+  initialRouteName: 'index',
 };
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    Inter: require('@tamagui/font-inter/otf/Inter-Medium.otf'),
-    InterBold: require('@tamagui/font-inter/otf/Inter-Bold.otf'),
+    Poppins_100Thin,
+    Poppins_400Regular,
+    Poppins_700Bold,
+    Jersey10: require('../assets/Jersey10-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -31,16 +39,13 @@ export default function RootLayout() {
     <TamaguiProvider config={config}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack>
-          <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="thing" options={{ headerShown: false }} />
           <Stack.Screen
             name="modal"
             options={{ title: 'Modal', presentation: 'modal', headerShown: false }}
           />
-          <Stack.Screen
-            name="moneyEx"
-            // component={DynamicScreen} // Reference the new screen component
-            options={{ title: 'moneyEx', headerShown: false }}
-          />
+          <Stack.Screen name="moneyEx" options={{ title: 'moneyEx', headerShown: false }} />
         </Stack>
       </GestureHandlerRootView>
     </TamaguiProvider>

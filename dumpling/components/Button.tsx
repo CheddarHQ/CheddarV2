@@ -1,4 +1,5 @@
 import { ComponentProps, forwardRef } from 'react';
+//@ts-ignore
 import { TamaguiElement } from 'tamagui';
 
 import { Button as TButton } from '../tamagui.config';

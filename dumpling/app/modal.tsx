@@ -1,6 +1,7 @@
 import { Link } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, ScrollView, Text } from 'react-native';
+//@ts-ignore
 import { Input, Card, Avatar, YStack, XStack } from 'tamagui';
 
 export default function Modal() {

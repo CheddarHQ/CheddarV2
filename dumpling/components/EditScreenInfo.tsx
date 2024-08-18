@@ -1,3 +1,4 @@
+//@ts-ignore
 import { YStack, H4, Paragraph } from 'tamagui';
 
 export const EditScreenInfo = ({ path }: { path: string }) => {
