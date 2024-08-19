@@ -10,9 +10,10 @@
   },
   "private": true,
   "scripts": {
-    "start": "wrangler dev",
-    "deploy": "wrangler deploy"
-  },
+    "start": "bun src/app.ts",
+    "dev": "bun --watch src/app.ts",
+    "build": "bun build src/app.ts"
+    },
   "dependencies": {
     "@hono/trpc-server": "^0.3.2",
     "@hono/zod-validator": "^0.2.2",
