@@ -2,11 +2,10 @@
  * @file chart/index.ts
  * @description this file defines the main router for the application to fetch chart data
  */
-
-import { z } from 'zod';
 import axios from 'axios';
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
+import { querySchema } from "./schemas";
 
 // TODO:
 // We dont wanna show chart all the time can i just make one 24 hour call for 1440 data points and then
@@ -16,10 +15,8 @@ import { zValidator } from "@hono/zod-validator";
  * @description Fetches the chart data for the specified token ticker for the last 24 hrs
  * @input ticker: the ticker of the token to fetch the chart data for
  * @returns an array of chart data of last 24 with 1 min interval (1440 data points)
- */
-const querySchema = z.object({
-    ticker: z.string().nonempty("Ticker is required"),
-});
+ * @example http://<worker>/api/chart/fetchChart?ticker=SOL
+ */ 
 
 export const chartRouter = new Hono()
     .get("/fetchChart", zValidator("query", querySchema), async (c) => { const { ticker } = c.req.query();

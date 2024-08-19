@@ -2,13 +2,13 @@
  * @file buy/index.ts
  * @description This file defines the tRPC router for the application to buy/swap tokens
  */
-
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import axios from 'axios';
 import { Transaction, Connection, VersionedTransaction } from '@solana/web3.js';
 import { quoteBody, swapBody } from "./interfaces";
 import z from 'zod';
+import { quoteSchema } from './schemas';
 
 const connection = new Connection('https://api.mainnet-beta.solana.com');
 
@@ -16,7 +16,8 @@ export const buyRouter = new Hono()
 
 /**
  * @description Fetches the current autofee rates
- * @returns object containing the autofee rates vh, h & m
+ * @returns object containing the autofee rates for very high, high & medium priority
+ * @example http://<worker>/api/buy/autofee
  */
 .get("/autofee", async (c) => {
     try {
@@ -52,7 +53,8 @@ export const buyRouter = new Hono()
 
 /**
  * @description Fetches the current Raydium RPCs
- * @returns object containing the RPCs urls
+ * @returns array of objects contining RPCs urls, ws, weight, and name 
+ * @example http://<worker>/api/buy/rpcs
  */
     .get("/rpcs", async (c) => {
         try {
@@ -79,18 +81,14 @@ export const buyRouter = new Hono()
  *        slippage (optional) 
  *        platformFees
  * @returns the quote response
+ * @example http://<worker>/api/buy/quote?inputMint=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&outputMint=So11111111111111111111111111111111111111112&amount=1000000&slippage=50&platformFees=0
  */
-    .get("/quote", zValidator("query", z.object({
-        inputMint: z.string(),
-        outputMint: z.string(),
-        amount: z.string(), // Query params come as strings
-        slippage: z.string().optional(),
-        platformFees: z.string(),
-    })), async (c) => {
+    .get("/quote", zValidator("query", quoteSchema), async (c) => {
         const { inputMint, outputMint, amount, slippage, platformFees } = c.req.query();
         try {
             const response = await axios.get('https://quote-api.jup.ag/v6/quote', {
                 params: {
+                    // handle the query params according to schema defined in schemas.ts
                     inputMint,
                     outputMint,
                     amount: parseInt(amount),
@@ -104,6 +102,7 @@ export const buyRouter = new Hono()
             if (axios.isAxiosError(error)) {
                 console.error(`Axios Error: ${error.message}`);
                 console.error(`Response data:`, error.response?.data);
+                console.error(`Response status:`, error.response?.status);
             }
             return c.json({ error: 'Failed to fetch quote' }, 500);
         }
@@ -117,7 +116,9 @@ export const buyRouter = new Hono()
  *        wrapAndUnwrapSol: (optional) whether to wrap and unwrap SOL
  *        feeAccount: the public key of the fee account
  * @returns the serialized transaction
+ * @example http://<worker>/api/buy/swap
  */
+// TODO: testing on devnet
     .post("/swap", zValidator("json", z.object({
         quoteResponse: z.object({
             inputMint: z.string(),
