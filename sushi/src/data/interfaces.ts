@@ -1,3 +1,7 @@
+/*
+* @file data/interfaces.ts
+* @description Interfaces for the data module
+*/
 export interface TokenInfo {
     address: string;
     name: string;
