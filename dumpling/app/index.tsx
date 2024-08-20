@@ -9,20 +9,24 @@ export default function Home() {
   return (
     <YStack f={1} jc="center" ai="center" backgroundColor="#000000" padding="$4">
       <AnimatedBackground />
-      <Image
-        source={require('../assets/cheese-svgrepo-com.png')}
-        width={200}
-        height={200}
-        resizeMode="contain"
-      />
-      <Text fontSize="$8" fontWeight="bold">
-        Cheddar
-      </Text>
-      {/* @ts-ignore */}
       <Link href={'/thing'} asChild>
-        <Button size="$4" theme="active">
-          Get Started
-        </Button>
+        <Image
+          source={require('../assets/cheese-svgrepo-com.png')}
+          width={300}
+          height={300}
+          resizeMode="contain"
+        />
+      </Link>
+      <Link href={'/thing'} asChild>
+        <Text
+          fontSize="$10"
+          fontWeight="bold"
+          textDecorationColor={'#ffffff'}
+          color={'#ffffff'}
+          //@ts-ignore
+          fontFamily="Jersey10">
+          Cheddar
+        </Text>
       </Link>
     </YStack>
   );

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { FlatList, KeyboardAvoidingView, Platform } from 'react-native';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import {
   TamaguiProvider,
   YStack,
@@ -13,10 +14,7 @@ import {
   ScrollView,
   Theme,
   AnimatePresence,
-  //@ts-ignore
 } from 'tamagui';
-//@ts-ignore
-// import { ChevronDown, Send, MoreVertical } from '@tamagui/lucide-icons';
 import { Link } from 'expo-router';
 import { AnimatedBackground } from 'components/AnimatedBackground';
 // import config from "./tamagui.config";
@@ -53,11 +51,10 @@ export default function chatroom() {
           alignItems="center"
           justifyContent="space-between"
           paddingBottom="$3">
-          <Text color="white" fontSize="$6" fontWeight="bold">
-            LOW
-          </Text>
-          <Text color="white" fontSize="$6" fontWeight="bold">
-            Global Chat
+          <MaterialIcons name="query-stats" size={24} color="white" padding={5} />
+          {/* @ts-ignore */}
+          <Text color="yellow" fontSize="$10" fontWeight="bold" fontFamily="Jersey10">
+            Cheddar
           </Text>
           <Link href={'/modal'} asChild>
             <AntDesign name="pluscircle" size={24} color="white" />
@@ -84,7 +81,7 @@ export default function chatroom() {
         />
 
         {/* Footer - Message Input */}
-        <XStack padding="$5" background={'#000000'}>
+        <XStack padding="$5">
           <Input
             flex={1}
             value={inputText}
@@ -94,7 +91,6 @@ export default function chatroom() {
             height="$5"
             paddingHorizontal="$3"
             paddingRight={inputText ? '$8' : '$3'}
-            keyboardAppearance="dark"
           />
           <AnimatePresence>
             {inputText && (

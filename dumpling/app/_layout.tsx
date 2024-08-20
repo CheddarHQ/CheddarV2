@@ -10,6 +10,7 @@ import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 //@ts-ignore
 import { TamaguiProvider } from 'tamagui';
+import { StatusBar } from 'expo-status-bar';
 
 import config from '../tamagui.config';
 
@@ -37,15 +38,20 @@ export default function RootLayout() {
 
   return (
     <TamaguiProvider config={config}>
+      <StatusBar style="auto" />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="thing" options={{ headerShown: false }} />
+          <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen
             name="modal"
             options={{ title: 'Modal', presentation: 'modal', headerShown: false }}
           />
-          <Stack.Screen name="moneyEx" options={{ title: 'moneyEx', headerShown: false }} />
+          <Stack.Screen
+            name="moneyEx"
+            options={{ title: 'moneyEx', headerShown: false, presentation: 'modal' }}
+          />
         </Stack>
       </GestureHandlerRootView>
     </TamaguiProvider>
