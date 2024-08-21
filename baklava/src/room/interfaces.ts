@@ -1,3 +1,5 @@
+import { WebSocketServer } from ".";
+
 export interface Env {
-  WESOCKET_HIBERNATION_SERVER: DurableObjectNamespace<WebSocketHibernationServer>
+  WEBSOCKET_SERVER: DurableObjectNamespace<any>; // TODO types
 }

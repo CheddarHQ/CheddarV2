@@ -8,7 +8,7 @@ import { Env } from "./interfaces";
  * @description This function is responsible for upgrading the connection to a websocket connection
  * @returns Returns a promise forwarding the request to the durable object
  */
-async function upgradeConnection(
+export async function upgradeConnection(
     req: Request, 
     env: Env,
     name: string
