@@ -20,6 +20,7 @@
     "@react-navigation/native": "^6.1.7",
     "@supabase/supabase-js": "^2.38.4",
     "@tamagui/font-inter": "1.74.8",
+    "@tamagui/lucide-icons": "^1.108.4",
     "@tamagui/react-native-media-driver": "1.74.8",
     "@tamagui/shorthands": "1.74.8",
     "@tamagui/themes": "1.74.8",
