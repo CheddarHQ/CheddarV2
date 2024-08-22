@@ -44,8 +44,13 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
           <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
+          <Stack.Screen name="analytics" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="thing" options={{ headerShown: false }} />
           <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
+          <Stack.Screen
+            name="cryptoGraph"
+            options={{ headerShown: false, presentation: 'modal' }}
+          />
           <Stack.Screen
             name="modal"
             options={{ title: 'Modal', presentation: 'modal', headerShown: false }}

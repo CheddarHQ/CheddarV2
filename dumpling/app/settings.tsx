@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import React, { useState } from 'react';
-import { ToggleGroup, Heading, XStack, YStack, Text, Input } from 'tamagui';
+import { ToggleGroup, Heading, XStack, YStack, Text, Input, Slider } from 'tamagui';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Fontisto from '@expo/vector-icons/Fontisto';
 import { Pop } from '~/components/Popover';
@@ -74,6 +74,14 @@ const Settings = () => {
             />
           </ToggleGroup.Item>
         </ToggleGroup>
+      </XStack>
+      <XStack alignSelf={'center'} marginTop={'$10'}>
+        <Slider size="$4" width={200} defaultValue={[50]} max={100} step={20}>
+          <Slider.Track>
+            <Slider.TrackActive />
+          </Slider.Track>
+          <Slider.Thumb circular index={0} />
+        </Slider>
       </XStack>
     </YStack>
   );
