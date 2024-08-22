@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { chartRouter } from "./chart";
 import { dataRouter } from "./data";
-import { buyRouter } from "./buy";
+import { buyRouter } from "./buy/jup";
 import { logger } from "hono/logger";
 // import { serveStatic } from "hono/bun";
 
