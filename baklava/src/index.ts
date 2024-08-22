@@ -10,7 +10,7 @@ const app = new Hono()
 app.use("*", logger());
 
 const apiRoutes = app.basePath("/api")
-                .route("durableSocketServer", durableRouter);
+                .route("durableSocketServer", durableSocketServer);
 
 export default app;
 export type App = typeof app;
