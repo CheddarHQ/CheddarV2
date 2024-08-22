@@ -10,8 +10,6 @@ import { BN } from 'bn.js';
 import { TokenInfo } from '@solana/spl-token-registry';
 import AmmImpl from '@mercurial-finance/dynamic-amm-sdk';
 import * as math from 'mathjs';
-import { createJupiterApi } from './jupiter-api';
-
 
 /**
  * @description Creates a swap transaction
