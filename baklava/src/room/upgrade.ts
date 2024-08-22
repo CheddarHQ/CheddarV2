@@ -11,7 +11,7 @@ import { Env } from "./interfaces";
 export async function upgradeConnection(
     req: Request, 
     env: Env,
-    name: string
+    roomName: string
     ): Promise<any> {
     try {
         const header = req.headers.get("Upgrade");
@@ -21,12 +21,13 @@ export async function upgradeConnection(
         }
         // extract ID of the durable object from the name 
         // let id = OBJECT_NAMESPACE.idFromString(hexId); id -> string
-        let id = env.WEBSOCKET_SERVER.idFromName(name);
+        let id = env.WEBSOCKET_SERVER.idFromName(roomName);
         let stub = env.WEBSOCKET_SERVER.get(id); // Client of the durable used to send messages
 
         return await stub.fetch(req);
         }
         catch (error) {
             console.error("Error handling WebSocket upgrade:", error);
-            return new Response("Internal Server Error", { status: 500 });        }
+            return new Response("Internal Server Error", { status: 500 });        
+        }
     }

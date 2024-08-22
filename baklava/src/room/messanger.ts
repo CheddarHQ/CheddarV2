@@ -1,9 +1,7 @@
-import { broadcastMessage } from "./pubsub";
+import Ably from 'ably';
 
-export async function handleMessanger(server: WebSocket, clientId: string, clients: Map<string, WebSocket>) {
-    server.addEventListener("message", async (event) => {
-        const message = JSON.parse(event.data as string);
+export const broadCastMessage = (clientId: string, clients: Map<string, WebSocket>, message: string) => {
 
-        broadcastMessage(clients, message, clientId); // Pubsub
-      });
-    }
+  const ably = new Ably.Realtime('23OSzg.9sDZtg:*****');
+  console.log("pub/sub connected") 
+}
