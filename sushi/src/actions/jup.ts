@@ -3,7 +3,7 @@
  * @description This file defines Solana actions for Jupiter Swap functionality
  */
 
-// TODO
+// TODO refactor and fix major issues (just a placeholder for now)
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
@@ -33,57 +33,6 @@ const postBodySchema = z.object({
 const API_BASE_URL = 'https://<worker>/api';
 
 export const jupiterSwapRouter = new Hono()
-  /**
-   * @description Fetches initial data for Jupiter Swap
-   * @input tokenPair: the pair of tokens for the swap
-   * @returns ActionGetResponse with swap options
-   * @example http://<worker>/api/jupiter-swap/USDC-SOL
-   */
-  .get("/:tokenPair", zValidator("param", tokenPairSchema), async (c) => {
-    const { tokenPair } = c.req.param();
-    const [inputToken, outputToken] = tokenPair.split('-');
-
-    try {
-      // Fetch current autofee rates
-      const autofeeResponse = await axios.get(`${API_BASE_URL}/buy/autofee`);
-      const autofee = autofeeResponse.data;
-
-      const response: ActionGetResponse = {
-        type: 'action',
-        icon: JUPITER_LOGO,
-        label: `Swap ${inputToken} for ${outputToken}`,
-        title: `Jupiter Swap: ${inputToken} to ${outputToken}`,
-        description: `Swap ${inputToken} for ${outputToken} using Jupiter. Choose a priority level for your swap.`,
-        links: {
-          actions: [
-            {
-              label: `Very High Priority (${autofee.veryHighP} SOL)`,
-              href: `/api/jupiter-swap/${tokenPair}/quote?priority=veryHigh`,
-            },
-            {
-              label: `High Priority (${autofee.highP} SOL)`,
-              href: `/api/jupiter-swap/${tokenPair}/quote?priority=high`,
-            },
-            {
-              label: `Medium Priority (${autofee.mediumP} SOL)`,
-              href: `/api/jupiter-swap/${tokenPair}/quote?priority=medium`,
-            },
-          ],
-        },
-      };
-
-      return c.json(response);
-    } catch (error) {
-      return c.json({
-        type: 'action',
-        icon: JUPITER_LOGO,
-        label: 'Error',
-        title: 'Failed to fetch swap options',
-        description: 'An error occurred while fetching swap options.',
-        error: { message: 'Failed to fetch swap options' }
-      } satisfies ActionGetResponse, 500);
-    }
-  })
 
   /**
    * @description Fetches quote for a specific swap

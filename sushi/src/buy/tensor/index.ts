@@ -1,3 +1,5 @@
+// FOR FUTURE USE - NOT NEEDED NOW
+
 const baseUrl = 'https://api.mainnet.tensordev.io/api/v1';
 
 export interface GetNftBuyNowTxCommand {
