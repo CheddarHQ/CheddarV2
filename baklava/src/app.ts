@@ -1,9 +1,19 @@
-import { Hono } from 'hono'
+import { Hono } from 'hono';
+import { Env } from './room/interfaces';
+import { durableSocketServer } from './room';
 
-const app = new Hono<{ Bindings: CloudflareBindings }>()
+const app = new Hono<{ Bindings: Env }>();
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+const roomName = "baklavaChat";
 
-export default app
+app.get('/websocket', async (c) => {
+  const id = c.env.DURABLE_OBJECT.idFromName(roomName);
+  const obj = c.env.DURABLE_OBJECT.get(id);
+  const resp = await obj.fetch(c.req.raw);
+  return resp;
+});
+
+export default {
+    fetch: app.fetch,
+    durableSocketServer
+  };

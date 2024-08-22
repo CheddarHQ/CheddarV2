@@ -14,5 +14,6 @@ export function heartBeat(server: WebSocket, clientId: string, clients: Map<stri
 }
 
 export function generateClientId() {
+  // GET TWIITER USERNAME FROM FRONTEND
     return Math.random().toString(36).substring(2, 15);
 }
