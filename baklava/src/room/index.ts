@@ -8,10 +8,10 @@ import { Env } from "./interfaces";
 import { upgradeConnection } from "./upgrade";
 import { generateClientId, heartBeat } from "./utils";
 
-const roomName = "baklavaChat";             // name of the durable object 
+const roomName = "baklavaChat";             // Name of the durable object
 
 export class durableSocketServer extends DurableObject {
-  clients: Map<string, WebSocket>;          // hashmap of client to the socket it corresponds to
+  clients: Map<string, WebSocket>;          // Hashmap of client to the socket it corresponds to
   state: DurableObjectState;
   env: Env; 
 
@@ -29,14 +29,13 @@ export class durableSocketServer extends DurableObject {
       if (!clientId) {
         return new Response("Expected clientId", { status: 400 });
       }
-        return this.handleWebSocket(request, clientId);
+      return this.handleWebSocket(request, clientId);
     }
     return new Response("Not Found", { status: 404 });
   }
 
-async handleWebSocket(request: Request, clientId: string) {
+  async handleWebSocket(request: Request, clientId: string) {
     upgradeConnection(request, this.env, roomName); 
-    const webSocket = new WebSocketPair();
     const [client, server] = Object.values(new WebSocketPair());
     this.clients.set(clientId, server);
 
@@ -45,21 +44,18 @@ async handleWebSocket(request: Request, clientId: string) {
 
     server.addEventListener("message", async (event) => {
       try {
-          const message = JSON.parse(event.data as string); // Get this message from the frontend
+        const message = JSON.parse(event.data as string); // Get this message from the frontend
 
-          console.log(`Received message from client ${clientId}:`, message);
-          server.send(JSON.stringify({ type: "message", data: message.data }));
-
-          // BROADCASTING THE MESSAGE
-          this.clients.forEach((client) => {
-            client.send(JSON.stringify({ type: "message", data: message.data }));
-          });
+        console.log(`Received message from client ${clientId}:`, message);
+        
+        // Broadcasting the received message to all clients
+        this.broadcast({ type: "message", data: message.data });
 
       } catch (error) {
-          console.error("Error processing message:", error);
-          server.send(JSON.stringify({ type: "error", message: "Error processing your message" }));
+        console.error("Error processing message:", error);
+        server.send(JSON.stringify({ type: "error", message: "Error processing your message" }));
       }
-  });
+    });
 
     server.addEventListener('close', () => {
       this.clients.delete(clientId);
@@ -70,9 +66,27 @@ async handleWebSocket(request: Request, clientId: string) {
     
     return new Response(`${clientId} left the chat`, { status: 200 });
   }
+
+  broadcast(message: string | object) {
+    // Convert the message to a string if it's not already
+    if (typeof message !== 'string') {
+      message = JSON.stringify(message);
+    }
+
+    // Iterate over all connected clients and send them the message
+    this.clients.forEach((client, clientId) => {
+      try {
+        client.send(message);
+      } catch (error) {
+        console.error(`Failed to send message to client ${clientId}:`, error);
+        this.clients.delete(clientId);
+      }
+    });
+  }
+
   async getActiveUsersCount() {
     return this.clients.size;
   }
-};
+}
 
 export type DurableRouter = typeof durableSocketServer;
