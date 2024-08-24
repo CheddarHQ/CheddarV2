@@ -11,7 +11,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 //@ts-ignore
 import { TamaguiProvider } from 'tamagui';
 import { StatusBar } from 'expo-status-bar';
-
+import { PortalProvider } from '@tamagui/portal';
 import config from '../tamagui.config';
 
 ExpoRouterSplashScreen.preventAutoHideAsync();
@@ -26,6 +26,7 @@ export default function RootLayout() {
     Poppins_400Regular,
     Poppins_700Bold,
     Jersey10: require('../assets/Jersey10-Regular.ttf'),
+    Press2P: require('../assets/PressStart2P-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -42,8 +43,14 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <Stack>
           <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
+          <Stack.Screen name="analytics" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="thing" options={{ headerShown: false }} />
           <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
+          <Stack.Screen
+            name="cryptoGraph"
+            options={{ headerShown: false, presentation: 'modal' }}
+          />
           <Stack.Screen
             name="modal"
             options={{ title: 'Modal', presentation: 'modal', headerShown: false }}

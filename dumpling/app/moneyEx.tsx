@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import { TextInput } from 'react-native';
+import { YStack, XStack, Button, Input, Text } from 'tamagui';
+import { Link } from 'expo-router';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import Animated, {
+  Layout,
+  useSharedValue,
+  withSpring,
+  useAnimatedStyle,
+} from 'react-native-reanimated';
 
-const moneyEx = ({ value }: { value: string }) => {
+const MoneyEx = ({ value }: { value: string }) => {
   const [input, setInput] = useState('');
 
   const handlePress = (num: string) => {
@@ -21,121 +30,107 @@ const moneyEx = ({ value }: { value: string }) => {
 
   switch (value) {
     case 'option1':
-      content = <Text style={styles.text}>Content for Option 1</Text>;
+      content = <Text>Content for Option 1</Text>;
       break;
     case 'option2':
-      content = <Text style={styles.text}>Content for Option 2</Text>;
+      content = <Text>Content for Option 2</Text>;
       break;
     default:
-      content = <Text style={styles.text}>Default Content</Text>;
+      content = <Text>Default Content</Text>;
   }
 
-  return (
-    <View style={styles.container}>
-      {content}
+  // Shared value for Reanimated
+  const animationValue = useSharedValue(1);
 
-      {/* Input Bar */}
-      <TextInput
-        value={input}
-        style={styles.input}
-        placeholder="Enter number"
-        keyboardType="numeric"
-        editable={false} // Make it read-only if only using the keyboard
-      />
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: withSpring(animationValue.value) }],
+  }));
+
+  return (
+    <YStack f={1} jc="center" ai="center" bg="$background" p="$4">
+      {content}
+      <Animated.View style={animatedStyle}>
+        <XStack ai="center" space="$4" mb="$5">
+          <Link href="/settings">
+            <Ionicons name="settings-outline" size={24} color="white" />
+          </Link>
+          <Input
+            value={input}
+            editable={false} // Make it read-only if only using the keyboard
+            placeholder="Enter number"
+            keyboardType="numeric"
+            size="$7"
+            backgroundColor="$backgroundDark"
+            color="white"
+            fontSize={50}
+            fontWeight="bold"
+            width="70%"
+          />
+        </XStack>
+      </Animated.View>
 
       {/* Number Keyboard */}
-      <View style={styles.keyboard}>
-        <View style={styles.row}>
-          {[1, 2, 3].map((num) => (
-            <TouchableOpacity
-              key={num}
-              style={styles.key}
-              onPress={() => handlePress(num.toString())}>
-              <Text style={styles.keyText}>{num}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.row}>
-          {[4, 5, 6].map((num) => (
-            <TouchableOpacity
-              key={num}
-              style={styles.key}
-              onPress={() => handlePress(num.toString())}>
-              <Text style={styles.keyText}>{num}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.row}>
-          {[7, 8, 9].map((num) => (
-            <TouchableOpacity
-              key={num}
-              style={styles.key}
-              onPress={() => handlePress(num.toString())}>
-              <Text style={styles.keyText}>{num}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.row}>
-          <TouchableOpacity style={styles.key} onPress={handleClear}>
-            <Text style={styles.keyText}>C</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.key} onPress={() => handlePress('0')}>
-            <Text style={styles.keyText}>0</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.key} onPress={handleBackspace}>
-            <Text style={styles.keyText}>←</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
+      <YStack width="80%" space="$2">
+        {[
+          [1, 2, 3],
+          [4, 5, 6],
+          [7, 8, 9],
+        ].map((row, rowIndex) => (
+          <XStack key={rowIndex} space="$2">
+            {row.map((num) => (
+              <Button
+                key={num}
+                onPress={() => handlePress(num.toString())}
+                width={70}
+                height={70}
+                br="$2"
+                bg="$backgroundDark"
+                color="white"
+                fontSize={24}
+                f={1}>
+                {num}
+              </Button>
+            ))}
+          </XStack>
+        ))}
+        <XStack space="$2">
+          <Button
+            onPress={handleClear}
+            width={70}
+            height={70}
+            br="$2"
+            bg="$backgroundDark"
+            color="white"
+            fontSize={24}
+            f={1}>
+            C
+          </Button>
+          <Button
+            onPress={() => handlePress('0')}
+            width={70}
+            height={70}
+            br="$2"
+            bg="$backgroundDark"
+            color="white"
+            fontSize={24}
+            f={1}>
+            0
+          </Button>
+          <Button
+            onPress={handleBackspace}
+            width={70}
+            height={70}
+            br="$2"
+            bg="$backgroundDark"
+            color="white"
+            fontSize={24}
+            f={1}>
+            ←
+          </Button>
+        </XStack>
+      </YStack>
+    </YStack>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#000000', // Black background
-  },
-  input: {
-    width: '80%',
-    height: 50,
-    backgroundColor: '#000000', // Dark background for input
-    color: '#FFFFFF', // White text color
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginVertical: 100,
-    fontSize: 50,
-    fontWeight: 'bold',
-  },
-  keyboard: {
-    width: '80%',
-    flex: 1,
-    justifyContent: 'center',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  key: {
-    width: 70,
-    height: 70,
-    backgroundColor: '#000000', // Dark key background
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  keyText: {
-    color: '#FFFFFF', // White text color on keys
-    fontSize: 24,
-  },
-  text: {
-    color: '#FFFFFF', // White text color for dynamic content
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-});
-
-export default moneyEx;
+export default MoneyEx;
