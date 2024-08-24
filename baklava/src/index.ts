@@ -1,62 +1,195 @@
-import axios from 'axios';
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
-import { logger } from 'hono/logger';
-import { durableSocketServer } from './room';
-import { upgradeConnection } from './room/upgrade';
-import { Env } from './room/interfaces';
+/**
+ * @file durable_socket_server.ts
+ * @description This file defines a Durable Object for handling WebSocket connections and room management
+ */
 
-const app = new Hono()
+import { DurableObject } from "cloudflare:workers";
+import { Env } from "./interfaces";
+import { generateClientId, heartBeat } from "./utils";
 
-app.use("*", logger());
+/**
+ * @description Main fetch handler for the worker
+ * @param request The incoming request
+ * @param env Environment variables
+ * @returns Response based on the request path
+ */
+export default {
+  async fetch(request: Request, env: Env) {
+    const url = new URL(request.url);
+    const path = url.pathname.slice(1).split('/');
 
-//const apiRoutes = app.basePath("/api").route("durableSocketServer", durableSocketServer);
+    if (!path[0]) {
+      return new Response("Couldn't access path", { status: 400 });
+    }
 
+    switch (path[0]) {
+      case "api":
+        return handleApiRequest(path.slice(1), request, env);
+      default:
+        return new Response("Not found", { status: 404 });
+    }
+  }
+}
 
-//TODO : define a zod schema for the message
-// TODO : 
+/**
+ * @description Handles API requests, particularly for room management
+ * @param path Array of path segments
+ * @param request The incoming request
+ * @param env Environment variables
+ * @returns Response based on the API request
+ */
+async function handleApiRequest(path: string[], request: Request, env: Env) {
+  switch (path[0]) {
+    case "room": {
+      const roomName = path[1];
 
-// app.get("/api/websocket", async (c)=>{
-//   const req = c.req.raw
-//   const env = c.env as Env
-//   const response = await upgradeConnection(req, env, "baklavaChat")
-//   return response;
-// })
+      if (!roomName) {
+        if (request.method === "POST") {
+          const id = env.rooms.newUniqueId();
+          return new Response(id.toString(), { headers: { "Access-Control-Allow-Origin": "*" } });
+        } else {
+          return new Response("Method not allowed", { status: 405 });
+        }
+      }
 
+      let id;
+      if (roomName.match(/^[0-9a-f]{64}$/)) {
+        id = env.rooms.idFromString(roomName);
+      } else if (roomName.length <= 32) {
+        id = env.rooms.idFromName(roomName);
+      } else {
+        return new Response("Name too long", { status: 400 });
+      }
 
-//route to send message
-// app.post('/api/send-message', async (c) => {
-//   const body = await c.req.json();
+      const roomObject = env.rooms.get(id);
 
+      const newUrl = new URL(request.url);
+      newUrl.pathname = "/websocket" + path.slice(2).join("/");
 
-//   // Interact with your Durable Object
-//   const response = await fetch(`${DURABLE_OBJECT_NAMESPACE}/websocket`, {
-//     method: 'POST',
-//     headers: {
-//       'Content-Type': 'application/json',
-//     },
-//     body: JSON.stringify({ type,data }),  //get the type from the zod schema (baad me dekhenge) -> z,object before async (c)
-//   });
+      return roomObject.fetch(newUrl, request);
+    }
+    default:
+      return new Response("Not found", { status: 404 });
+  }
+}
 
-//   if (response.ok) {
-//     return c.json({ success: true });
-//   } else {
-//     return c.json({ error: "Failed to send message" }, 500);
-//   }
-// });
+/**
+ * @class durableSocketServer
+ * @description Durable Object class for managing WebSocket connections
+ */
+export class durableSocketServer extends DurableObject {
+  clients: Map<string, WebSocket>;
+  state: DurableObjectState;
+  env: Env;
 
-
-//route to fetch the active users
-app.get("/api/active-users", async (c)=>{
-  const response = await axios.get(`${durableSocketServer}/getActiveUsersCount`);
-
-  if(response.status ===200){
-    const data = await response.data;
-    return c.json({activeUser : data})
+  constructor(state: DurableObjectState, env: Env) {
+    super(state, env);
+    this.state = state;
+    this.env = env;
+    this.clients = new Map();
   }
 
-})
+  /**
+   * @description Handles incoming requests to the Durable Object
+   * @param request The incoming request
+   * @returns Response or WebSocket connection
+   */
+  async fetch(request: Request) {
+    const url = new URL(request.url);
+    if (url.pathname === "/websocket") {
+      const clientId = generateClientId();
+      if (!clientId) {
+        return new Response("Expected clientId", { status: 400 });
+      }
+      return this.handleWebSocket(request, clientId);
+    }
+    return new Response("Not Found", { status: 404 });
+  }
 
-export default app;
-export type App = typeof app;
+  /**
+   * @description Handles WebSocket connection setup
+   * @param request The incoming WebSocket request
+   * @param clientId Unique identifier for the client
+   * @returns WebSocket connection response
+   */
+  async handleWebSocket(request: Request, clientId: string) {
+    if (request.headers.get("Upgrade") !== "websocket") {
+      return new Response("Expected WebSocket", { status: 426 });
+    }
+
+    const pair = new WebSocketPair();
+    const [client, server] = Object.values(pair);
+
+    server.accept();
+    this.clients.set(clientId, server);
+
+    console.log(`${clientId} joined the chat`);
+
+    server.addEventListener("message", async (event) => {
+      try {
+        const message = JSON.parse(event.data as string);
+        console.log(`Received message from client ${clientId}:`, message);
+        this.broadcast({ type: "message", data: message.data });
+      } catch (error) {
+        console.error("Error processing message:", error);
+        server.send(JSON.stringify({ type: "error", message: "Error processing your message" }));
+      }
+    });
+
+    server.addEventListener('close', () => {
+      this.clients.delete(clientId);
+      server.close();
+    });
+
+    heartBeat(server, clientId, this.clients);
+
+    return new Response(null, {
+      status: 101,
+      webSocket: client,
+    });
+  }
+
+  /**
+   * @description Broadcasts a message to all connected clients
+   * @param message The message to broadcast
+   */
+  broadcast(message: string | object) {
+    const messageString = typeof message === 'string' ? message : JSON.stringify(message);
+    this.clients.forEach((client, clientId) => {
+      try {
+        client.send(messageString);
+      } catch (error) {
+        console.error(`Failed to send message to client ${clientId}:`, error);
+        this.clients.delete(clientId);
+      }
+    });
+  }
+}
+
+/**
+ * @description Upgrades a connection to a WebSocket
+ * @param req The incoming request
+ * @param env Environment variables
+ * @param roomName The name of the room to connect to
+ * @returns Response from the Durable Object
+ */
+export async function upgradeConnection(
+  req: Request, 
+  env: Env,
+  roomName: string
+): Promise<Response> {
+  try {
+    const header = req.headers.get("Upgrade");
+    if (header !== "websocket") {
+      return new Response("Expected WebSocket", { status: 426 });
+    }
+
+    let id: DurableObjectId = env.rooms.idFromName(roomName);
+    let stub: DurableObjectStub = env.rooms.get(id);
+
+    return await stub.fetch(req);
+  } catch (error) {
+    console.error("Error handling WebSocket upgrade:", error);
+    return new Response("Internal Server Error", { status: 500 });
+  }
+}
