@@ -49,9 +49,6 @@ Cheddar is our groundbreaking global chat platform that enables users to purchas
 - Commit messages should follow our standardized format
 - All features must be thoroughly tested before submitting for review
 
-## Deployment Process
-TBA
-
 ## Developer contact Information
 - Armaan Verma [Github](https://github.com/Ormon-huehuehue) [Email](armnvrma10@gmail.com)
 - Shauray Dhingra [Github](https://github.com/Shauray018) [Email](shauraydhingra03@gmail.com)
