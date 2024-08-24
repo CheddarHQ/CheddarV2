@@ -63,7 +63,7 @@ compatibility_date = "2024-08-06"
 
 [durable_objects]
 bindings = [
-  { name = "rooms", class_name = "baklavaChat" },
+  { name = "rooms", class_name = "durableSocketServer" },
 ]
  
 # { name = "limiters", class_name = "RateLimiter" } -> add this below name in DO bindings
