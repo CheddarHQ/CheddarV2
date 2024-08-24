@@ -56,8 +56,16 @@ export default function chatroom() {
             <MaterialIcons name="query-stats" size={24} color="white" padding={5} />
           </Link>
           {/* @ts-ignore */}
-          <Text color="yellow" fontSize="$10" fontWeight="bold" fontFamily="Jersey10">
-            Cheddar
+          <Text
+            color="yellow"
+            fontSize="$8"
+            fontWeight="bold"
+            //@ts-ignore
+            fontFamily={'Press2P'}
+            paddingTop={'$2'}
+            paddingLeft={'$3'}
+            alignSelf="center">
+            CHEDDAR
           </Text>
           <Link href={'/modal'} asChild>
             <AntDesign name="pluscircle" size={24} color="white" />
