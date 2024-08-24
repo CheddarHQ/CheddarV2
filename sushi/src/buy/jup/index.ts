@@ -10,8 +10,21 @@ import { quoteBody, swapBody } from "./interfaces";
 import z from 'zod';
 import { quoteSchema } from './schemas';
 
-// TODO TEST AND FIX SWAP
-const connection = new Connection('https://api.mainnet-beta.solana.com');
+const connection = new Connection('https://api.devnet.solana.com');
+
+async function getInternalQuote(inputMint: string, outputMint: string, amount: number, slippage?: number, platformFees: number = 0) {
+    const params = {
+        inputMint,
+        outputMint,
+        amount,
+        slippageBps: slippage || 50,
+        platformFeeBps: platformFees,
+        swapMode: 'ExactOut'
+    };
+
+    const response = await axios.get('https://quote-api.jup.ag/v6/quote', { params });
+    return response.data;
+}
 
 export const buyRouter = new Hono()
 
@@ -110,7 +123,7 @@ export const buyRouter = new Hono()
     })
 
 /**
- * @description Swaps the tokens
+ * @description Serialize the swap transaction
  * @input object containing:
  *        quoteResponse: the quote response
  *        userPubkey: the public key of the user
@@ -119,8 +132,7 @@ export const buyRouter = new Hono()
  * @returns the serialized transaction
  * @example http://<worker>/api/buy/swap
  */
-// TODO: testing on devnet
-    .post("/swap", zValidator("json", z.object({
+    .post("/swap", zValidator("json", z.object({        
         quoteResponse: z.object({
             inputMint: z.string(),
             outputMint: z.string(),
@@ -131,50 +143,64 @@ export const buyRouter = new Hono()
         userPubkey: z.string(),
         wrapAndUnwrapSol: z.boolean().optional(),
         feeAccount: z.string(),
-        wallet: z.object({
-            payer: z.object({
-                publicKey: z.string(),
-                secretKey: z.array(z.number()), // Array of numbers
-            }),
-        }),
     })), async (c) => {
-        const { quoteResponse, userPubkey, feeAccount, wallet } = c.req.json() as unknown as swapBody;
+        const { quoteResponse, userPubkey, feeAccount } = c.req.json() as unknown as swapBody;
         try {
+            const body = await c.req.json();
+            if (!body || typeof body !== 'object') {
+                throw new Error('Invalid request body');
+            }
+            const { quoteResponse, userPubkey, feeAccount } = body as swapBody;
+            if (!quoteResponse || typeof quoteResponse !== 'object') {
+                throw new Error('Invalid quoteResponse in request body');
+            }
+
+            const quoteUrl = new URL(c.req.url);
+            quoteUrl.pathname = '/api/buy/quote';
+            quoteUrl.search = new URLSearchParams({
+                inputMint: quoteResponse.inputMint,
+                outputMint: quoteResponse.outputMint,
+                amount: quoteResponse.amount.toString(),
+                slippage: quoteResponse.slippage?.toString() || '50',
+                platformFees: quoteResponse.platformFees.toString()
+            }).toString();
+            console.log('Fetching quote from:', quoteUrl.toString());
+    
+            const quoteRes = await fetch(quoteUrl.toString());
+            if (!quoteRes.ok) {
+                console.log(`Internal quote request failed: ${quoteRes.statusText}`);
+            }
+            const internalQuote = await quoteRes.json();
+            console.log('Internal quote:', internalQuote);
+
             const swapRequestBody = {
-                quoteResponse,
+                quoteResponse: internalQuote,
                 userPublicKey: userPubkey,
                 wrapUnwrapSOL: true,
                 feeAccount: feeAccount,
             };
-            const swapResponse = await axios.post('https://swap-api.jup.ag/v6/swap', swapRequestBody);
-            const { swapTransaction } = swapResponse.data;
+            console.log('Swap request body:', swapRequestBody);
 
-            const swapTransactionBuf = Buffer.from(swapTransaction, 'base64');
-            var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-
-            const keypair = Keypair.fromSecretKey(Uint8Array.from(wallet.payer.secretKey));
-            transaction.sign([keypair]);
-
-            const rawTransaction = transaction.serialize();
-            const txId = await connection.sendRawTransaction(rawTransaction, {
-                skipPreflight: true,
-                maxRetries: 2,
-            });
-
-            const confirmation = await connection.confirmTransaction(txId);
-            if (confirmation.value.err) {
-                throw new Error(`Transaction failed: ${confirmation.value.err}`);
+            const swapResponse = await axios.post('https://quote-api.jup.ag/v6/swap', swapRequestBody);\
+            if (!swapResponse.data || typeof swapResponse.data !== 'object') {
+               console.log('Unexpected swap response', swapResponse.data);
             }
 
-            return c.json({ success: true, txId, explorerUrl: `https://solscan.io/tx/${txId}` });
+            const { swapTransaction } = swapResponse.data;
+            console.log('Swap transaction:', swapTransaction);
+
+         // Return the unsigned transaction to the client
+            return c.json({ 
+                success: true, 
+                unsignedTransaction: swapTransaction 
+            });
         } catch (error) {
             console.error('Swap error:', error);
             if (axios.isAxiosError(error)) {
                 console.error('Axios error details:', error.response?.data);
             }
-            return c.json({ success: false, error: 'Failed to perform swap' }, 500);
+            return c.json('Failed to create swap transaction', 500);
         }
-    });
-
+});
 
 export type BuyRouter = typeof buyRouter;
