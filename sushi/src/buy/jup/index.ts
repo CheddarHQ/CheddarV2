@@ -181,7 +181,7 @@ export const buyRouter = new Hono()
             };
             console.log('Swap request body:', swapRequestBody);
 
-            const swapResponse = await axios.post('https://quote-api.jup.ag/v6/swap', swapRequestBody);\
+            const swapResponse = await axios.post('https://quote-api.jup.ag/v6/swap', swapRequestBody);
             if (!swapResponse.data || typeof swapResponse.data !== 'object') {
                console.log('Unexpected swap response', swapResponse.data);
             }
