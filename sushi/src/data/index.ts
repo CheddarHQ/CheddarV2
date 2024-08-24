@@ -62,7 +62,6 @@ export const dataRouter = new Hono()
         }
     })
 
-
     /**
      * @description Fetches the query data for the specified query
      * @input query: the query to fetch the data for (can be a token name, symbol, or address)
