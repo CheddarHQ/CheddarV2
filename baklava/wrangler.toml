@@ -1,6 +1,6 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "baklava"
-main = "src/index.ts"
+main = "src//room/index.ts"
 compatibility_date = "2024-08-15"
 
 # Automatically place your workloads in an optimal location to minimize latency.
@@ -53,11 +53,15 @@ compatibility_date = "2024-08-15"
 # name = "MY_DURABLE_OBJECT"
 # class_name = "MyDurableObject"
 
+
 # Durable Object migrations.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#migrations
 # [[migrations]]
 # tag = "v1"
 # new_classes = ["MyDurableObject"]
+
+
+
 
 # Bind a Hyperdrive configuration. Use to accelerate access to your existing databases from Cloudflare Workers.
 # Docs: https://developers.cloudflare.com/workers/wrangler/configuration/#hyperdrive
@@ -105,3 +109,6 @@ compatibility_date = "2024-08-15"
 # [[vectorize]]
 # binding = "MY_INDEX"
 # index_name = "my-index"
+
+
+

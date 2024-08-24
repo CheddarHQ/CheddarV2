@@ -1,6 +1,6 @@
 /**
  * @file room/upgrade.ts
- * @description This file is responsible for upgrading the room to a websocket connections and all the edge cases 
+ * @de  scription This file is responsible for upgrading the room to a websocket connections and all the edge cases 
  */
 import { Env } from "./interfaces";
 /**
@@ -10,7 +10,7 @@ import { Env } from "./interfaces";
  */
 export async function upgradeConnection(
     req: Request, 
-    env: Env,
+    env : Env,
     roomName: string
     ): Promise<any> {
     try {
@@ -21,8 +21,10 @@ export async function upgradeConnection(
         }
         // extract ID of the durable object from the name 
         // let id = OBJECT_NAMESPACE.idFromString(hexId); id -> string
-        let id = env.WEBSOCKET_SERVER.idFromName(roomName);
-        let stub = env.WEBSOCKET_SERVER.get(id); // Client of the durable used to send messages
+        let id: DurableObjectId = env.rooms.idFromName(roomName);
+
+        //The get method is used to retrieve a DurableObjectStub that acts as a client to the specific instance of the Durable Object identified by id.
+        let stub : DurableObjectStub = env.rooms.get(id); // Client of the durable used to send messages
 
         return await stub.fetch(req);
         }

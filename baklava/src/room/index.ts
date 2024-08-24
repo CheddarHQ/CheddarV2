@@ -36,10 +36,11 @@ export class durableSocketServer extends DurableObject {
 
   async handleWebSocket(request: Request, clientId: string) {
     upgradeConnection(request, this.env, roomName); 
+    
     const [client, server] = Object.values(new WebSocketPair());
     this.clients.set(clientId, server);
 
-    server.accept();
+    server.accept();  //establish websocket connection
     console.log(`${clientId} joined the chat`);
 
     server.addEventListener("message", async (event) => {
