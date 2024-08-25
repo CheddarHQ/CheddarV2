@@ -85,7 +85,7 @@ export default function Modal() {
                   </Avatar>
                   <YStack space={8} flex={1}>
                     <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFFFFF' }}>
-                      {item.baseAddress.slice(0, 8)}...
+                      {item.name}
                     </Text>
                     <Text style={{ fontSize: 14, color: '#888888' }}>${item.priceUsd}</Text>
                   </YStack>
