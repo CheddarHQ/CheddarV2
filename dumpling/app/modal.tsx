@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
-//@ts-ignore
 import { StatusBar } from 'expo-status-bar';
-//@ts-ignore
 import { Platform, ScrollView, Text, Pressable } from 'react-native';
-//@ts-ignore
 import { useRouter } from 'expo-router';
-//@ts-ignore
 import { Input, Card, Avatar, YStack, XStack } from 'tamagui';
 
 interface TokenBasicInfo {
@@ -28,8 +24,7 @@ export default function Modal() {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState<string>(''); // State for search query
 
-  const initialIds =
-    'GGXDG9XzfazWZGyV6CPKHQyB1V6qDzXGYb5RyufqfTVN,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,34Vzjmat2bRAY3mTxXaCemnT1ca51Tj7xL3J9T1cHhiT,3a7fVXt9vpQbxytdDkqep2n5hqw8iyCdXuN3N4i6Ki3r';
+  const initialIds = 'GGXDG9XzfazWZGyV6CPKHQyB1V6qDzXGYb5RyufqfTVN,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,34Vzjmat2bRAY3mTxXaCemnT1ca51Tj7xL3J9T1cHhiT,3a7fVXt9vpQbxytdDkqep2n5hqw8iyCdXuN3N4i6Ki3r';
   const router = useRouter();
 
   useEffect(() => {
