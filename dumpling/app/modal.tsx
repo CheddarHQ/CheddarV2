@@ -19,7 +19,7 @@ interface TokenBasicInfo {
 
 interface TokenData {
   basicInfo: TokenBasicInfo[];
-  detailedInfo: any[]; // You can define a more specific type for detailedInfo if needed
+  detailedInfo: Record<string, any>; // You can define a more specific type for detailedInfo if needed
 }
 
 export default function Modal() {
@@ -76,7 +76,11 @@ export default function Modal() {
             <Pressable
               key={index}
               onPress={() => {
-                router.push(`/crypto/${item.baseAddress}`);
+                const detailedInfoString = JSON.stringify(tokenData.detailedInfo);
+                router.push({
+                  pathname: `/crypto/${item.baseAddress}`,
+                  params: { detailedInfo: detailedInfoString },
+                });
               }}>
               <Card elevate paddingVertical={20} borderRadius={0} backgroundColor="#000000">
                 <XStack alignItems="center" space>
