@@ -29,6 +29,7 @@ dataRouter.get("/fetchmetadata", zValidator("query", metaSchema), async (c) => {
         const result = {
                     // @ts-ignore
             basicInfo: data.pairs.map(pair => ({
+                name: pair.baseToken.name,
                 baseAddress: pair.baseToken.address,
                 priceUsd: pair.priceUsd,
                 priceNative: pair.priceNative,
@@ -37,6 +38,7 @@ dataRouter.get("/fetchmetadata", zValidator("query", metaSchema), async (c) => {
             })),
         // @ts-ignore
             detailedInfo: data.pairs.map(pair => ({
+                name: pair.baseToken.name,
                 baseAddress: pair.baseToken.address,
                 priceUsd: pair.priceUsd,
                 priceNative: pair.priceNative,
