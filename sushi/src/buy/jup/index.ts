@@ -203,7 +203,8 @@ export const buyRouter = new Hono()
         };
         console.log('Swap request body:', swapRequestBody);
 
-        const swapResponse = await fetch('https://quote-api.jup.ag/v6/swap', {
+        // Send the request to the proxy server
+        const swapResponse = await fetch('http://localhost:3000/proxy/swap', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(swapRequestBody)
@@ -236,3 +237,4 @@ export const buyRouter = new Hono()
 });
 
 export type BuyRouter = typeof buyRouter;
+
