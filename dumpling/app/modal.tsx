@@ -9,6 +9,7 @@ import { useRouter } from 'expo-router';
 import { Input, Card, Avatar, YStack, XStack } from 'tamagui';
 
 interface TokenBasicInfo {
+  name: string;
   baseAddress: string;
   priceUsd: string;
   priceNative: string;
