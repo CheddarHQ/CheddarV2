@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+//@ts-ignore
 import { Dimensions, Pressable } from 'react-native';
+//@ts-ignore
 import type { TabsContentProps } from 'tamagui';
 import Feather from '@expo/vector-icons/Feather';
 import {
@@ -12,9 +14,12 @@ import {
   Card,
   CardHeader,
   Avatar,
+  //@ts-ignore
 } from 'tamagui';
+//@ts-ignore
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { Link, useLocalSearchParams } from 'expo-router';
+//@ts-ignore
+import { Link, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
 
 interface TokenBasicInfo {
   name: string;
@@ -33,7 +38,13 @@ interface TokenData {
 const { width } = Dimensions.get('window');
 
 const HorizontalTabs = () => {
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
+
+  const parsedDetailedInfo = JSON.parse(detailedInfo || '[]');
+  //@ts-ignore
+  const tokenInfo = parsedDetailedInfo.find((token) => token.baseAddress === id);
+
   const [buyInput, setBuyInput] = useState('');
   const [sellInput, setSellInput] = useState('');
   const [activeTab, setActiveTab] = useState('tab1');
@@ -41,31 +52,6 @@ const HorizontalTabs = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const ids =
-    'GGXDG9XzfazWZGyV6CPKHQyB1V6qDzXGYb5RyufqfTVN,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,34Vzjmat2bRAY3mTxXaCemnT1ca51Tj7xL3J9T1cHhiT,3a7fVXt9vpQbxytdDkqep2n5hqw8iyCdXuN3N4i6Ki3r';
-
-  useEffect(() => {
-    async function fetchMetadata(ids: string) {
-      try {
-        setLoading(true);
-        console.log('Fetching data...');
-        const response = await fetch(
-          `https://sushi.cheddar-io.workers.dev/api/data/fetchmetadata?ids=${ids}`
-        );
-        const data: TokenData = await response.json();
-        console.log('Fetched data:', data);
-        setTokenData(data);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setError(error instanceof Error ? error.message : String(error));
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchMetadata(ids);
-  }, []);
-
-  // Shared values for each input
   const buyInputLength = useSharedValue(buyInput.length);
   const sellInputLength = useSharedValue(sellInput.length);
 
@@ -116,9 +102,10 @@ const HorizontalTabs = () => {
   interface CryptoCardProps {
     item: TokenBasicInfo;
     onPress: () => void;
+    input: string;
   }
 
-  const CryptoCard = ({ item, onPress }: CryptoCardProps) => (
+  const CryptoCard = ({ item, onPress, input }: CryptoCardProps) => (
     <Pressable onPress={onPress}>
       <XStack
         alignSelf="center"
@@ -137,14 +124,15 @@ const HorizontalTabs = () => {
                 <Text color={'white'} alignSelf="center" fontSize={18} fontWeight="bold">
                   {item.name}
                 </Text>
-                <Text style={{ fontSize: 14, color: '#888888' }}>${item.priceUsd}</Text>
+                <Text style={{ fontSize: 14, color: '#fff' }}>${item.priceNative}</Text>
               </YStack>
               <Text
                 style={{
-                  fontSize: 14,
-                  color: item.priceChange >= 0 ? '#00FF00' : '#FF0000',
+                  fontSize: 20,
+                  color: item.priceChange >= 0 ? '#fff' : '#fff',
                 }}>
-                {item.priceChange.toFixed(2)}%
+                {/* @ts-ignore */}
+                {(1 / item.priceNative) * input}
               </Text>
             </XStack>
           </CardHeader>
@@ -194,7 +182,7 @@ const HorizontalTabs = () => {
       defaultValue="tab1"
       orientation="horizontal"
       flexDirection="column"
-      width={360}
+      width={400}
       height={700}
       borderRadius="$4"
       overflow="hidden">
@@ -216,11 +204,12 @@ const HorizontalTabs = () => {
             paddingBottom={'$7'}>
             <Animated.Text style={animatedStyle(buyInputLength)}>+{buyInput || '0'}</Animated.Text>
           </XStack>
-          {tokenData && tokenData.basicInfo[0] && (
+          {tokenInfo && (
             <CryptoCard
-              item={tokenData.basicInfo[0]}
+              item={tokenInfo}
+              input={buyInput}
               onPress={() => {
-                console.log(`Clicked on ${tokenData.basicInfo[0].name}`);
+                console.log(`Clicked on ${tokenInfo.name}`);
               }}
             />
           )}
@@ -240,11 +229,12 @@ const HorizontalTabs = () => {
               -{sellInput || '0'}
             </Animated.Text>
           </XStack>
-          {tokenData && tokenData.basicInfo[1] && (
+          {tokenInfo && (
             <CryptoCard
-              item={tokenData.basicInfo[1]}
+              item={tokenInfo}
+              input={sellInput}
               onPress={() => {
-                console.log(`Clicked on ${tokenData.basicInfo[1].name}`);
+                console.log(`Clicked on ${tokenInfo.name}`);
               }}
             />
           )}
@@ -255,4 +245,18 @@ const HorizontalTabs = () => {
   );
 };
 
-export default HorizontalTabs;
+const MoneyEx = () => (
+  <YStack flex={1} backgroundColor="#000000" paddingHorizontal={20} paddingVertical={20}>
+    <XStack width="100%" justifyContent="flex-start" marginBottom={20}>
+      <Link href="/settings" asChild>
+        <Button
+          icon={<Feather name="settings" size={24} color="white" />}
+          backgroundColor="transparent"
+        />
+      </Link>
+    </XStack>
+    <HorizontalTabs />
+  </YStack>
+);
+
+export default MoneyEx;
