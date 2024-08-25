@@ -27,7 +27,7 @@ dataRouter.get("/fetchmetadata", zValidator("query", metaSchema), async (c) => {
         
         const data = await response.json();
         const result = {
-                    // @ts-ignore
+        // @ts-ignore
             basicInfo: data.pairs.map(pair => ({
                 name: pair.baseToken.name,
                 baseAddress: pair.baseToken.address,
@@ -74,7 +74,7 @@ dataRouter.get("/fetchmetadata", zValidator("query", metaSchema), async (c) => {
  * @returns an object containing basic and detailed info for the specified query
  * @example http://<worker>/api/data/fetchMetadata?query=solana
  */
-dataRouter.get("/fetchQuery", zValidator("query", querySchema), async (c) => {
+dataRouter.get("/fetchquery", zValidator("query", querySchema), async (c) => {
     const { query } = c.req.query();
     try {
         const response = await fetch(`https://api.dexscreener.io/latest/dex/search?q=${query}`);
