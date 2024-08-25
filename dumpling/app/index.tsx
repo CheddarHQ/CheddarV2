@@ -8,24 +8,18 @@ import { ScreenContent } from '~/components/ScreenContent';
 export default function Home() {
   return (
     <YStack f={1} jc="center" ai="center" backgroundColor="#000000" padding="$4">
-      <AnimatedBackground />
       <Link href={'/thing'} asChild>
-        <Image
-          source={require('../assets/cheese-svgrepo-com.png')}
-          width={300}
-          height={300}
-          resizeMode="contain"
-        />
+        <Image source={require('../assets/cheese-svgrepo-com.gif')} width={280} height={300} />
       </Link>
       <Link href={'/thing'} asChild>
         <Text
-          fontSize="$10"
+          fontSize="$9"
           fontWeight="bold"
           textDecorationColor={'#ffffff'}
           color={'#ffffff'}
           //@ts-ignore
-          fontFamily="Jersey10">
-          Cheddar
+          fontFamily="Press2P">
+          CHEDDAR
         </Text>
       </Link>
     </YStack>
