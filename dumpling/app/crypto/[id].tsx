@@ -111,6 +111,7 @@ const HorizontalTabs = () => {
         alignSelf="center"
         justifyContent="center"
         width="100%"
+        maxHeight={100}
         maxWidth={360}
         paddingBottom={'$5'}>
         <Card borderRadius={'$12'} scale={0.8} alignSelf="center">
@@ -182,7 +183,7 @@ const HorizontalTabs = () => {
       defaultValue="tab1"
       orientation="horizontal"
       flexDirection="column"
-      width={400}
+      width={350}
       height={700}
       borderRadius="$4"
       overflow="hidden">
