@@ -1,3 +1,4 @@
+//@ts-ignore
 import { Link, Stack } from 'expo-router';
 //@ts-ignore
 import { TamaguiProvider, Text, YStack, XStack, Button, Image } from 'tamagui';
