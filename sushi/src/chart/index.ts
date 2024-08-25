@@ -19,53 +19,49 @@ import { querySchema } from "./schemas";
  */ 
 
 export const chartRouter = new Hono()
-    .get("/fetchchart", zValidator("query", querySchema), async (c) => { const { ticker } = c.req.query();
-            if (!ticker) {
-                return c.json({
-                    success: false,
-                    error: {
-                        issues: [
-                            {
-                                code: "invalid_type",
-                                expected: "string",
-                                received: "undefined",
-                                path: ["ticker"],
-                                message: "Ticker is required"
-                            }
-                        ]
-                    }
-                }, 400);
-            }
-            try {
-                const url = `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${ticker}&tsym=SOL&limit=1440`;
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`API responded with status ${response.status}`);
+    .get("/fetchchart", zValidator("query", querySchema), async (c) => {
+        const { ticker } = c.req.query();
+        if (!ticker) {
+            return c.json({
+                success: false,
+                error: {
+                    issues: [
+                        {
+                            code: "invalid_type",
+                            expected: "string",
+                            received: "undefined",
+                            path: ["ticker"],
+                            message: "Ticker is required"
+                        }
+                    ]
                 }
-                // @ts-ignore
-                const data = response.data;
-                if (!data || !data.Data || !data.Data.Data) {
-                    throw new Error('Unexpected response format');
-                }
-
-                const chartData = data.Data.Data.map((point: any) => ({
-                    time: new Date(point.time * 1000),  // converted to ms
-                    open: point.open,
-                    close: point.close,
-                    high: point.high,
-                    low: point.low,
-                }));
-
-                return c.json(chartData);
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    console.error('Axios error:', error.response?.data);
-                    return c.json({ error: 'Failed to fetch data' }, 500);
-                }
-                console.error('General error:', error);
-                return c.json({ error: 'Internal server error' }, 500);
-            }
+            }, 400);
         }
-    );
+        try {
+            const url = `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${ticker}&tsym=SOL&limit=1440`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`API responded with status ${response.status}`);
+            }
+            const data = await response.json();
+
+            if (!data.Data || !data.Data.Data) {
+                throw new Error('Unexpected API response structure');
+            }
+
+            const chartData = data.Data.Data.map((point: any) => ({
+                time: new Date(point.time * 1000).toISOString(),
+                open: point.open,
+                close: point.close,
+                high: point.high,
+                low: point.low,
+            }));
+
+            return c.json(chartData);
+        } catch (error) {
+            console.error('Error:', error);
+            return c.json({ error: 'Failed to fetch data' }, 500);
+        }
+    });
 
 export type ChartRouter = typeof chartRouter;
