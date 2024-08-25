@@ -30,7 +30,7 @@ export default function Modal() {
       try {
         setLoading(true);
         console.log("Fetching data...");
-        const response = await fetch(`http://localhost:3000/api/data/fetchMetadata?ids=${ids}`);
+        const response = await fetch(`https://sushi.cheddar-io.workers.dev/api/data/fetchMetadata?ids=${ids}`);
         const data: TokenData = await response.json();
         console.log("Fetched data:", data);
         setTokenData(data);
