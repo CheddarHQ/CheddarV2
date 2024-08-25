@@ -140,6 +140,21 @@ export const buyRouter = new Hono()
  * @returns the serialized transaction
  * @example http://<worker>/api/buy/swap
  */
+
+/*
+{
+  "quoteResponse": {
+    "inputMint": "So11111111111111111111111111111111111111112",
+    "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "amount": 1000000,
+    "slippage": 50,
+    "platformFees": 10
+  },
+  "userPubkey": "7DyWpi9NwKsF84ERrSJNd7JBwDjbrGRB8xvisr112ZLc",
+  "wrapAndUnwrapSol": true,
+  "feeAccount": "44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2"
+}
+*/
 .post("/swap", zValidator("json", z.object({        
     quoteResponse: z.object({
         inputMint: z.string(),
