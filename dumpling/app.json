@@ -7,7 +7,7 @@
     "web": {
       "bundler": "metro",
       "output": "static",
-      "favicon": "./assets/cheese-svgrepo-com.png"
+      "favicon": "./assets/thing.png"
     },
     "plugins": ["expo-router", "expo-font"],
     "experiments": {
@@ -15,10 +15,10 @@
       "tsconfigPaths": true
     },
     "orientation": "portrait",
-    "icon": "./assets/cheese-svgrepo-com.png",
+    "icon": "./assets/thing.png",
     "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/cheese-svgrepo-com.png",
+      "image": "./assets/thing.png",
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
@@ -28,7 +28,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/cheese-svgrepo-com.png",
+        "foregroundImage": "./assets/thing.png",
         "backgroundColor": "#000000"
       }
     }
