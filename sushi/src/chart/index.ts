@@ -19,7 +19,7 @@ import { querySchema } from "./schemas";
  */ 
 
 export const chartRouter = new Hono()
-    .get("/fetchChart", zValidator("query", querySchema), async (c) => { const { ticker } = c.req.query();
+chartRouter.get("/fetchchart", zValidator("query", querySchema), async (c) => { const { ticker } = c.req.query();
             if (!ticker) {
                 return c.json({
                     success: false,
@@ -37,9 +37,12 @@ export const chartRouter = new Hono()
                 }, 400);
             }
             try {
-                const response = await axios.get(
-                    `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${ticker}&tsym=SOL&limit=1440`
-                );
+                const url = `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${ticker}&tsym=SOL&limit=1440`;
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`API responded with status ${response.status}`);
+                }
+                // @ts-ignore
                 const data = response.data;
                 if (!data || !data.Data || !data.Data.Data) {
                     throw new Error('Unexpected response format');

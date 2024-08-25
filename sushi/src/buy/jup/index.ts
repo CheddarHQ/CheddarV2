@@ -4,7 +4,6 @@
  */
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import axios from 'axios';
 import { Transaction, Connection, VersionedTransaction } from '@solana/web3.js';
 import { quoteBody, swapBody } from "./interfaces";
 import z from 'zod';
@@ -13,17 +12,20 @@ import { quoteSchema } from './schemas';
 const connection = new Connection('https://api.devnet.solana.com');
 
 async function getInternalQuote(inputMint: string, outputMint: string, amount: number, slippage?: number, platformFees: number = 0) {
-    const params = {
+    const params = new URLSearchParams({
         inputMint,
         outputMint,
-        amount,
-        slippageBps: slippage || 50,
-        platformFeeBps: platformFees,
+        amount: amount.toString(),
+        slippageBps: slippage?.toString() || '50',
+        platformFeeBps: platformFees.toString(),
         swapMode: 'ExactOut'
-    };
+    });
 
-    const response = await axios.get('https://quote-api.jup.ag/v6/quote', { params });
-    return response.data;
+    const response = await fetch(`https://quote-api.jup.ag/v6/quote?${params.toString()}`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch internal quote: ${response.statusText}`);
+    }
+    return response.json();
 }
 
 export const buyRouter = new Hono()
@@ -35,14 +37,18 @@ export const buyRouter = new Hono()
  */
 .get("/autofee", async (c) => {
     try {
-        const response = await axios.get('https://api-v3.raydium.io/main/auto-fee');
-        console.log(JSON.stringify(response.data, null, 2));
-
-        if (!response.data || typeof response.data !== 'object' || !response.data.data || !response.data.data.default) {
+        const response = await fetch('https://api-v3.raydium.io/main/auto-fee');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch autofee: ${response.statusText}`);
+        }
+        const data = await response.json();
+        console.log(JSON.stringify(data, null, 2));
+// @ts-ignore
+        if (!data || typeof data !== 'object' || !data.data || !data.data.default) {
             throw new Error('Unexpected response structure');
         }
-
-        const { default: defaultFees } = response.data.data;
+// @ts-ignore
+        const { default: defaultFees } = data.data;
 
         const autofeeRes = {
             veryHighP: defaultFees.vh,
@@ -56,36 +62,35 @@ export const buyRouter = new Hono()
         return c.json(autofeeRes);
     } catch (error) {
         console.error('Full error:', error);
-        if (axios.isAxiosError(error)) {
-            console.error(`Axios Error: ${error.message}`);
-            console.error(`Response data:`, error.response?.data);
-            console.error(`Response status:`, error.response?.status);
+        if (error instanceof Error) {
+            console.error(`Error details: ${error.message}`);
         }
-        throw new Error(`Failed to fetch autofee: ${(error as Error).message}`);
+        return c.json({ error: 'Failed to fetch autofee' }, 500);
     }
 })
 
 /**
  * @description Fetches the current Raydium RPCs
- * @returns array of objects contining RPCs urls, ws, weight, and name 
+ * @returns array of objects containing RPCs urls, ws, weight, and name 
  * @example http://<worker>/api/buy/rpcs
  */
-    .get("/rpcs", async (c) => {
-        try {
-            const response = await axios.get('https://api-v3.raydium.io/main/rpcs');
-            console.log(response.data.data.rpcs);
-
-            return c.json(response.data.data.rpcs);
-        } catch (error) {
-            console.error('Full error:', error);
-            if (axios.isAxiosError(error)) {
-                console.error(`Axios Error: ${error.message}`);
-                console.error(`Response data:`, error.response?.data);
-                console.error(`Response status:`, error.response?.status);
-            }
-            return c.json({ error: 'Failed to fetch RPCs' }, 500);
+.get("/rpcs", async (c) => {
+    try {
+        const response = await fetch('https://api-v3.raydium.io/main/rpcs');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch RPCs: ${response.statusText}`);
         }
-    })
+        const data = await response.json();
+// @ts-ignore
+        return c.json(data.data.rpcs);
+    } catch (error) {
+        console.error('Full error:', error);
+        if (error instanceof Error) {
+            console.error(`Error details: ${error.message}`);
+        }
+        return c.json({ error: 'Failed to fetch RPCs' }, 500);
+    }
+})
 
 /**
  * @description Fetches the quote for the specified input and output mints
@@ -97,30 +102,33 @@ export const buyRouter = new Hono()
  * @returns the quote response
  * @example http://<worker>/api/buy/quote?inputMint=EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v&outputMint=So11111111111111111111111111111111111111112&amount=1000000&slippage=50&platformFees=0
  */
-    .get("/quote", zValidator("query", quoteSchema), async (c) => {
-        const { inputMint, outputMint, amount, slippage, platformFees } = c.req.query();
-        try {
-            const response = await axios.get('https://quote-api.jup.ag/v6/quote', {
-                params: {
-                    // handle the query params according to schema defined in schemas.ts
-                    inputMint,
-                    outputMint,
-                    amount: parseInt(amount),
-                    slippageBps: slippage ? parseInt(slippage) : 50,
-                    platformFeeBps: parseInt(platformFees),
-                    swapMode: 'ExactOut'
-                }
-            });
-            return c.json(response.data);
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                console.error(`Axios Error: ${error.message}`);
-                console.error(`Response data:`, error.response?.data);
-                console.error(`Response status:`, error.response?.status);
-            }
-            return c.json({ error: 'Failed to fetch quote' }, 500);
+.get("/quote", zValidator("query", quoteSchema), async (c) => {
+    const { inputMint, outputMint, amount, slippage, platformFees } = c.req.query();
+    try {
+        const params = new URLSearchParams({
+            inputMint,
+            outputMint,
+            amount: parseInt(amount).toString(),
+            slippageBps: slippage ? parseInt(slippage).toString() : '50',
+            platformFeeBps: parseInt(platformFees).toString(),
+            swapMode: 'ExactOut'
+        });
+
+        const response = await fetch(`https://quote-api.jup.ag/v6/quote?${params.toString()}`);
+        if (!response.ok) {
+            throw new Error(`Failed to fetch quote: ${response.statusText}`);
         }
-    })
+        const data = await response.json();
+// @ts-ignore
+        return c.json(data);
+    } catch (error) {
+        console.error('Quote error:', error);
+        if (error instanceof Error) {
+            console.error(`Error details: ${error.message}`);
+        }
+        return c.json({ error: 'Failed to fetch quote' }, 500);
+    }
+})
 
 /**
  * @description Serialize the swap transaction
@@ -132,75 +140,84 @@ export const buyRouter = new Hono()
  * @returns the serialized transaction
  * @example http://<worker>/api/buy/swap
  */
-    .post("/swap", zValidator("json", z.object({        
-        quoteResponse: z.object({
-            inputMint: z.string(),
-            outputMint: z.string(),
-            amount: z.number(),
-            slippage: z.number().optional(),
-            platformFees: z.number(),
-        }),
-        userPubkey: z.string(),
-        wrapAndUnwrapSol: z.boolean().optional(),
-        feeAccount: z.string(),
-    })), async (c) => {
-        const { quoteResponse, userPubkey, feeAccount } = c.req.json() as unknown as swapBody;
-        try {
-            const body = await c.req.json();
-            if (!body || typeof body !== 'object') {
-                throw new Error('Invalid request body');
-            }
-            const { quoteResponse, userPubkey, feeAccount } = body as swapBody;
-            if (!quoteResponse || typeof quoteResponse !== 'object') {
-                throw new Error('Invalid quoteResponse in request body');
-            }
-
-            const quoteUrl = new URL(c.req.url);
-            quoteUrl.pathname = '/api/buy/quote';
-            quoteUrl.search = new URLSearchParams({
-                inputMint: quoteResponse.inputMint,
-                outputMint: quoteResponse.outputMint,
-                amount: quoteResponse.amount.toString(),
-                slippage: quoteResponse.slippage?.toString() || '50',
-                platformFees: quoteResponse.platformFees.toString()
-            }).toString();
-            console.log('Fetching quote from:', quoteUrl.toString());
-    
-            const quoteRes = await fetch(quoteUrl.toString());
-            if (!quoteRes.ok) {
-                console.log(`Internal quote request failed: ${quoteRes.statusText}`);
-            }
-            const internalQuote = await quoteRes.json();
-            console.log('Internal quote:', internalQuote);
-
-            const swapRequestBody = {
-                quoteResponse: internalQuote,
-                userPublicKey: userPubkey,
-                wrapUnwrapSOL: true,
-                feeAccount: feeAccount,
-            };
-            console.log('Swap request body:', swapRequestBody);
-
-            const swapResponse = await axios.post('https://quote-api.jup.ag/v6/swap', swapRequestBody);
-            if (!swapResponse.data || typeof swapResponse.data !== 'object') {
-               console.log('Unexpected swap response', swapResponse.data);
-            }
-
-            const { swapTransaction } = swapResponse.data;
-            console.log('Swap transaction:', swapTransaction);
-
-         // Return the unsigned transaction to the client
-            return c.json({ 
-                success: true, 
-                unsignedTransaction: swapTransaction 
-            });
-        } catch (error) {
-            console.error('Swap error:', error);
-            if (axios.isAxiosError(error)) {
-                console.error('Axios error details:', error.response?.data);
-            }
-            return c.json('Failed to create swap transaction', 500);
+.post("/swap", zValidator("json", z.object({        
+    quoteResponse: z.object({
+        inputMint: z.string(),
+        outputMint: z.string(),
+        amount: z.number(),
+        slippage: z.number().optional(),
+        platformFees: z.number(),
+    }),
+    userPubkey: z.string(),
+    wrapAndUnwrapSol: z.boolean().optional(),
+    feeAccount: z.string(),
+})), async (c) => {
+    try {
+        const body = await c.req.json();
+        if (!body || typeof body !== 'object') {
+            throw new Error('Invalid request body');
         }
+        const { quoteResponse, userPubkey, feeAccount } = body as swapBody;
+        if (!quoteResponse || typeof quoteResponse !== 'object') {
+            throw new Error('Invalid quoteResponse in request body');
+        }
+
+        const quoteUrl = new URL(c.req.url);
+        quoteUrl.pathname = '/api/buy/quote';
+        quoteUrl.search = new URLSearchParams({
+            inputMint: quoteResponse.inputMint,
+            outputMint: quoteResponse.outputMint,
+            amount: quoteResponse.amount.toString(),
+            slippage: quoteResponse.slippage?.toString() || '50',
+            platformFees: quoteResponse.platformFees.toString()
+        }).toString();
+        console.log('Fetching quote from:', quoteUrl.toString());
+    
+        const quoteRes = await fetch(quoteUrl.toString());
+        if (!quoteRes.ok) {
+            throw new Error(`Internal quote request failed: ${quoteRes.statusText}`);
+        }
+        const internalQuote = await quoteRes.json();
+        console.log('Internal quote:', internalQuote);
+
+        const swapRequestBody = {
+            quoteResponse: internalQuote,
+            userPublicKey: userPubkey,
+            wrapUnwrapSOL: true,
+            feeAccount: feeAccount,
+        };
+        console.log('Swap request body:', swapRequestBody);
+
+        const swapResponse = await fetch('https://quote-api.jup.ag/v6/swap', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(swapRequestBody)
+        });
+
+        if (!swapResponse.ok) {
+            throw new Error(`Failed to create swap transaction: ${swapResponse.statusText}`);
+        }
+
+        const swapData = await swapResponse.json();
+        if (!swapData || typeof swapData !== 'object') {
+            throw new Error('Unexpected swap response');
+        }
+// @ts-ignore
+        const { swapTransaction } = swapData;
+        console.log('Swap transaction:', swapTransaction);
+
+        // Return the unsigned transaction to the client
+        return c.json({ 
+            success: true, 
+            unsignedTransaction: swapTransaction 
+        });
+    } catch (error) {
+        console.error('Swap error:', error);
+        if (error instanceof Error) {
+            console.error('Error details:', error.message);
+        }
+        return c.json('Failed to create swap transaction', 500);
+    }
 });
 
 export type BuyRouter = typeof buyRouter;

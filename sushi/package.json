@@ -2,17 +2,21 @@
   "name": "sushi",
   "version": "0.0.0",
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240815.0",
+    "@cloudflare/workers-types": "^4.20240821.1",
+    "buffer": "^6.0.3",
+    "bun-types": "^1.1.26",
     "esbuild": "^0.17.19",
+    "events": "^3.3.0",
     "hono": "^4.5.8",
+    "process": "^0.11.10",
+    "stream-browserify": "^3.0.0",
     "typescript": "^5.5.4",
     "wrangler": "^3.72.0"
   },
   "private": true,
   "scripts": {
-    "start": "bun src/app.ts",
-    "dev": "bun --watch src/app.ts",
-    "build": "bun build src/app.ts"
+    "build": "bun run build.js",
+    "deploy": "wrangler publish"
   },
   "dependencies": {
     "@hono/trpc-server": "^0.3.2",
@@ -29,6 +33,9 @@
     "bn.js": "^5.2.1",
     "mathjs": "^13.0.3",
     "tsc": "^2.0.4",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "bun-types": "latest",
+    "@cloudflare/workers-types": "^4.0.0",
+    "wrangler": "^3.0.0"
   }
 }

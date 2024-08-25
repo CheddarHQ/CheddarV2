@@ -1,7 +1,6 @@
 name = "sushi"
-main = "src/app.ts"
+main = "./dist/app.js"
 compatibility_date = "2024-08-16"
 
 [build]
-command = "npm run build"
-
+command = "bun run build"
