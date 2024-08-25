@@ -202,7 +202,7 @@ export const buyRouter = new Hono()
         if (!swapData || typeof swapData !== 'object') {
             throw new Error('Unexpected swap response');
         }
-// @ts-ignore
+        // @ts-ignore
         const { swapTransaction } = swapData;
         console.log('Swap transaction:', swapTransaction);
 

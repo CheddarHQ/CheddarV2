@@ -19,7 +19,7 @@ import { querySchema } from "./schemas";
  */ 
 
 export const chartRouter = new Hono()
-chartRouter.get("/fetchchart", zValidator("query", querySchema), async (c) => { const { ticker } = c.req.query();
+    .get("/fetchchart", zValidator("query", querySchema), async (c) => { const { ticker } = c.req.query();
             if (!ticker) {
                 return c.json({
                     success: false,
