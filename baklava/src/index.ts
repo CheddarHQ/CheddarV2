@@ -1,63 +1,47 @@
-/**
- * @file durable_socket_server.ts
- * @description This file defines a Durable Object for handling WebSocket connections and room management
- */
-
 import { DurableObject } from "cloudflare:workers";
 import { Env } from "./interfaces";
 import { generateClientId, heartBeat } from "./utils";
 
-/**
- * @description Main fetch handler for the worker
- * @param request The incoming request
- * @param env Environment variables
- * @returns Response based on the request path
- */
 export default {
   async fetch(request: Request, env: Env) {
+    console.log(`Received request: ${request.method} ${request.url}`);
     const url = new URL(request.url);
     const path = url.pathname.slice(1).split('/');
 
-    if (!path[0]) {
-      return new Response("Couldn't access path", { status: 400 });
+    console.log(`Path: ${path.join('/')}`);
+
+    if (path[0] === "api") {
+      return handleApiRequest(path.slice(1), request, env);
     }
 
-    switch (path[0]) {
-      case "api":
-        return handleApiRequest(path.slice(1), request, env);
-      default:
-        return new Response("Not found", { status: 404 });
-    }
+    console.log(`Unhandled path: ${path.join('/')}`);
+    return new Response("Not found", { status: 404 });
   }
 }
 
-/**
- * @description Handles API requests, particularly for room management
- * @param path Array of path segments
- * @param request The incoming request
- * @param env Environment variables
- * @returns Response based on the API request
- */
 async function handleApiRequest(path: string[], request: Request, env: Env) {
+  console.log(`Handling API request: ${path.join('/')}`);
   switch (path[0]) {
     case "room": {
-      const roomName = path[1];
-
-      if (!roomName) {
+      if (!path[1]) {
         if (request.method === "POST") {
           const id = env.rooms.newUniqueId();
+          console.log(`Created new room: ${id}`);
           return new Response(id.toString(), { headers: { "Access-Control-Allow-Origin": "*" } });
         } else {
+          console.log(`Method not allowed: ${request.method}`);
           return new Response("Method not allowed", { status: 405 });
         }
       }
 
+      const roomName = path[1];
       let id;
       if (roomName.match(/^[0-9a-f]{64}$/)) {
         id = env.rooms.idFromString(roomName);
       } else if (roomName.length <= 32) {
         id = env.rooms.idFromName(roomName);
       } else {
+        console.log(`Invalid room name: ${roomName}`);
         return new Response("Name too long", { status: 400 });
       }
 
@@ -65,18 +49,16 @@ async function handleApiRequest(path: string[], request: Request, env: Env) {
 
       const newUrl = new URL(request.url);
       newUrl.pathname = "/websocket" + path.slice(2).join("/");
+      console.log(`Forwarding to room: ${newUrl}`);
 
       return roomObject.fetch(newUrl, request);
     }
     default:
+      console.log(`Unhandled API path: ${path[0]}`);
       return new Response("Not found", { status: 404 });
   }
 }
 
-/**
- * @class durableSocketServer
- * @description Durable Object class for managing WebSocket connections
- */
 export class durableSocketServer extends DurableObject {
   clients: Map<string, WebSocket>;
   state: DurableObjectState;
@@ -89,31 +71,25 @@ export class durableSocketServer extends DurableObject {
     this.clients = new Map();
   }
 
-  /**
-   * @description Handles incoming requests to the Durable Object
-   * @param request The incoming request
-   * @returns Response or WebSocket connection
-   */
   async fetch(request: Request) {
-    const url = new URL(request.url);
-    if (url.pathname === "/websocket") {
+    console.log(`Durable Object received request: ${request.method} ${request.url}`);
+    
+    if (request.headers.get("Upgrade") === "websocket") {
       const clientId = generateClientId();
       if (!clientId) {
-        return new Response("Expected clientId", { status: 400 });
+        console.log("Failed to generate client ID");
+        return new Response("Failed to generate client ID", { status: 400 });
       }
       return this.handleWebSocket(request, clientId);
     }
-    return new Response("Not Found", { status: 404 });
+
+    console.log(`Non-WebSocket request in Durable Object`);
+    return new Response("Expected WebSocket", { status: 426 });
   }
 
-  /**
-   * @description Handles WebSocket connection setup
-   * @param request The incoming WebSocket request
-   * @param clientId Unique identifier for the client
-   * @returns WebSocket connection response
-   */
   async handleWebSocket(request: Request, clientId: string) {
     if (request.headers.get("Upgrade") !== "websocket") {
+      console.log("Non-WebSocket request received");
       return new Response("Expected WebSocket", { status: 426 });
     }
 
@@ -137,6 +113,7 @@ export class durableSocketServer extends DurableObject {
     });
 
     server.addEventListener('close', () => {
+      console.log(`${clientId} left the chat`);
       this.clients.delete(clientId);
       server.close();
     });
@@ -149,10 +126,6 @@ export class durableSocketServer extends DurableObject {
     });
   }
 
-  /**
-   * @description Broadcasts a message to all connected clients
-   * @param message The message to broadcast
-   */
   broadcast(message: string | object) {
     const messageString = typeof message === 'string' ? message : JSON.stringify(message);
     this.clients.forEach((client, clientId) => {
@@ -163,33 +136,5 @@ export class durableSocketServer extends DurableObject {
         this.clients.delete(clientId);
       }
     });
-  }
-}
-
-/**
- * @description Upgrades a connection to a WebSocket
- * @param req The incoming request
- * @param env Environment variables
- * @param roomName The name of the room to connect to
- * @returns Response from the Durable Object
- */
-export async function upgradeConnection(
-  req: Request, 
-  env: Env,
-  roomName: string
-): Promise<Response> {
-  try {
-    const header = req.headers.get("Upgrade");
-    if (header !== "websocket") {
-      return new Response("Expected WebSocket", { status: 426 });
-    }
-
-    let id: DurableObjectId = env.rooms.idFromName(roomName);
-    let stub: DurableObjectStub = env.rooms.get(id);
-
-    return await stub.fetch(req);
-  } catch (error) {
-    console.error("Error handling WebSocket upgrade:", error);
-    return new Response("Internal Server Error", { status: 500 });
   }
 }
