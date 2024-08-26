@@ -1,7 +1,19 @@
 #:schema node_modules/wrangler/config-schema.json
 name = "baklava"
-main = "src/index.ts"
+main = "./src/index.ts"
 compatibility_date = "2024-08-06"
+
+[build]
+command = "bun run build"
+
+[durable_objects]
+bindings = [
+  { name = "rooms", class_name = "durableSocketServer" }
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["durableSocketServer"]
 
 # Automatically place your workloads in an optimal location to minimize latency.
 # If you are running back-end logic in a Worker, running it closer to your back-end infrastructure
@@ -59,18 +71,6 @@ compatibility_date = "2024-08-06"
 # [[migrations]]
 # tag = "v1"
 # new_classes = ["MyDurableObject"]
-
-
-[durable_objects]
-bindings = [
-  { name = "rooms", class_name = "durableSocketServer" },
-]
- 
-# { name = "limiters", class_name = "RateLimiter" } -> add this below name in DO bindings
-
-[[migrations]]
-tag="v1" #should be unique for each entry
-new_classes = ["baklavaChat"]
 
 
 # Bind a Hyperdrive configuration. Use to accelerate access to your existing databases from Cloudflare Workers.

@@ -2,7 +2,8 @@
   "name": "baklava",
   "scripts": {
     "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify",
+    "build": "bun run ",
+    "deploy": "wrangler publish",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
