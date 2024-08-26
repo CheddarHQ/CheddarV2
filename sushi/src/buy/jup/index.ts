@@ -140,6 +140,21 @@ export const buyRouter = new Hono()
  * @returns the serialized transaction
  * @example http://<worker>/api/buy/swap
  */
+
+/*
+{
+  "quoteResponse": {
+    "inputMint": "So11111111111111111111111111111111111111112",
+    "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "amount": 1000000,
+    "slippage": 50,
+    "platformFees": 10
+  },
+  "userPubkey": "7DyWpi9NwKsF84ERrSJNd7JBwDjbrGRB8xvisr112ZLc",
+  "wrapAndUnwrapSol": true,
+  "feeAccount": "44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2"
+}
+*/
 .post("/swap", zValidator("json", z.object({        
     quoteResponse: z.object({
         inputMint: z.string(),
@@ -188,7 +203,8 @@ export const buyRouter = new Hono()
         };
         console.log('Swap request body:', swapRequestBody);
 
-        const swapResponse = await fetch('https://quote-api.jup.ag/v6/swap', {
+        // Send the request to the proxy server
+        const swapResponse = await fetch('http://localhost:3000/proxy/swap', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(swapRequestBody)
@@ -202,7 +218,7 @@ export const buyRouter = new Hono()
         if (!swapData || typeof swapData !== 'object') {
             throw new Error('Unexpected swap response');
         }
-// @ts-ignore
+        // @ts-ignore
         const { swapTransaction } = swapData;
         console.log('Swap transaction:', swapTransaction);
 
@@ -221,3 +237,4 @@ export const buyRouter = new Hono()
 });
 
 export type BuyRouter = typeof buyRouter;
+

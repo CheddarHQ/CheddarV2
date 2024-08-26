@@ -6,6 +6,7 @@ import { donateRouter } from "./actions/donate";
 import { logger } from "hono/logger";
 import { memoRouter } from "./actions/memo";
 import { dynamicTransferRouter } from "./actions/dynamic";
+// import { proxyRouter } from "./proxy";
 // import { serveStatic } from "hono/bun";
 
 const app = new Hono()
@@ -13,6 +14,7 @@ const app = new Hono()
 app.use("*", logger());
 
 const apiRoutes = app.basePath("/api")
+                // .route("/proxy", proxyRouter)
                 .route("buy", buyRouter)
                 .route("data", dataRouter)
                 .route("chart", chartRouter)

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import  { useEffect, useState } from 'react';
 //@ts-ignore
 import { Dimensions, Pressable } from 'react-native';
 //@ts-ignore
