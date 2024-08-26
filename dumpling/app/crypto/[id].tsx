@@ -1,24 +1,9 @@
-import  { useEffect, useState } from 'react';
-//@ts-ignore
+import { useEffect, useState } from 'react';
 import { Dimensions, Pressable } from 'react-native';
-//@ts-ignore
 import type { TabsContentProps } from 'tamagui';
 import Feather from '@expo/vector-icons/Feather';
-import {
-  Text,
-  SizableText,
-  Tabs,
-  XStack,
-  YStack,
-  Button,
-  Card,
-  CardHeader,
-  Avatar,
-  //@ts-ignore
-} from 'tamagui';
-//@ts-ignore
+import { Text, SizableText, Tabs, XStack, YStack, Button, Card, CardHeader, Avatar } from 'tamagui';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-//@ts-ignore
 import { Link, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
 
 interface TokenBasicInfo {
@@ -28,6 +13,7 @@ interface TokenBasicInfo {
   priceNative: string;
   imageUrl: string;
   priceChange: number;
+  symbol: string;
 }
 
 interface TokenData {
@@ -41,16 +27,20 @@ const HorizontalTabs = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
 
-  const parsedDetailedInfo = JSON.parse(detailedInfo || '[]');
-  //@ts-ignore
-  const tokenInfo = parsedDetailedInfo.find((token) => token.baseAddress === id);
+  let parsedDetailedInfo;
+  try {
+    parsedDetailedInfo = JSON.parse(detailedInfo || '[]');
+    console.log('Parsed detailedInfo:', parsedDetailedInfo);
+  } catch (error) {
+    console.error('Error parsing detailedInfo:', error);
+    parsedDetailedInfo = [];
+  }
+
+  const tokenInfo = parsedDetailedInfo;
 
   const [buyInput, setBuyInput] = useState('');
   const [sellInput, setSellInput] = useState('');
   const [activeTab, setActiveTab] = useState('tab1');
-  const [tokenData, setTokenData] = useState<TokenData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
 
   const buyInputLength = useSharedValue(buyInput.length);
   const sellInputLength = useSharedValue(sellInput.length);
@@ -94,8 +84,8 @@ const HorizontalTabs = () => {
         fontSize,
         color: '#FFFFFF',
         fontWeight: 'bold',
-        position: 'absolute', // Position to avoid layout shifts
-        top: 20, // Adjust as needed
+        position: 'absolute',
+        top: 20,
       };
     });
 
@@ -111,6 +101,7 @@ const HorizontalTabs = () => {
         alignSelf="center"
         justifyContent="center"
         width="100%"
+        maxHeight={100}
         maxWidth={360}
         paddingBottom={'$5'}>
         <Card borderRadius={'$12'} scale={0.8} alignSelf="center">
@@ -124,15 +115,14 @@ const HorizontalTabs = () => {
                 <Text color={'white'} alignSelf="center" fontSize={18} fontWeight="bold">
                   {item.name}
                 </Text>
-                <Text style={{ fontSize: 14, color: '#fff' }}>${item.priceNative}</Text>
+                <Text style={{ fontSize: 14, color: '#fff' }}>${item.priceUsd}</Text>
               </YStack>
               <Text
                 style={{
                   fontSize: 20,
-                  color: item.priceChange >= 0 ? '#fff' : '#fff',
+                  color: item.priceChange >= 0 ? '#00FF00' : '#FF0000',
                 }}>
-                {/* @ts-ignore */}
-                {(1 / item.priceNative) * input}
+                {(parseFloat(input) / parseFloat(item.priceUsd)).toFixed(6)} {item.symbol}
               </Text>
             </XStack>
           </CardHeader>
@@ -182,7 +172,7 @@ const HorizontalTabs = () => {
       defaultValue="tab1"
       orientation="horizontal"
       flexDirection="column"
-      width={400}
+      width={350}
       height={700}
       borderRadius="$4"
       overflow="hidden">
@@ -204,7 +194,7 @@ const HorizontalTabs = () => {
             paddingBottom={'$7'}>
             <Animated.Text style={animatedStyle(buyInputLength)}>+{buyInput || '0'}</Animated.Text>
           </XStack>
-          {tokenInfo && (
+          {tokenInfo ? (
             <CryptoCard
               item={tokenInfo}
               input={buyInput}
@@ -212,6 +202,8 @@ const HorizontalTabs = () => {
                 console.log(`Clicked on ${tokenInfo.name}`);
               }}
             />
+          ) : (
+            <Text>No token information available</Text>
           )}
           {renderNumpad('buy')}
         </YStack>

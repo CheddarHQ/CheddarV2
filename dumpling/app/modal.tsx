@@ -11,47 +11,22 @@ interface TokenBasicInfo {
   priceNative: string;
   imageUrl: string;
   priceChange: number;
+  symbol: string;
 }
-
-interface socialProps{
-  type : string,
-  url : string
-}
-
-interface infoProps{
-  imageUrl : string,
-  socials: socialProps[]
-
-}
-
-interface BaseTokenProps{
-  name : string,
-  address : string,
-  
-}
-
-interface baseToken{
-  info : infoProps
-  priceNative: string,
-  priceUsd : string,
-  priceChange: number
-  baseToken : BaseTokenProps;
-}
-
 
 interface TokenData {
   basicInfo: TokenBasicInfo[];
-  detailedInfo: Record<string, any>;
+  detailedInfo: any[]; // Change this to an array
 }
 
 export default function Modal() {
   const [tokenData, setTokenData] = useState<TokenData | null>(null);
-  const [searchTokens, setSearchTokens] = useState<baseToken[] | null>(null)
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [query, setQuery] = useState<string>(''); // State for search query
+  const [query, setQuery] = useState<string>('');
 
-  const initialIds = 'GGXDG9XzfazWZGyV6CPKHQyB1V6qDzXGYb5RyufqfTVN,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,34Vzjmat2bRAY3mTxXaCemnT1ca51Tj7xL3J9T1cHhiT,3a7fVXt9vpQbxytdDkqep2n5hqw8iyCdXuN3N4i6Ki3r';
+  const initialIds =
+    'GGXDG9XzfazWZGyV6CPKHQyB1V6qDzXGYb5RyufqfTVN,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,34Vzjmat2bRAY3mTxXaCemnT1ca51Tj7xL3J9T1cHhiT,3a7fVXt9vpQbxytdDkqep2n5hqw8iyCdXuN3N4i6Ki3r';
   const router = useRouter();
 
   useEffect(() => {
@@ -77,12 +52,12 @@ export default function Modal() {
   }, []);
 
   useEffect(() => {
-    if (query === '') return; // Don't search if the query is empty
+    if (query === '') return;
 
     async function fetchSearchResults(query: string) {
       try {
         setLoading(true);
-        setError(null); // Reset any previous error
+        setError(null);
         console.log('Fetching data with query:', query);
 
         const response = await fetch(
@@ -93,18 +68,9 @@ export default function Modal() {
           throw new Error('Failed to fetch data');
         }
 
-        const data = await response.json();
+        const data: TokenData = await response.json();
         console.log('Fetched data from search:', data);
-        if(data){
-          console.log("Search Data : ", data[0].info)
-        }
-
-        setSearchTokens(data);
-
-        if(searchTokens){
-          console.log("SearchTokens[0] : ",searchTokens[0].info.imageUrl)
-        }
-
+        setTokenData(data);
       } catch (error) {
         console.error('Error fetching data:', error);
         setError(error instanceof Error ? error.message : String(error));
@@ -113,12 +79,11 @@ export default function Modal() {
       }
     }
 
-    // Debounce the fetch call to avoid too many requests
     const timeoutId = setTimeout(() => {
       fetchSearchResults(query);
-    }, 500); // Delay in ms
+    }, 500);
 
-    return () => clearTimeout(timeoutId); // Cleanup the timeout on unmount or new query
+    return () => clearTimeout(timeoutId);
   }, [query]);
 
   return (
@@ -135,85 +100,54 @@ export default function Modal() {
         color="#FFFFFF"
         backgroundColor="#000000"
         value={query}
-        onChangeText={setQuery} // Update the query state on text change
+        onChangeText={setQuery}
       />
 
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {loading && <Text style={{ color: '#FFFFFF' }}>Loading...</Text>}
         {error && <Text style={{ color: '#FF0000' }}>Error: {error}</Text>}
-        {tokenData?.basicInfo && tokenData.basicInfo.length >=0 && query==''  ? (
-        tokenData.basicInfo.map((item, index) => (
-          <Pressable
-            key={index}
-            onPress={() => {
-              const detailedInfoString = JSON.stringify(tokenData.detailedInfo);
-              router.push({
-                pathname: `/crypto/${item.baseAddress}`,
-                params: { detailedInfo: detailedInfoString },
-              });
-            }}>
-            <Card elevate paddingVertical={20} borderRadius={0} backgroundColor="#000000">
-              <XStack alignItems="center" space>
-                <Avatar circular size="$5">
-                  <Avatar.Image accessibilityLabel={`Token ${index + 1}`} src={item.imageUrl} />
-                  <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
-                </Avatar>
-                <YStack space={8} flex={1}>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFFFFF' }}>
-                    {item.name}
+        {tokenData?.basicInfo && tokenData.basicInfo.length > 0 ? (
+          tokenData.basicInfo.map((item, index) => (
+            <Pressable
+              key={index}
+              onPress={() => {
+                const detailedInfo = tokenData.detailedInfo.find(
+                  (detail: any) => detail.baseAddress === item.baseAddress
+                );
+                if (detailedInfo) {
+                  const detailedInfoString = JSON.stringify(detailedInfo);
+                  router.push({
+                    //@ts-ignore
+                    pathname: `/crypto/${item.baseAddress}`,
+                    params: { detailedInfo: detailedInfoString },
+                  });
+                } else {
+                  console.log(`No detailed info found for ${item.baseAddress}`);
+                }
+              }}>
+              <Card elevate paddingVertical={20} borderRadius={0} backgroundColor="#000000">
+                <XStack alignItems="center" space>
+                  <Avatar circular size="$5">
+                    <Avatar.Image accessibilityLabel={`Token ${index + 1}`} src={item.imageUrl} />
+                    <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
+                  </Avatar>
+                  <YStack space={8} flex={1}>
+                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFFFFF' }}>
+                      {item.name}
+                    </Text>
+                    <Text style={{ fontSize: 14, color: '#888888' }}>${item.priceUsd}</Text>
+                  </YStack>
+                  <Text
+                    style={{ fontSize: 14, color: item.priceChange >= 0 ? '#00FF00' : '#FF0000' }}>
+                    {item.priceChange.toFixed(2)}%
                   </Text>
-                  <Text style={{ fontSize: 14, color: '#888888' }}>${item.priceUsd}</Text>
-                </YStack>
-                <Text
-                  style={{ fontSize: 14, color: item.priceChange >= 0 ? '#00FF00' : '#FF0000' }}>
-                  {item.priceChange.toFixed(2)}%
-                </Text>
-              </XStack>
-            </Card>
-          </Pressable>
-        ))
-      ) : (
-        
-        <Text style={{ color: '#FFFFFF' }}>{query=='' ? "No data available" : ""}</Text>
-      )}
-      {searchTokens?
-      (
-     
-        searchTokens.map((item, index) => (
-          
-          <Pressable
-            key={index}
-            onPress={() => {
-              const detailedInfoString = JSON.stringify(tokenData);
-              router.push({
-                pathname: `/crypto/${item.address}`,
-                params: { detailedInfo: detailedInfoString },
-              });
-            }}>
-            <Card elevate paddingVertical={20} borderRadius={0} backgroundColor="#000000">
-              <XStack alignItems="center" space>
-                <Avatar circular size="$5">
-                  <Avatar.Image accessibilityLabel={`Token ${index + 1}`} src={""}  />
-                  <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
-                </Avatar>
-                <YStack space={8} flex={1}>
-                  <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFFFFF' }}>
-                    {item.baseToken.name}
-                  </Text>
-                  <Text style={{ fontSize: 14, color: '#888888' }}>${item.priceUsd}</Text>
-                </YStack>
-                <Text
-                  style={{ fontSize: 14, color: item.priceChange >= 0 ? '#00FF00' : '#FF0000' }}>
-                  {/* {item.priceChange.toFixed(2)}% */}
-                </Text>
-              </XStack>
-            </Card>
-          </Pressable>
-        ))
-      ) : (
-        <Text style={{ color: '#FFFFFF' }}>{query!='' ? "No data available" : ""}</Text>
-      )}
-
+                </XStack>
+              </Card>
+            </Pressable>
+          ))
+        ) : (
+          <Text style={{ color: '#FFFFFF' }}>No data available</Text>
+        )}
       </ScrollView>
       <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />
     </YStack>
