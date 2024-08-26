@@ -13,7 +13,7 @@ export const dataRouter = new Hono();
  * @description Fetches the metadata for the specified token ids
  * @input ids: the pair address of the token(s) to fetch the metadata for
  * @returns an object containing basic and detailed info for the specified tokens
- * @example http://<worker>/api/data/fetchMetadata?ids=zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz
+ * @example http://<worker>/api/data/fetchmetadata?ids=zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz
  */
 dataRouter.get("/fetchmetadata", zValidator("query", metaSchema), async (c) => {
     const { ids } = c.req.query();
@@ -29,7 +29,10 @@ dataRouter.get("/fetchmetadata", zValidator("query", metaSchema), async (c) => {
         const result = {
         // @ts-ignore
             basicInfo: data.pairs.map(pair => ({
+                chainId: pair.chainId,
+                dexId: pair.dexId,
                 name: pair.baseToken.name,
+                symbol: pair.baseToken.symbol,
                 baseAddress: pair.baseToken.address,
                 priceUsd: pair.priceUsd,
                 priceNative: pair.priceNative,
@@ -38,8 +41,10 @@ dataRouter.get("/fetchmetadata", zValidator("query", metaSchema), async (c) => {
             })),
         // @ts-ignore
             detailedInfo: data.pairs.map(pair => ({
+                chainId: pair.chainId,
+                dexId: pair.dexId,
                 name: pair.baseToken.name,
-                baseAddress: pair.baseToken.address,
+                symbol: pair.baseToken.symbol,                baseAddress: pair.baseToken.address,
                 priceUsd: pair.priceUsd,
                 priceNative: pair.priceNative,
                 imageUrl: pair.info.imageUrl,
@@ -84,16 +89,72 @@ dataRouter.get("/fetchquery", zValidator("query", querySchema), async (c) => {
         }
         
         const data = await response.json();
-                // @ts-ignore
-        return c.json(data.pairs);
+        const result = {
+            basicInfo: data.pairs.map(pair => ({
+                chainId: pair.chainId,
+                dexId: pair.dexId,
+                name: pair.baseToken.name,
+                symbol: pair.baseToken.symbol,
+                baseAddress: pair.baseToken.address,
+                priceUsd: pair.priceUsd,
+                priceNative: pair.priceNative,
+                imageUrl: pair.info?.imageUrl,
+                priceChange: pair.priceChange?.h1 || 0,
+            })),
+            detailedInfo: data.pairs.map(pair => ({
+                chainId: pair.chainId,
+                dexId: pair.dexId,
+                name: pair.baseToken.name,
+                symbol: pair.baseToken.symbol,
+                baseAddress: pair.baseToken.address,
+                priceUsd: pair.priceUsd,
+                priceNative: pair.priceNative,
+                imageUrl: pair.info?.imageUrl,
+                volH24: pair.volume?.h24 || 0,
+                volH6: pair.volume?.h6 || 0,
+                volH1: pair.volume?.h1 || 0,
+                priceChangeh1: pair.priceChange?.h1 || 0,
+                priceChangeh6: pair.priceChange?.h6 || 0,
+                priceChangeh24: pair.priceChange?.h24 || 0,
+                liquidityUsd: pair.liquidity?.usd || 0,
+                liquidityQuote: pair.liquidity?.quote || 0,
+                liquidityBase: pair.liquidity?.base || 0,
+                website: pair.info?.websites?.[0]?.url,
+                twitter: pair.info?.socials?.find(social => social.type === "twitter")?.url,
+                telegram: pair.info?.socials?.find(social => social.type === "telegram")?.url,
+            }))
+        };
+        return c.json(result);
     } catch (error) {
         console.error('Error in fetchQuery:', error);
         if (error instanceof Error) {
             const status = error.message.includes('API responded with status') ? parseInt(error.message.split('status ')[1]) : 500;
-                    // @ts-ignore
             return c.json({ error: error.message }, status);
         }
         return c.json({ error: "An unexpected error occurred" }, 500);
+    }
+});
+
+/*
+* @description Fetches all the tokens
+* @returns an object containing about 158,050 tokens
+* @example http://<worker>/api/data/tokens
+*/
+dataRouter.get("/tokens", async (c) => {
+    try {
+        const response = await fetch('https://quote-api.jup.ag/v6/tokens');
+        if (!response.ok) {
+            throw new Error(`Failed to fetch tokens: ${response.statusText}`);
+        }
+        const data = await response.json();
+
+        return c.json(data);
+    } catch (error) {
+        console.error('Full error:', error);
+        if (error instanceof Error) {
+            console.error(`Error details: ${error.message}`);
+        }
+        return c.json({ error: 'Failed to fetch tokens' }, 500);
     }
 });
 
