@@ -19,49 +19,33 @@ import { querySchema } from "./schemas";
  */ 
 
 export const chartRouter = new Hono()
-    .get("/fetchchart", zValidator("query", querySchema), async (c) => {
-        const { ticker } = c.req.query();
-        if (!ticker) {
-            return c.json({
-                success: false,
-                error: {
-                    issues: [
-                        {
-                            code: "invalid_type",
-                            expected: "string",
-                            received: "undefined",
-                            path: ["ticker"],
-                            message: "Ticker is required"
-                        }
-                    ]
-                }
-            }, 400);
-        }
-        try {
-            const url = `https://min-api.cryptocompare.com/data/v2/histominute?fsym=${ticker}&tsym=SOL&limit=1440`;
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`API responded with status ${response.status}`);
-            }
-            const data = await response.json();
+.get("/fetchchart", zValidator("query", querySchema), async (c) => {
+    const { ticker } = c.req.query();
 
-            if (!data.Data || !data.Data.Data) {
-                throw new Error('Unexpected API response structure');
-            }
+    try {
+        const response = await fetch(`https://min-api.cryptocompare.com/data/v2/histominute?fsym=${ticker}&tsym=USD&limit=1440`);
+        const data = await response.json();
 
+        // Ensure data is defined and structured as expected
+        if (data && data.Data && data.Data.Data) {
             const chartData = data.Data.Data.map((point: any) => ({
-                time: new Date(point.time * 1000).toISOString(),
-                open: point.open,
-                close: point.close,
+                time: point.time,
                 high: point.high,
                 low: point.low,
+                open: point.open,
+                close: point.close,
             }));
-
-            return c.json(chartData);
-        } catch (error) {
-            console.error('Error:', error);
-            return c.json({ error: 'Failed to fetch data' }, 500);
+            console.log(chartData);
+            return c.json(chartData); // Return the data as a JSON response
+        } else {
+            console.error('Unexpected data format:', data);
+            return c.json({ error: 'Unexpected data format' }, 500); // Return an error response
         }
-    });
+    } catch (error) {
+        console.error('Error fetching chart data:', error);
+        return c.json({ error: 'Failed to fetch chart data' }, 500); // Return an error response
+    }
+});
+
 
 export type ChartRouter = typeof chartRouter;
