@@ -1,7 +1,15 @@
+/**
+ * @file index.ts
+ * @description Main entry point for the WebSocket-based chat room application.
+ */
 import { DurableObject } from "cloudflare:workers";
 import { Env } from "./interfaces";
 import { generateClientId, heartBeat } from "./utils";
 
+/**
+ * Main request handler for the Worker.
+ * Routes requests to appropriate handlers based on the URL path.
+ */
 export default {
   async fetch(request: Request, env: Env) {
     console.log(`Received request: ${request.method} ${request.url}`);
@@ -19,6 +27,13 @@ export default {
   }
 }
 
+/**
+ * Handles API requests, primarily for room creation and WebSocket connections.
+ * @param path - Array of path segments
+ * @param request - The incoming request
+ * @param env - Environment variables and bindings
+ * @returns Response object
+ */
 async function handleApiRequest(path: string[], request: Request, env: Env) {
   console.log(`Handling API request: ${path.join('/')}`);
   switch (path[0]) {
@@ -59,6 +74,10 @@ async function handleApiRequest(path: string[], request: Request, env: Env) {
   }
 }
 
+/**
+ * Durable Object class representing a chat room.
+ * Handles WebSocket connections and message broadcasting.
+ */
 export class durableSocketServer extends DurableObject {
   clients: Map<string, WebSocket>;
   state: DurableObjectState;
@@ -71,6 +90,11 @@ export class durableSocketServer extends DurableObject {
     this.clients = new Map();
   }
 
+  /**
+  * Handles incoming requests to the Durable Object.
+  * @param request - The incoming request
+  * @returns Response object
+  */
   async fetch(request: Request) {
     console.log(`Durable Object received request: ${request.method} ${request.url}`);
     
@@ -86,7 +110,12 @@ export class durableSocketServer extends DurableObject {
     console.log(`Non-WebSocket request in Durable Object`);
     return new Response("Expected WebSocket", { status: 426 });
   }
-
+  /**
+   * Handles WebSocket connections.
+   * @param request - The incoming WebSocket request
+   * @param clientId - Unique ID for the client
+   * @returns Response object with WebSocket
+   */
   async handleWebSocket(request: Request, clientId: string) {
     if (request.headers.get("Upgrade") !== "websocket") {
       console.log("Non-WebSocket request received");
@@ -125,7 +154,10 @@ export class durableSocketServer extends DurableObject {
       webSocket: client,
     });
   }
-
+  /**
+   * Broadcasts a message to all connected clients.
+   * @param message - The message to broadcast
+   */
   broadcast(message: string | object) {
     const messageString = typeof message === 'string' ? message : JSON.stringify(message);
     this.clients.forEach((client, clientId) => {
