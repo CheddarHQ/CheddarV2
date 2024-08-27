@@ -16,7 +16,6 @@ import { dataPoint, querySchema } from "./schemas";
 export const chartRouter = new Hono()
 .get("/fetchchart", zValidator("query", querySchema), async (c) => {
     const { ticker } = c.req.query();
-
     try {
         const response = await fetch(`https://min-api.cryptocompare.com/data/v2/histominute?fsym=${ticker}&tsym=USD&limit=1440`);
         const data = await response.json();
@@ -40,6 +39,5 @@ export const chartRouter = new Hono()
         return c.json({ error: 'Failed to fetch chart data' }, 500); // Return an error response
     }
 });
-
 
 export type ChartRouter = typeof chartRouter;
