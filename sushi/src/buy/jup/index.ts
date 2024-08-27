@@ -9,7 +9,7 @@ import { quoteBody, swapBody } from "./interfaces";
 import z from 'zod';
 import { quoteSchema } from './schemas';
 
-const connection = new Connection('https://api.devnet.solana.com');
+const connection = new Connection('https://api.mainnet-beta.solana.com');
 
 async function getInternalQuote(inputMint: string, outputMint: string, amount: number, slippage?: number, platformFees: number = 0) {
     const params = new URLSearchParams({
@@ -177,24 +177,17 @@ export const buyRouter = new Hono()
             throw new Error('Invalid quoteResponse in request body');
         }
 
-        const quoteUrl = new URL(c.req.url);
-        quoteUrl.pathname = '/api/buy/quote';
-        quoteUrl.search = new URLSearchParams({
-            inputMint: quoteResponse.inputMint,
-            outputMint: quoteResponse.outputMint,
-            amount: quoteResponse.amount.toString(),
-            slippage: quoteResponse.slippage?.toString() || '50',
-            platformFees: quoteResponse.platformFees.toString()
-        }).toString();
-        console.log('Fetching quote from:', quoteUrl.toString());
-    
-        const quoteRes = await fetch(quoteUrl.toString());
-        if (!quoteRes.ok) {
-            throw new Error(`Internal quote request failed: ${quoteRes.statusText}`);
-        }
-        const internalQuote = await quoteRes.json();
+        // Fetch the quote directly from Jupiter API
+        const internalQuote = await getInternalQuote(
+            quoteResponse.inputMint,
+            quoteResponse.outputMint,
+            quoteResponse.amount,
+            quoteResponse.slippage,
+            quoteResponse.platformFees
+        );
         console.log('Internal quote:', internalQuote);
 
+        // Prepare the swap request body for Jupiter API
         const swapRequestBody = {
             quoteResponse: internalQuote,
             userPublicKey: userPubkey,
@@ -203,8 +196,8 @@ export const buyRouter = new Hono()
         };
         console.log('Swap request body:', swapRequestBody);
 
-        // Send the request to the proxy server
-        const swapResponse = await fetch('http://localhost:3000/proxy/swap', {
+        // Send the swap request directly to Jupiter API
+        const swapResponse = await fetch('https://quote-api.jup.ag/v6/swap', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(swapRequestBody)
@@ -218,7 +211,7 @@ export const buyRouter = new Hono()
         if (!swapData || typeof swapData !== 'object') {
             throw new Error('Unexpected swap response');
         }
-        // @ts-ignore
+        
         const { swapTransaction } = swapData;
         console.log('Swap transaction:', swapTransaction);
 
@@ -232,7 +225,7 @@ export const buyRouter = new Hono()
         if (error instanceof Error) {
             console.error('Error details:', error.message);
         }
-        return c.json('Failed to create swap transaction', 500);
+        return c.json({ error: 'Failed to create swap transaction' }, 500);
     }
 });
 
