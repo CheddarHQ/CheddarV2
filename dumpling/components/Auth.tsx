@@ -3,6 +3,8 @@ import { Alert, StyleSheet, View } from 'react-native'
 import { supabase } from '../lib/supabase'
 import { Button } from '@rneui/themed'
 
+const supabaseUrl = process.env.SUPABASE_URL
+
 export default function Auth() {
   const [loading, setLoading] = useState(false)
 
@@ -11,7 +13,7 @@ export default function Auth() {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'twitter',
       options: {
-        redirectTo: 'https://byyfnvlykcydmyailevw.supabase.co/auth/v1/callback',
+        redirectTo: `${supabaseUrl}/auth/v1/callback`,
       },
     });
 
