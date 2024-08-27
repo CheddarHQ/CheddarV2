@@ -29,7 +29,9 @@
     "@tamagui/shorthands": "1.74.8",
     "@tamagui/themes": "1.74.8",
     "@types/d3": "^7.4.3",
+    "babel-plugin-inline-dotenv": "^1.7.0",
     "d3": "^7.9.0",
+    "dotenv": "^16.4.5",
     "expo": "^51.0.28",
     "expo-constants": "~16.0.1",
     "expo-font": "~12.0.9",
@@ -62,9 +64,11 @@
     "@typescript-eslint/eslint-plugin": "^7.7.0",
     "@typescript-eslint/parser": "^7.7.0",
     "ajv": "^8.12.0",
+    "babel-plugin-transform-inline-environment-variables": "^0.4.4",
     "eslint": "^8.57.0",
     "eslint-config-universe": "^12.0.1",
     "prettier": "^3.2.5",
+    "react-native-dotenv": "^3.4.11",
     "typescript": "~5.3.3"
   },
   "eslintConfig": {
