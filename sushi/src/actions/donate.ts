@@ -73,8 +73,8 @@ export type DonateRouter = typeof donateRouter;
 /**
  * @description Handles donation actions including fetching donation info and processing donations
  * @returns Hono router for donation actions
- * @example http://<worker>/api/donate
- * @example http://<worker>/api/donate/5
+ * @example http://<worker>/api/actions/donate
+ * @example http://<worker>/api/actions/donate/5
  */
 export const donateRouter = new Hono()
   .get('/info', async (c) => {

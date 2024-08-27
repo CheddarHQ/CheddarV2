@@ -31,8 +31,8 @@ const bodySchema = z.object({
 /**
  * @description Handles memo actions including fetching memo info and processing memo transactions
  * @returns Hono router for memo actions
- * @example http://<worker>/api/memo
- * @example http://<worker>/api/memo/Hello%20world!
+ * @example http://<worker>/api/actions/memo
+ * @example http://<worker>/api/actions/memo/Hello%20world!
  */
 export const memoRouter = new Hono()
   .get('/info', async (c) => {

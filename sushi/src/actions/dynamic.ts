@@ -77,8 +77,8 @@ export const dynamicTransferRouter = new Hono()
 /**
  * Retrieves transfer information including icon, title, and description
  * @returns Object containing transfer information
- * @example http://<worker>/api/dynamicTransfer/custom/info
- * @example http://<worker>/api/dynamicTransfer/custom/amount
+ * @example http://<worker>/api/actions/dynamicTransfer/custom/info
+ * @example http://<worker>/api/actions/dynamic/custom/amount
  */
   .get('/:custom/info', zValidator('param', transferParamsSchema), async (c) => {
     try {
