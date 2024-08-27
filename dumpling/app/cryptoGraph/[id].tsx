@@ -4,6 +4,7 @@ import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { LineGraph } from 'react-native-graph';
 import { Card, Text, XStack, YStack, Avatar } from 'tamagui';
 const { width } = Dimensions.get('window');
+import { dummyGraphData } from '~/test/message';
 
 const randomPrice = (min: number, max: number): number => Math.random() * (max - min) + min;
 
@@ -21,43 +22,41 @@ interface PriceHistoryPoint {
 }
 
 const generateDayData = (): DataPoint[] => {
-  const data: DataPoint[] = [];
-  const baseDate = new Date('2024-08-25T00:00:00Z');
-  const basePrice = 100;
+  const data: DataPoint[] = dummyGraphData.Data.Data.map((point) => ({
+    time: point.time * 1000, // Convert seconds to milliseconds
+    open: point.open,
+    close: point.close,
+    high: point.high,
+    low: point.low,
+  }));
 
-  for (let i = 0; i < 1440; i++) {
-    const time = new Date(baseDate.getTime() + i * 60000);
-    const open = i === 0 ? basePrice : data[i - 1].close;
-    const close = randomPrice(open * 0.995, open * 1.005);
-    const high = Math.max(open, close, randomPrice(open, close * 1.002));
-    const low = Math.min(open, close, randomPrice(close * 0.998, open));
-
-    data.push({ time: time.getTime(), open, close, high, low });
-  }
+  console.log('Number of data points:', data.length);
 
   return data;
 };
 
-const dummyData: DataPoint[] = generateDayData();
+const realData: DataPoint[] = generateDayData();
 
-type TimeRange = '30min' | '1hour' | '6hours' | 'all';
+type TimeRange = '30min' | '1hour' | '6hours' | '24hours';
 
 const MyChart: React.FC = () => {
   const { id } = useLocalSearchParams();
   const [selectedPoint, setSelectedPoint] = useState<PriceHistoryPoint | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>('all');
+  const [timeRange, setTimeRange] = useState<TimeRange>('24hours');
 
   const filteredData = useMemo(() => {
-    const now = dummyData[dummyData.length - 1].time;
+    const now = realData[realData.length - 1].time;
     switch (timeRange) {
       case '30min':
-        return dummyData.filter((d) => now - d.time <= 30 * 60 * 1000);
+        return realData.filter((d) => now - d.time <= 30 * 60 * 1000);
       case '1hour':
-        return dummyData.filter((d) => now - d.time <= 60 * 60 * 1000);
+        return realData.filter((d) => now - d.time <= 60 * 60 * 1000);
       case '6hours':
-        return dummyData.filter((d) => now - d.time <= 6 * 60 * 60 * 1000);
+        return realData.filter((d) => now - d.time <= 6 * 60 * 60 * 1000);
+      case '24hours':
+        return realData.filter((d) => now - d.time <= 24 * 60 * 60 * 1000);
       default:
-        return dummyData;
+        return realData;
     }
   }, [timeRange]);
 
@@ -160,9 +159,9 @@ const MyChart: React.FC = () => {
           <Text style={styles.buttonText}>6 Hours</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, timeRange === 'all' && styles.activeButton]}
-          onPress={() => setTimeRange('all')}>
-          <Text style={styles.buttonText}>All</Text>
+          style={[styles.button, timeRange === '24hours' && styles.activeButton]}
+          onPress={() => setTimeRange('24hours')}>
+          <Text style={styles.buttonText}>24 Hours</Text>
         </TouchableOpacity>
       </View>
     </YStack>

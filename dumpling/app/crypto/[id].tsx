@@ -5,6 +5,7 @@ import Feather from '@expo/vector-icons/Feather';
 import { Text, SizableText, Tabs, XStack, YStack, Button, Card, CardHeader, Avatar } from 'tamagui';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Link, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
+import { useWindowDimensions } from 'react-native';
 
 interface TokenBasicInfo {
   name: string;
@@ -167,13 +168,15 @@ const HorizontalTabs = () => {
     </YStack>
   );
 
+  const { height, width } = useWindowDimensions();
+
   return (
     <Tabs
       defaultValue="tab1"
       orientation="horizontal"
       flexDirection="column"
-      width={350}
-      height={700}
+      width={width - 40}
+      height={height - 100}
       borderRadius="$4"
       overflow="hidden">
       <Tabs.List aria-label="Manage your account" paddingBottom={'$10'}>
