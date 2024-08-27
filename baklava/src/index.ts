@@ -3,7 +3,7 @@
  * @description Main entry point for the WebSocket-based chat room application.
  */
 import { DurableObject } from "cloudflare:workers";
-import { Env } from "./interfaces";
+import { Env, ClientInfo } from "./interfaces";
 import { generateClientId, heartBeat } from "./utils";
 
 /**
@@ -79,7 +79,7 @@ async function handleApiRequest(path: string[], request: Request, env: Env) {
  * Handles WebSocket connections and message broadcasting.
  */
 export class durableSocketServer extends DurableObject {
-  clients: Map<string, WebSocket>;
+  clients: Map<string, { socket: WebSocket, info: ClientInfo }>;
   state: DurableObjectState;
   env: Env;
 
@@ -97,7 +97,7 @@ export class durableSocketServer extends DurableObject {
   */
   async fetch(request: Request) {
     console.log(`Durable Object received request: ${request.method} ${request.url}`);
-    
+
     if (request.headers.get("Upgrade") === "websocket") {
       const clientId = generateClientId();
       if (!clientId) {
@@ -110,6 +110,7 @@ export class durableSocketServer extends DurableObject {
     console.log(`Non-WebSocket request in Durable Object`);
     return new Response("Expected WebSocket", { status: 426 });
   }
+
   /**
    * Handles WebSocket connections.
    * @param request - The incoming WebSocket request
@@ -126,15 +127,39 @@ export class durableSocketServer extends DurableObject {
     const [client, server] = Object.values(pair);
 
     server.accept();
-    this.clients.set(clientId, server);
+
+    const clientInfo: ClientInfo = {
+      id: clientId,
+      joinTime: new Date(),
+      messagesSent: 0,
+      lastActive: new Date()
+    };
+
+    this.clients.set(clientId, { socket: server, info: clientInfo });
 
     console.log(`${clientId} joined the chat`);
+    this.broadcast({ type: "join", data: `Client ${clientId} joined the chat` });
 
     server.addEventListener("message", async (event) => {
       try {
         const message = JSON.parse(event.data as string);
         console.log(`Received message from client ${clientId}:`, message);
-        this.broadcast({ type: "message", data: message.data });
+
+        const client = this.clients.get(clientId);
+        if (client) {
+          client.info.messagesSent++;
+          client.info.lastActive = new Date();
+        }
+
+        if (message.type === "leave") {
+          console.log(`${clientId} is leaving the chat`);
+          this.clients.delete(clientId);
+          server.close();
+          this.broadcast({ type: "leave", data: `Client ${clientId} left the chat` });
+          return;
+        }
+
+        this.broadcast({ type: "message", sender: clientId, data: message.data });
       } catch (error) {
         console.error("Error processing message:", error);
         server.send(JSON.stringify({ type: "error", message: "Error processing your message" }));
@@ -144,16 +169,21 @@ export class durableSocketServer extends DurableObject {
     server.addEventListener('close', () => {
       console.log(`${clientId} left the chat`);
       this.clients.delete(clientId);
+      this.broadcast({ type: "leave", data: `Client ${clientId} left the chat` });
       server.close();
     });
 
     heartBeat(server, clientId, this.clients);
+
+    // Start periodic cleanup of inactive users
+    setInterval(() => this.cleanupInactiveUsers(), 5 * 60 * 1000); // Run every 5 minutes
 
     return new Response(null, {
       status: 101,
       webSocket: client,
     });
   }
+
   /**
    * Broadcasts a message to all connected clients.
    * @param message - The message to broadcast
@@ -162,11 +192,42 @@ export class durableSocketServer extends DurableObject {
     const messageString = typeof message === 'string' ? message : JSON.stringify(message);
     this.clients.forEach((client, clientId) => {
       try {
-        client.send(messageString);
+        client.socket.send(messageString);
       } catch (error) {
         console.error(`Failed to send message to client ${clientId}:`, error);
         this.clients.delete(clientId);
       }
     });
+  }
+
+  /**
+   * Returns a list of active users and their information.
+   * @returns Array of active user information
+   */
+  getActiveUsers() {
+    const activeUsers = [];
+    for (const [id, client] of this.clients) {
+      activeUsers.push({
+        id: client.info.id,
+        joinTime: client.info.joinTime,
+        messagesSent: client.info.messagesSent,
+        lastActive: client.info.lastActive
+      });
+    }
+    return activeUsers;
+  }
+
+  /**
+   * Cleans up inactive users from the chat room.
+   */
+  cleanupInactiveUsers() {
+    const now = new Date();
+    for (const [id, client] of this.clients) {
+      if (now.getTime() - client.info.lastActive.getTime() > 30 * 60 * 1000) { // 30 minutes
+        this.clients.delete(id);
+        client.socket.close();
+        this.broadcast({ type: "leave", data: `Client ${id} timed out` });
+      }
+    }
   }
 }

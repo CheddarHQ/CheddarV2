@@ -1,16 +1,18 @@
+import { durableSocketServer } from ".";
+
 export function getName() {
 
 }
 
-export function heartBeat(server: WebSocket, clientId: string, clients: Map<string, WebSocket>) {
-    const intervalId = setInterval(() => {
-      if (server.readyState === WebSocket.OPEN) {
-        server.send(JSON.stringify({ type: "ping" }));
-      } else {
-        clearInterval(intervalId);
-        clients.delete(clientId);
-      }
-    }, 30000);
+export function heartBeat(socket: WebSocket, clientId: string, room: durableSocketServer) {
+  const intervalId = setInterval(() => {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: "heartbeat" }));
+    } else {
+      clearInterval(intervalId);
+      room.clients.delete(clientId);
+    }
+  }, 30000); // Send heartbeat every 30 seconds
 }
 
 export function generateClientId() {
