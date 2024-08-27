@@ -1,10 +1,17 @@
-import { useLocalSearchParams } from 'expo-router';
+import { useGlobalSearchParams, useLocalSearchParams } from 'expo-router';
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { LineGraph } from 'react-native-graph';
-import { Card, Text, XStack, YStack, Avatar } from 'tamagui';
+import { Card, Text, XStack, YStack, Avatar, SizableText } from 'tamagui';
 const { width } = Dimensions.get('window');
-
+import { dummyGraphData } from '~/test/message';
+import AntDesign from '@expo/vector-icons/AntDesign';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { point } from '@shopify/react-native-skia';
+//<AntDesign name="up" size={24} color="black" />
+//<AntDesign name="caretup" size={24} color="black" />
+//<AntDesign name="down" size={24} color="black" />
+//<AntDesign name="caretdown" size={24} color="black" />
 const randomPrice = (min: number, max: number): number => Math.random() * (max - min) + min;
 
 interface DataPoint {
@@ -20,44 +27,65 @@ interface PriceHistoryPoint {
   value: number;
 }
 
+interface TokenBasicInfo {
+  name: string;
+  baseAddress: string;
+  priceUsd: string;
+  priceNative: string;
+  imageUrl: string;
+  priceChange: number;
+  symbol: string;
+}
+
 const generateDayData = (): DataPoint[] => {
-  const data: DataPoint[] = [];
-  const baseDate = new Date('2024-08-25T00:00:00Z');
-  const basePrice = 100;
+  const data: DataPoint[] = dummyGraphData.Data.Data.map((point) => ({
+    time: point.time * 1000, // Convert seconds to milliseconds
+    open: point.open,
+    close: point.close,
+    high: point.high,
+    low: point.low,
+  }));
 
-  for (let i = 0; i < 1440; i++) {
-    const time = new Date(baseDate.getTime() + i * 60000);
-    const open = i === 0 ? basePrice : data[i - 1].close;
-    const close = randomPrice(open * 0.995, open * 1.005);
-    const high = Math.max(open, close, randomPrice(open, close * 1.002));
-    const low = Math.min(open, close, randomPrice(close * 0.998, open));
-
-    data.push({ time: time.getTime(), open, close, high, low });
-  }
+  console.log('Number of data points:', data.length);
 
   return data;
 };
 
-const dummyData: DataPoint[] = generateDayData();
+const realData: DataPoint[] = generateDayData();
 
-type TimeRange = '30min' | '1hour' | '6hours' | 'all';
+type TimeRange = '30min' | '1hour' | '6hours' | '24hours';
 
 const MyChart: React.FC = () => {
   const { id } = useLocalSearchParams();
   const [selectedPoint, setSelectedPoint] = useState<PriceHistoryPoint | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>('all');
+  const [timeRange, setTimeRange] = useState<TimeRange>('24hours');
+
+  const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
+
+  let parsedDetailedInfo;
+  try {
+    parsedDetailedInfo = JSON.parse(detailedInfo || '[]');
+    console.log('Parsed detailedInfo:', parsedDetailedInfo);
+  } catch (error) {
+    console.error('Error parsing detailedInfo:', error);
+    parsedDetailedInfo = [];
+  }
+
+  const tokenInfo = parsedDetailedInfo;
 
   const filteredData = useMemo(() => {
-    const now = dummyData[dummyData.length - 1].time;
+    const now = realData[realData.length - 1].time;
     switch (timeRange) {
       case '30min':
-        return dummyData.filter((d) => now - d.time <= 30 * 60 * 1000);
+        return realData.filter((d) => now - d.time <= 30 * 60 * 1000);
       case '1hour':
-        return dummyData.filter((d) => now - d.time <= 60 * 60 * 1000);
+        return realData.filter((d) => now - d.time <= 60 * 60 * 1000);
       case '6hours':
-        return dummyData.filter((d) => now - d.time <= 6 * 60 * 60 * 1000);
+        return realData.filter((d) => now - d.time <= 6 * 60 * 60 * 1000);
+      case '24hours':
+        return realData.filter((d) => now - d.time <= 24 * 60 * 60 * 1000);
       default:
-        return dummyData;
+        return realData;
     }
   }, [timeRange]);
 
@@ -83,7 +111,11 @@ const MyChart: React.FC = () => {
   }, [priceHistory]);
 
   const formatPriceTitle = useCallback((point: PriceHistoryPoint) => {
-    return `Time: ${point.date.toLocaleTimeString()}, Price: $${point.value.toFixed(2)}`;
+    return `$${point.value.toFixed(2)}`;
+  }, []);
+
+  const formatTimeTitle = useCallback((point: PriceHistoryPoint) => {
+    return `Time: ${point.date.toLocaleTimeString()}`;
   }, []);
 
   const handlePointSelected = useCallback((point: PriceHistoryPoint) => {
@@ -97,30 +129,47 @@ const MyChart: React.FC = () => {
   const displayPoint = selectedPoint || latestPoint;
 
   return (
-    <YStack
-      backgroundColor={'#000000'}
-      fullscreen
-      flex={1}
-      alignItems="center"
-      justifyContent="center">
-      <XStack paddingBottom={'$10'}>
-        <Card>
+    <YStack backgroundColor={'#000000'} fullscreen flex={1}>
+      <XStack alignItems="center" alignContent="space-between" justifyContent="space-between">
+        <Card backgroundColor={'#000000'}>
           <Card.Header>
-            <XStack>
+            <XStack alignItems="center">
               <Avatar circular size="$3">
-                <Avatar.Image
-                  accessibilityLabel="Cam"
-                  src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
-                />
+                <Avatar.Image accessibilityLabel="Cam" src={tokenInfo.imageUrl} />
                 <Avatar.Fallback backgroundColor="$blue10" />
               </Avatar>
-              <Text color={'white'} alignSelf="center" paddingLeft="$3">
-                Crypto Coin {id}
-              </Text>
+              <YStack paddingLeft="$3">
+                <Text color={'white'} alignSelf="center">
+                  {tokenInfo.name}
+                </Text>
+                <Text color={'gray'}>{tokenInfo.symbol}</Text>
+              </YStack>
             </XStack>
           </Card.Header>
         </Card>
+        {displayPoint && (
+          <YStack alignItems="flex-end" paddingRight={7}>
+            <Text style={styles.infoText}>{formatPriceTitle(displayPoint)}</Text>
+            <XStack gap={4}>
+              {percentageChange >= 0 ? (
+                // <AntDesign name="up" size={24} color="#4caf50" />
+                <FontAwesome name="caret-up" size={20} color="#4caf50" />
+              ) : (
+                <FontAwesome name="caret-down" size={20} color="#f44336" />
+              )}
+              <Text
+                style={[
+                  styles.infoText,
+                  percentageChange >= 0 ? styles.positiveChange : styles.negativeChange,
+                ]}>
+                {percentageChange.toFixed(2)}%
+              </Text>
+            </XStack>
+            <Text style={styles.infoText}>{formatTimeTitle(displayPoint)}</Text>
+          </YStack>
+        )}
       </XStack>
+
       <LineGraph
         points={priceHistory}
         animated={true}
@@ -131,18 +180,7 @@ const MyChart: React.FC = () => {
         onPointSelected={handlePointSelected}
         onGestureEnd={handleGestureEnd}
       />
-      {displayPoint && (
-        <View style={styles.infoContainer}>
-          <Text style={styles.infoText}>{formatPriceTitle(displayPoint)}</Text>
-          <Text
-            style={[
-              styles.infoText,
-              percentageChange >= 0 ? styles.positiveChange : styles.negativeChange,
-            ]}>
-            Total Change: {percentageChange.toFixed(2)}%
-          </Text>
-        </View>
-      )}
+
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, timeRange === '30min' && styles.activeButton]}
@@ -160,11 +198,21 @@ const MyChart: React.FC = () => {
           <Text style={styles.buttonText}>6 Hours</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.button, timeRange === 'all' && styles.activeButton]}
-          onPress={() => setTimeRange('all')}>
-          <Text style={styles.buttonText}>All</Text>
+          style={[styles.button, timeRange === '24hours' && styles.activeButton]}
+          onPress={() => setTimeRange('24hours')}>
+          <Text style={styles.buttonText}>24 Hours</Text>
         </TouchableOpacity>
       </View>
+      <XStack
+        gap={10}
+        padding={20}
+        alignItems="center"
+        alignContent="center"
+        justifyContent="center">
+        <MyCard text="liquidity" value={tokenInfo.liquidityUsd} />
+        <MyCard text="market cap" value={tokenInfo.marginTop} />
+        <MyCard text="24h Vol" value={tokenInfo.volH24} />
+      </XStack>
     </YStack>
   );
 };
@@ -175,7 +223,6 @@ const styles = StyleSheet.create({
     height: 300,
   },
   infoContainer: {
-    marginTop: 20,
     padding: 10,
     backgroundColor: '#333',
     borderRadius: 10,
@@ -210,11 +257,14 @@ const styles = StyleSheet.create({
   },
   button: {
     padding: 10,
-    backgroundColor: '#4484B2',
+    backgroundColor: '#000000',
     borderRadius: 5,
   },
   activeButton: {
-    backgroundColor: '#2C5D7C',
+    backgroundColor: '#000000',
+    textDecorationColor: '#000000',
+    borderWidth: 1,
+    borderColor: '#808080',
   },
   buttonText: {
     color: '#fff',
@@ -223,3 +273,25 @@ const styles = StyleSheet.create({
 });
 
 export default MyChart;
+
+function MyCard({ text, value }: { text: string; value: string }) {
+  return (
+    <YStack
+      borderWidth={2}
+      borderRadius={20}
+      backgroundColor={'#141414'}
+      padding={20}
+      width={100}
+      height={80}
+      alignContent="center"
+      alignItems="center"
+      justifyContent="center">
+      <SizableText size="$5" color={'#fff'}>
+        {value}
+      </SizableText>
+      <SizableText size="$2" color={'#808080'}>
+        {text}
+      </SizableText>
+    </YStack>
+  );
+}
