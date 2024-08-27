@@ -3,6 +3,7 @@ import { Link, Stack } from 'expo-router';
 //@ts-ignore
 import { TamaguiProvider, Text, YStack, XStack, Button, Image } from 'tamagui';
 import { AnimatedBackground } from '~/components/AnimatedBackground';
+import Auth from '~/components/Auth';
 import { Container } from '~/components/Container';
 import { ScreenContent } from '~/components/ScreenContent';
 
@@ -23,6 +24,7 @@ export default function Home() {
           CHEDDAR
         </Text>
       </Link>
+      <Auth />
     </YStack>
   );
 }
