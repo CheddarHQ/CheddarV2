@@ -27,17 +27,18 @@ const { width } = Dimensions.get('window');
 const HorizontalTabs = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
+  const [tokenInfo, setTokenInfo] = useState<TokenBasicInfo | null>(null);
 
-  let parsedDetailedInfo;
-  try {
-    parsedDetailedInfo = JSON.parse(detailedInfo || '[]');
-    console.log('Parsed detailedInfo:', parsedDetailedInfo);
-  } catch (error) {
-    console.error('Error parsing detailedInfo:', error);
-    parsedDetailedInfo = [];
-  }
-
-  const tokenInfo = parsedDetailedInfo;
+  useEffect(() => {
+    try {
+      const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
+      console.log('Parsed detailedInfo:', parsedDetailedInfo);
+      setTokenInfo(parsedDetailedInfo);
+    } catch (error) {
+      console.error('Error parsing detailedInfo:', error);
+      setTokenInfo(null);
+    }
+  }, [detailedInfo]);
 
   const [buyInput, setBuyInput] = useState('');
   const [sellInput, setSellInput] = useState('');
