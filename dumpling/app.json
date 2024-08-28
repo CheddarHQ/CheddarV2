@@ -4,16 +4,28 @@
     "slug": "dumpling",
     "version": "1.0.0",
     "scheme": "dumpling",
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "web": {
       "bundler": "metro",
       "output": "static",
       "favicon": "./assets/thing.png",
-      "config":{
-        "generateStaticSite" : true
+      "config": {
+        "generateStaticSite": true
       }
-
     },
-    "plugins": ["expo-router", "expo-font"],
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-dev-launcher",
+        {
+          "launchMode": "most-recent"
+        }
+      ]
+    ],
     "experiments": {
       "typedRoutes": true,
       "tsconfigPaths": true
@@ -26,17 +38,28 @@
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "infoPlist": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "dumpling"
+            ]
+          }
+        ]
+      },
+      "supportsTablet": true,
+      "bundleIdentifier": "dumpling.apk"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/thing.png",
         "backgroundColor": "#000000"
-      }
+      },
+      "package": "dumpling.apk"
     }
   }
 }
-
-
