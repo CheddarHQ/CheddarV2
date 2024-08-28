@@ -3,7 +3,6 @@ CREATE TABLE users (
   id TEXT PRIMARY KEY, -- TWITTER ID
   username TEXT NOT NULL,
   bio TEXT,
-  twitter_handle TEXT NOT NULL,
   profile_image_url TEXT,
   pub_address TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -80,8 +79,8 @@ CREATE TABLE chat_rooms (
   name TEXT NOT NULL,
   description TEXT,
   admin_id TEXT, -- User ID of the chat room creator
-  FOREIGN KEY (creator_id) REFERENCES users(id)
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (admin_id) REFERENCES users(id)
 );
 
 -- ROOM_PARTICIPANTS
