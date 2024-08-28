@@ -8,11 +8,9 @@ import { supabase } from "~/lib/supabase";
 WebBrowser.maybeCompleteAuthSession(); // required for web only
 // const redirectTo = makeRedirectUri();
 const redirectTo = makeRedirectUri({
-  scheme: "dumpling", // Your custom scheme
+  scheme: "cheddarchat", // Your custom scheme
   path: "auth/callback", // Ensure the path is consistent with your OAuth setup
 });
-
-
 
 const createSessionFromUrl = async (url: string) => {
   const { params, errorCode } = QueryParams.getQueryParams(url);
