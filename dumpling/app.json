@@ -4,6 +4,9 @@
     "slug": "dumpling",
     "version": "1.0.0",
     "scheme": "cheddarchat",
+    "deepLinking": {
+      "enabled": true
+    },
     "platforms": [
       "ios",
       "android"
