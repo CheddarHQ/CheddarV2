@@ -57,7 +57,7 @@ transactionRouter.post("/add", zValidator("json", transactionSchema), async (c) 
 
 // Getting all transactions of a user 
 transactionRouter.get("/all/:user_id", zValidator("query", z.object({user_id: z.string()})), async (c) => {
-    const user_id  = c.req.query;
+    const user_id  = c.req.query();
     try {
         const query = `
         SELECT * FROM transactions WHERE user_id = ?;
@@ -76,7 +76,7 @@ transactionRouter.get("/all/:user_id", zValidator("query", z.object({user_id: z.
 
 // Getting a transaction by id
 transactionRouter.get("/get/:id", zValidator("query", z.object({id: z.string()})), async (c) => {
-    const id = c.req.query;
+    const id = c.req.query();
     try {
         const query = `
         SELECT * FROM transactions WHERE id = ?;
