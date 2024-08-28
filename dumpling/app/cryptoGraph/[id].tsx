@@ -4,9 +4,10 @@ import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { LineGraph } from 'react-native-graph';
 import { Card, Text, XStack, YStack, Avatar, SizableText } from 'tamagui';
 const { width } = Dimensions.get('window');
-import { dummyGraphData } from '~/test/message';
+import { dummyGraphData } from '../../test/message';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import Entypo from '@expo/vector-icons/Entypo';
 import { point } from '@shopify/react-native-skia';
 //<AntDesign name="up" size={24} color="black" />
 //<AntDesign name="caretup" size={24} color="black" />
@@ -37,6 +38,15 @@ interface TokenBasicInfo {
   symbol: string;
 }
 
+interface TokenInfo {
+  imageUrl: string;
+  name: string;
+  symbol: string;
+  liquidityUsd: string;
+  marginTop: string;
+  volH24: string;
+}
+
 const generateDayData = (): DataPoint[] => {
   const data: DataPoint[] = dummyGraphData.Data.Data.map((point) => ({
     time: point.time * 1000, // Convert seconds to milliseconds
@@ -61,17 +71,18 @@ const MyChart: React.FC = () => {
   const [timeRange, setTimeRange] = useState<TimeRange>('24hours');
 
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
 
-  let parsedDetailedInfo;
-  try {
-    parsedDetailedInfo = JSON.parse(detailedInfo || '[]');
-    console.log('Parsed detailedInfo:', parsedDetailedInfo);
-  } catch (error) {
-    console.error('Error parsing detailedInfo:', error);
-    parsedDetailedInfo = [];
-  }
-
-  const tokenInfo = parsedDetailedInfo;
+  useEffect(() => {
+    try {
+      const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
+      console.log('Parsed detailedInfo:', parsedDetailedInfo);
+      setTokenInfo(parsedDetailedInfo);
+    } catch (error) {
+      console.error('Error parsing detailedInfo:', error);
+      setTokenInfo(null);
+    }
+  }, [detailedInfo]);
 
   const filteredData = useMemo(() => {
     const now = realData[realData.length - 1].time;
@@ -133,18 +144,20 @@ const MyChart: React.FC = () => {
       <XStack alignItems="center" alignContent="space-between" justifyContent="space-between">
         <Card backgroundColor={'#000000'}>
           <Card.Header>
-            <XStack alignItems="center">
-              <Avatar circular size="$3">
-                <Avatar.Image accessibilityLabel="Cam" src={tokenInfo.imageUrl} />
-                <Avatar.Fallback backgroundColor="$blue10" />
-              </Avatar>
-              <YStack paddingLeft="$3">
-                <Text color={'white'} alignSelf="center">
-                  {tokenInfo.name}
-                </Text>
-                <Text color={'gray'}>{tokenInfo.symbol}</Text>
-              </YStack>
-            </XStack>
+            {tokenInfo && (
+              <XStack alignItems="center">
+                <Avatar circular size="$3">
+                  <Avatar.Image accessibilityLabel="Cam" src={tokenInfo.imageUrl} />
+                  <Avatar.Fallback backgroundColor="$blue10" />
+                </Avatar>
+                <YStack paddingLeft="$3">
+                  <Text color={'white'} alignSelf="center">
+                    {tokenInfo.name}
+                  </Text>
+                  <Text color={'gray'}>{tokenInfo.symbol}</Text>
+                </YStack>
+              </XStack>
+            )}
           </Card.Header>
         </Card>
         {displayPoint && (
@@ -152,7 +165,6 @@ const MyChart: React.FC = () => {
             <Text style={styles.infoText}>{formatPriceTitle(displayPoint)}</Text>
             <XStack gap={4}>
               {percentageChange >= 0 ? (
-                // <AntDesign name="up" size={24} color="#4caf50" />
                 <FontAwesome name="caret-up" size={20} color="#4caf50" />
               ) : (
                 <FontAwesome name="caret-down" size={20} color="#f44336" />
@@ -169,50 +181,89 @@ const MyChart: React.FC = () => {
           </YStack>
         )}
       </XStack>
-
-      <LineGraph
-        points={priceHistory}
-        animated={true}
-        color="#4484B2"
-        style={styles.chart}
-        enablePanGesture={true}
-        panGestureDelay={300}
-        onPointSelected={handlePointSelected}
-        onGestureEnd={handleGestureEnd}
-      />
+      {/* {percentageChange >= 0 ? (
+                <FontAwesome name="caret-up" size={20} color="#4caf50" />
+              ) : (
+                <FontAwesome name="caret-down" size={20} color="#f44336" />
+              )} */}
+      {percentageChange >= 0 ? (
+        <LineGraph
+          points={priceHistory}
+          animated={true}
+          color="#0FFF50"
+          style={styles.chart}
+          enablePanGesture={true}
+          panGestureDelay={300}
+          onPointSelected={handlePointSelected}
+          onGestureEnd={handleGestureEnd}
+        />
+      ) : (
+        <LineGraph
+          points={priceHistory}
+          animated={true}
+          color="#f44336"
+          style={styles.chart}
+          enablePanGesture={true}
+          panGestureDelay={300}
+          onPointSelected={handlePointSelected}
+          onGestureEnd={handleGestureEnd}
+        />
+      )}
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
           style={[styles.button, timeRange === '30min' && styles.activeButton]}
           onPress={() => setTimeRange('30min')}>
-          <Text style={styles.buttonText}>30 Min</Text>
+          <Text style={styles.buttonText} color={'#fff'}>
+            30 Min
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, timeRange === '1hour' && styles.activeButton]}
           onPress={() => setTimeRange('1hour')}>
-          <Text style={styles.buttonText}>1 Hour</Text>
+          <Text style={styles.buttonText} color={'#fff'}>
+            1 Hour
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, timeRange === '6hours' && styles.activeButton]}
           onPress={() => setTimeRange('6hours')}>
-          <Text style={styles.buttonText}>6 Hours</Text>
+          <Text style={styles.buttonText} color={'#fff'}>
+            6 Hours
+          </Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, timeRange === '24hours' && styles.activeButton]}
           onPress={() => setTimeRange('24hours')}>
-          <Text style={styles.buttonText}>24 Hours</Text>
+          <Text style={styles.buttonText} color={'#fff'}>
+            24 Hours
+          </Text>
         </TouchableOpacity>
       </View>
-      <XStack
-        gap={10}
-        padding={20}
-        alignItems="center"
-        alignContent="center"
-        justifyContent="center">
-        <MyCard text="liquidity" value={tokenInfo.liquidityUsd} />
-        <MyCard text="market cap" value={tokenInfo.marginTop} />
-        <MyCard text="24h Vol" value={tokenInfo.volH24} />
-      </XStack>
+      {tokenInfo && (
+        <XStack
+          gap={10}
+          padding={20}
+          alignItems="center"
+          alignContent="center"
+          justifyContent="center">
+          <MyCard
+            text="liquidity"
+            value={tokenInfo.liquidityUsd}
+            icon={<Entypo name="drop" size={20} color="white" />}
+          />
+          <MyCard
+            text="market cap"
+            value={tokenInfo.marginTop}
+            icon={<Entypo name="area-graph" size={20} color="white" />}
+          />
+          <MyCard
+            text="24h Vol"
+            value={tokenInfo.volH24}
+            icon={<Entypo name="bar-graph" size={20} color="white" />}
+          />
+        </XStack>
+      )}
     </YStack>
   );
 };
@@ -274,21 +325,24 @@ const styles = StyleSheet.create({
 
 export default MyChart;
 
-function MyCard({ text, value }: { text: string; value: string }) {
+function MyCard({ text, value, icon }: { text: string; value: string; icon: JSX.Element }) {
   return (
     <YStack
       borderWidth={2}
       borderRadius={20}
       backgroundColor={'#141414'}
       padding={20}
-      width={100}
+      width={110}
       height={80}
       alignContent="center"
       alignItems="center"
       justifyContent="center">
-      <SizableText size="$5" color={'#fff'}>
-        {value}
-      </SizableText>
+      <XStack alignContent="center" alignItems="center" justifyContent="center" gap={5}>
+        <SizableText size="$5" color={'#fff'} fontWeight={'bold'}>
+          {value}
+        </SizableText>
+        {icon}
+      </XStack>
       <SizableText size="$2" color={'#808080'}>
         {text}
       </SizableText>
