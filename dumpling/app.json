@@ -3,7 +3,7 @@
     "name": "dumpling",
     "slug": "dumpling",
     "version": "1.0.0",
-    "scheme": "dumpling",
+    "scheme": "cheddarchat",
     "platforms": [
       "ios",
       "android"
