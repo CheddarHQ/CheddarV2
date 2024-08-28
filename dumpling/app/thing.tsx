@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
@@ -18,10 +18,10 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
-import { TamaguiProvider, YStack, XStack, Text, Input, Button, AnimatePresence } from 'tamagui';
+import { YStack, XStack, Text, Input, Button, AnimatePresence } from 'tamagui';
 import { Link } from 'expo-router';
 
 const initialMessages = [
@@ -57,12 +57,78 @@ export default function Chatroom() {
     },
   });
 
-  const sendMessage = () => {
+  const ws = new WebSocket(
+    'ws://baklava.cheddar-io.workers.dev/api/room/002e03cc4a62464c7aa46cadaa82676bce8d3f9559ebd73c401e958e43301da4/websocket'
+  );
+  useEffect(() => {
+
+    ws.onopen = () => {
+      console.log('WebSocket connected');
+      ws.send(
+        JSON.stringify({
+          type: 'start_chat',
+          user: 'new_user',
+        })
+      );
+    };
+
+    ws.onmessage = (event) => {
+      const messageData = JSON.parse(event.data);
+      console.log('Received message:', messageData);
+    
+
+      // Ignore heartbeat messages
+      if (messageData.type === 'heartbeat') {
+        return;
+      }
+
+      if (messageData.type === 'message') {
+        // setMessages((prevMessages) => [
+        //   ...prevMessages,
+        //   {
+        //     key: generateUUID(),
+        //     text: messageData,
+        //     mine: false, // Set to true if the message is from the current user
+        //     user: messageData.user || 'Server', // Default to 'Server' if no user is provided
+        //   },
+        // ]);
+
+        sendMessage(ws, messageData.user || "Server")
+      }
+    };
+
+    ws.onerror = (error) => {
+      console.log('WebSocket error:', error);
+    };
+
+    ws.onclose = () => {
+      console.log('WebSocket connection closed');
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
+
+  function sendMessage(ws: WebSocket, sender: string) {
+    console.log('Sending message');
+
+    if(ws){
+      ws.send(JSON.stringify({data: inputText}))
+    }
+
+    console.log("message sent")
+
     if (inputText.trim()) {
-      setMessages([...messages, { key: generateUUID(), text: inputText, mine: true, user: 'me' }]);
+      setMessages([
+        ...messages,
+        { key: generateUUID(), text: inputText, mine: true, user: sender },
+      ]);
+   
+  
       setInputText('');
     }
-  };
+  }
 
   return (
     <KeyboardAvoidingView
@@ -151,11 +217,12 @@ export default function Chatroom() {
                           alignSelf: item.mine ? 'flex-end' : 'flex-start',
                         },
                       ]}>
-                      <Text style={{ color: 'white' }}>{item.text}</Text>
+                      <Text color={'#fff'} style={{ color: 'white' }}>{item.text}</Text>
                       <Text
+                        color={'#fff'}
                         style={{
                           fontSize: 12,
-                          color: 'rgba(255,255,255,0.7)',
+                          color: 'rgba(255,100,255,0.7)',
                           alignSelf: 'flex-end',
                           marginTop: 4,
                         }}>
@@ -187,7 +254,7 @@ export default function Chatroom() {
                   bottom="$2"
                   size="$3"
                   circular
-                  onPress={sendMessage}
+                  onPress={() => sendMessage(ws, 'Me')}
                   animation="quick"
                   enterStyle={{ opacity: 0, scale: 0.8 }}
                   exitStyle={{ opacity: 0, scale: 0.8 }}>
