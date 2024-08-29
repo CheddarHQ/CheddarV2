@@ -1,6 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// @ts-ignore
 import nacl from 'tweetnacl';
 import * as Crypto from 'expo-crypto';
+// @ts-ignore
 import bs58 from 'bs58';
 
 const STORAGE_KEY = 'PHANTOM_ENCRYPTION_KEY_PAIR';

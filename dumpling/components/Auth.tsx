@@ -1,10 +1,13 @@
-import { Button, Text, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { Button, Text, View, StyleSheet } from "react-native";
 import { makeRedirectUri } from "expo-auth-session";
-import * as QueryParams from "expo-auth-session/build/QueryParams";
 import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { supabase } from "~/lib/supabase";
-import React from "react";
+import { Link } from 'expo-router';
+import {Image } from 'tamagui';
+
+
 
 interface UserProfile {
   username: string;
@@ -22,8 +25,8 @@ const redirectTo = makeRedirectUri({
   path: "auth/callback",
 });
 
-const createSessionFromUrl = async (url: string): Promise<{ session: any; profile: any } | undefined> => {
-  const params = new URLSearchParams(url.split('?')[1]);
+const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefined> => {
+  const params = new URLSearchParams(url.split('#')[1]);
 
   const access_token = params.get('access_token');
   const refresh_token = params.get('refresh_token');
@@ -32,22 +35,20 @@ const createSessionFromUrl = async (url: string): Promise<{ session: any; profil
 
   // Set session in Supabase
   const { data, error } = await supabase.auth.setSession({
-    access_token: access_token, // Ensure access_token is a string
-    refresh_token: refresh_token, // Ensure refresh_token is a string
+    access_token,
+    refresh_token,
   });
   if (error) throw error;
 
-  // Fetch user profile data from Twitter
-  const userProfileResponse = await fetch('https://api.twitter.com/2/me', {
-    headers: {
-      Authorization: `Bearer ${access_token}`,
-    },
-  });
-  const userProfile = await userProfileResponse.json();
+  // Extract user profile data from the JWT token
+  const tokenPayload = JSON.parse(atob(access_token.split('.')[1]));
+  const userProfile = {
+    username: tokenPayload.user_metadata.user_name,
+    // Add other profile fields as needed
+  };
 
   return { session: data.session, profile: userProfile };
 };
-
 
 const performOAuth = async () => {
   console.log("Redirect URL:", redirectTo);
@@ -67,21 +68,22 @@ const performOAuth = async () => {
   );
   console.log("Auth session result:", res);
 
-  if (res.type === "success") {
-    const { url } = res;
-    const response = await createSessionFromUrl(url);
+  if (res.type === "success" && res.url) {
+    const response = await createSessionFromUrl(res.url);
     if (response) {
       console.log('User Profile:', response.profile);
+      return response.profile.username;
     }
   }
+  return null;
 };
 
 export default function Auth() {
-  const [userName, setUserName] = React.useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   
   // Handle linking into app from email app.
   const url = Linking.useURL();
-  React.useEffect(() => {
+  useEffect(() => {
     if (url) {
       createSessionFromUrl(url).then(response => {
         if (response) {
@@ -91,10 +93,36 @@ export default function Auth() {
     }
   }, [url]);
 
+  const handleSignIn = async () => {
+    try {
+      const username = await performOAuth();
+      if (username) {
+        setUserName(username);
+      }
+    } catch (error) {
+      console.error("Error during sign in:", error);
+    }
+  };
+
   return (
     <View>
-      <Button onPress={performOAuth} title="Sign in with Twitter" />
-      {userName ? <Text>Welcome, {userName}!</Text> : null}
+            {userName ? (
+                 <Link href={'/thing'} asChild>
+                <Button title ="Enter"/>
+               </Link>
+              
+                
+                
+            ) : (
+                <Button onPress={handleSignIn} title="Sign in with Twitter" />
+            )}
     </View>
   );
 }
+
+
+const styles = StyleSheet.create({
+  welcomeText: {
+      color: 'white', // Set the text color to white
+  },
+});

@@ -10,10 +10,7 @@ import { ScreenContent } from '~/components/ScreenContent';
 export default function Home() {
   return (
     <YStack f={1} jc="center" ai="center" backgroundColor="#000000" padding="$4">
-      <Link href={'/thing'} asChild>
         <Image source={require('../assets/cheese-svgrepo-com.gif')} width={280} height={300} />
-      </Link>
-      <Link href={'/thing'} asChild>
         <Text
           fontSize="$9"
           fontWeight="bold"
@@ -23,7 +20,7 @@ export default function Home() {
           fontFamily="Press2P">
           CHEDDAR
         </Text>
-      </Link>
+      
       <Auth />
     </YStack>
   );

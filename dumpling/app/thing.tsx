@@ -11,12 +11,12 @@ import {
   View,
 } from 'react-native';
 import Animated, {
-  useAnimatedRef,
   useAnimatedScrollHandler,
   useSharedValue,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
+
 
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -24,11 +24,13 @@ const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 import { YStack, XStack, Text, Input, Button, AnimatePresence } from 'tamagui';
 import { Link } from 'expo-router';
 
-const initialMessages = [
-  { id: '1', text: 'Hello!', sender: 'User1' },
-  { id: '2', text: 'Hi there!', sender: 'User2' },
-  { id: '3', text: 'How are you?', sender: 'User1' },
-];
+interface Message {
+  key: string;
+  text: string;
+  mine: boolean;
+  user: string;
+  sent: boolean;
+}
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -39,17 +41,11 @@ function generateUUID() {
 }
 
 export default function Chatroom() {
-  const [messages, setMessages] = useState(
-    initialMessages.map((msg) => ({
-      key: generateUUID(),
-      text: msg.text,
-      mine: msg.sender === 'Me',
-      user: msg.sender,
-    }))
-  );
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollY = useSharedValue(0);
+  const [ws, setWs] = useState<WebSocket | null>(null);
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -57,84 +53,117 @@ export default function Chatroom() {
     },
   });
 
-  const ws = new WebSocket(
-    'ws://baklava.cheddar-io.workers.dev/api/room/002e03cc4a62464c7aa46cadaa82676bce8d3f9559ebd73c401e958e43301da4/websocket'
-  );
   useEffect(() => {
+    const newWs = new WebSocket(
+      'ws://baklava.cheddar-io.workers.dev/api/room/002e03cc4a62464c7aa46cadaa82676bce8d3f9559ebd73c401e958e43301da4/websocket'
+    );
 
-    ws.onopen = () => {
+    newWs.onopen = () => {
       console.log('WebSocket connected');
-      ws.send(
-        JSON.stringify({
-          type: 'start_chat',
-          user: 'new_user',
-        })
-      );
     };
 
-    ws.onmessage = (event) => {
-      const messageData = JSON.parse(event.data);
-      console.log('Received message:', messageData);
-    
+    newWs.onmessage = (event) => {
+      console.log('Raw message received:', event.data);
+      try {
+        const messageData = JSON.parse(event.data);
+        console.log('Parsed message:', messageData);
 
-      // Ignore heartbeat messages
-      if (messageData.type === 'heartbeat') {
-        return;
+        if (messageData.type === 'heartbeat') {
+          console.log('Heartbeat received');
+          return;
+        }
+
+        if(messageData.sender == 'Server'){
+          return;
+        }
+        
+        if (messageData.type === 'message' || messageData.data) {
+
+          console.log("Message Data : ", messageData)
+          const newMessage: Message = {
+            key: generateUUID(),
+            text: messageData.data || messageData.message || JSON.stringify(messageData),
+            mine: messageData.sender === 'Me',
+            user: messageData.sender || 'Server',
+            sent: true,
+          };
+          console.log('Adding new message:', newMessage);
+          console.log("sender :",newMessage.user)
+          setMessages((prevMessages) => [...prevMessages, newMessage]);
+        } else {
+          console.log('Unhandled message type:', messageData.type);
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
       }
-
-      if (messageData.type === 'message') {
-        // setMessages((prevMessages) => [
-        //   ...prevMessages,
-        //   {
-        //     key: generateUUID(),
-        //     text: messageData,
-        //     mine: false, // Set to true if the message is from the current user
-        //     user: messageData.user || 'Server', // Default to 'Server' if no user is provided
-        //   },
-        // ]);
-
-        sendMessage(ws, messageData.user || "Server")
-      }
     };
 
-    ws.onerror = (error) => {
-      console.log('WebSocket error:', error);
+    newWs.onerror = (error) => {
+      console.error('WebSocket error:', error);
     };
 
-    ws.onclose = () => {
-      console.log('WebSocket connection closed');
+    newWs.onclose = (event) => {
+      console.log('WebSocket connection closed:', event.code, event.reason);
     };
+
+    setWs(newWs);
 
     return () => {
-      ws.close();
+      newWs.close();
     };
   }, []);
 
-  function sendMessage(ws: WebSocket, sender: string) {
-    console.log('Sending message');
+  useEffect(() => {
+    scrollRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
 
-    if(ws){
-      ws.send(JSON.stringify({data: inputText}))
-    }
-
-    console.log("message sent")
-
-    if (inputText.trim()) {
-      setMessages([
-        ...messages,
-        { key: generateUUID(), text: inputText, mine: true, user: sender },
-      ]);
-   
+  function sendMessage() {
+    if (inputText.trim() && ws) {
+      const messageKey = generateUUID();
+      const newMessage: Message = {
+        key: messageKey,
+        text: inputText,
+        mine: true,
+        user: 'Me',
+        sent: false,
+      };
   
+      // Immediately add the message to the UI
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+  
+      // Clear the input text
       setInputText('');
+  
+      // Prepare the message to send
+      const messageToSend = {
+        type: 'message',
+        data: inputText,
+        user: 'Me'   //use session details here
+      };
+  
+      console.log('Sending message:', messageToSend);
+  
+      // Send the message
+      ws.send(JSON.stringify(messageToSend));
+  
+      // Mark the message as sent after a short delay
+      setTimeout(() => {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.key === messageKey ? { ...msg, sent: true } : msg
+          )
+        );
+      }, 500);
     }
   }
+  
 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}>
       <YStack flex={1} backgroundColor="#000000">
+        {/* Header */}
         <XStack
           backgroundColor="#000000"
           paddingTop="$8"
@@ -149,7 +178,6 @@ export default function Chatroom() {
             color="white"
             fontSize="$8"
             fontWeight="bold"
-            //@ts-ignore
             fontFamily={'Press2P'}
             paddingTop={'$2'}
             paddingLeft={'$3'}
@@ -161,6 +189,7 @@ export default function Chatroom() {
           </Link>
         </XStack>
 
+        {/* Chat messages */}
         <View style={{ flex: 1 }}>
           <Animated.ScrollView
             ref={scrollRef}
@@ -178,6 +207,7 @@ export default function Chatroom() {
                         {
                           backgroundColor: item.mine ? 'white' : '#E4E7EB',
                           alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                          opacity: item.sent ? 1 : 0.5,
                         },
                       ]}>
                       <Text style={{ color: item.mine ? 'white' : '#111927' }}>{item.text}</Text>
@@ -188,7 +218,7 @@ export default function Chatroom() {
                           alignSelf: 'flex-end',
                           marginTop: 4,
                         }}>
-                        {item.user}
+                        {item.user} {!item.sent && '(Sending...)'}
                       </Text>
                     </View>
                   ))}
@@ -215,6 +245,7 @@ export default function Chatroom() {
                         {
                           backgroundColor: item.mine ? 'transparent' : '#141414',
                           alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                          opacity: item.sent ? 1 : 0.5,
                         },
                       ]}>
                       <Text color={'#fff'} style={{ color: 'white' }}>{item.text}</Text>
@@ -226,7 +257,7 @@ export default function Chatroom() {
                           alignSelf: 'flex-end',
                           marginTop: 4,
                         }}>
-                        {item.user}
+                        {item.user} {!item.sent && '(Sending...)'}
                       </Text>
                     </View>
                   )}
@@ -235,6 +266,7 @@ export default function Chatroom() {
             </MaskedView>
           </Animated.ScrollView>
 
+          {/* Input area */}
           <XStack padding="$5">
             <Input
               flex={1}
@@ -245,6 +277,7 @@ export default function Chatroom() {
               height="$5"
               paddingHorizontal="$3"
               paddingRight={inputText ? '$8' : '$3'}
+              onSubmitEditing={sendMessage}
             />
             <AnimatePresence>
               {inputText && (
@@ -254,7 +287,7 @@ export default function Chatroom() {
                   bottom="$2"
                   size="$3"
                   circular
-                  onPress={() => sendMessage(ws, 'Me')}
+                  onPress={sendMessage}
                   animation="quick"
                   enterStyle={{ opacity: 0, scale: 0.8 }}
                   exitStyle={{ opacity: 0, scale: 0.8 }}>
