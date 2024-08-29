@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Dimensions, Pressable } from 'react-native';
 import type { TabsContentProps } from 'tamagui';
 import Feather from '@expo/vector-icons/Feather';
@@ -6,6 +5,13 @@ import { Text, SizableText, Tabs, XStack, YStack, Button, Card, CardHeader, Avat
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Link, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
 import { useWindowDimensions } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
+import { PublicKey } from '@solana/web3.js';
+import { getPublicKey } from '~/components/encryptionUtils';
+import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
+import React, { useEffect, useCallback, useState } from 'react';
+import { useRouter } from 'expo-router';
 
 interface TokenBasicInfo {
   name: string;
@@ -26,8 +32,13 @@ const { width } = Dimensions.get('window');
 
 const HorizontalTabs = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const navigation = useNavigation();
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
   const [tokenInfo, setTokenInfo] = useState<TokenBasicInfo | null>(null);
+
+  const closeModal = () => {
+    navigation.goBack();
+  };
 
   useEffect(() => {
     try {
@@ -199,13 +210,7 @@ const HorizontalTabs = () => {
             <Animated.Text style={animatedStyle(buyInputLength)}>+{buyInput || '0'}</Animated.Text>
           </XStack>
           {tokenInfo ? (
-            <CryptoCard
-              item={tokenInfo}
-              input={buyInput}
-              onPress={() => {
-                console.log(`Clicked on ${tokenInfo.name}`);
-              }}
-            />
+            <CryptoCard item={tokenInfo} input={buyInput} onPress={closeModal} />
           ) : (
             <Text>No token information available</Text>
           )}
@@ -241,18 +246,76 @@ const HorizontalTabs = () => {
   );
 };
 
-const MoneyEx = () => (
-  <YStack flex={1} backgroundColor="#000000" paddingHorizontal={20} paddingVertical={20}>
-    <XStack width="100%" justifyContent="flex-start" marginBottom={20}>
-      <Link href="/settings" asChild>
+const MoneyEx = () => {
+  const [phantomWalletPublicKey, setPhantomWalletPublicKey] = React.useState(null);
+  const router = useRouter();
+
+  const handleDeepLink = useCallback((event: any) => {
+    const data = Linking.parse(event.url);
+    console.log('Deep link data:', data);
+    if (data.queryParams && data.queryParams.phantom_encryption_public_key) {
+      // This is just an example, you might need to handle the data differently
+      setPhantomWalletPublicKey(new PublicKey(data.queryParams.phantom_encryption_public_key));
+    }
+  }, []);
+
+  useEffect(() => {
+    // Set up the listener for deep links
+    const subscription = Linking.addEventListener('url', handleDeepLink);
+
+    // Check for any pending initial URL
+    Linking.getInitialURL().then((url) => {
+      if (url) {
+        handleDeepLink({ url });
+      }
+    });
+
+    // Clean up the listener when the component unmounts
+    return () => {
+      subscription.remove();
+    };
+  }, [handleDeepLink]);
+
+  const connectToPhantom = async () => {
+    try {
+      const dappPublicKey = await getPublicKey();
+      const redirectUrl = Linking.createURL('wallet-connect');
+      const url = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(redirectUrl)}&dapp_encryption_public_key=${encodeURIComponent(dappPublicKey)}&redirect_link=${encodeURIComponent(redirectUrl)}`;
+
+      console.log('Phantom connection URL:', url);
+
+      const supported = await Linking.canOpenURL(url);
+
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.log('Phantom app is not installed');
+        // You might want to show a message to the user here
+      }
+    } catch (error) {
+      console.error('Error connecting to Phantom:', error);
+      // You might want to show an error message to the user here
+    }
+  };
+  return (
+    <YStack flex={1} backgroundColor="#000000" paddingHorizontal={20}>
+      <XStack width="100%" justifyContent="space-between" marginBottom={10}>
+        <Link href="/settings" asChild>
+          <Button
+            icon={<Feather name="settings" size={24} color="white" />}
+            backgroundColor="transparent"
+          />
+        </Link>
         <Button
-          icon={<Feather name="settings" size={24} color="white" />}
+          icon={<FontAwesome5 name="wallet" size={24} color="white" />}
           backgroundColor="transparent"
+          onPress={connectToPhantom}
         />
-      </Link>
-    </XStack>
-    <HorizontalTabs />
-  </YStack>
-);
+      </XStack>
+      {phantomWalletPublicKey && <Text>Connected: {phantomWalletPublicKey.toString()}</Text>}
+      <HorizontalTabs />
+    </YStack>
+  );
+};
 
 export default MoneyEx;
