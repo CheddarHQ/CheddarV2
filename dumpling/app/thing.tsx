@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useRoute } from '@react-navigation/native';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -16,7 +17,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-
 
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -41,11 +41,18 @@ function generateUUID() {
 }
 
 export default function Chatroom() {
+  const route = useRoute();
+  const { username } = route.params;
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollY = useSharedValue(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastMessageTime, setLastMessageTime] = useState(0);
+  const [messageQueue, setMessageQueue] = useState([]);
+  const [ackTimeouts, setAckTimeouts] = useState({});
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -54,110 +61,171 @@ export default function Chatroom() {
   });
 
   useEffect(() => {
-    const newWs = new WebSocket(
-      'ws://baklava.cheddar-io.workers.dev/api/room/002e03cc4a62464c7aa46cadaa82676bce8d3f9559ebd73c401e958e43301da4/websocket'
-    );
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectInterval = 5000; // 5 seconds
 
-    newWs.onopen = () => {
-      console.log('WebSocket connected');
-    };
+    function connect() {
+      console.log('Attempting to connect to WebSocket...');
+      const newWs = new WebSocket(
+        'wss://baklava.cheddar-io.workers.dev/api/room/hhh/websocket'
+      );
 
-    newWs.onmessage = (event) => {
-      console.log('Raw message received:', event.data);
-      try {
-        const messageData = JSON.parse(event.data);
-        console.log('Parsed message:', messageData);
+      newWs.onopen = () => {
+        console.log('WebSocket connected at:', new Date().toISOString());
+        setIsConnected(true);
+        reconnectAttempts = 0;
+        newWs.send(JSON.stringify({ type: 'init', data: username }));
+      };
 
-        if (messageData.type === 'heartbeat') {
-          console.log('Heartbeat received');
-          return;
+      newWs.onmessage = (event) => {
+        console.log('Message received at:', new Date().toISOString());
+        console.log('Raw message:', event.data);
+        try {
+          const messageData = JSON.parse(event.data);
+          console.log('Parsed message:', messageData);
+
+          if (messageData.type === 'ack') {
+            handleAcknowledgment(messageData.id);
+            return;
+          }
+
+          if (messageData.type === 'heartbeat') {
+            console.log('Heartbeat received');
+            return;
+          }
+
+          if (messageData.sender === 'Server') {
+            console.log('Server message:', messageData);
+            return;
+          }
+
+          if (messageData.type === 'message' && messageData.data && messageData.sender !== username) {
+            const newMessage: Message = {
+              key: messageData.id || generateUUID(),
+              text: messageData.data,
+              mine: false,
+              user: messageData.sender || 'Unknown',
+              sent: true,
+            };
+            console.log('Adding new message:', newMessage);
+            setMessages((prevMessages) => [...prevMessages, newMessage]);
+            setLastMessageTime(Date.now());
+          } else {
+            console.log('Unhandled message type:', messageData.type);
+          }
+        } catch (error) {
+          console.error('Error parsing message:', error);
         }
+      };
 
-        if(messageData.sender == 'Server'){
-          return;
+      newWs.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
+      };
+
+      newWs.onclose = (event) => {
+        console.log('WebSocket connection closed:', event.code, event.reason);
+        setIsConnected(false);
+        if (reconnectAttempts < maxReconnectAttempts) {
+          setTimeout(() => {
+            reconnectAttempts++;
+            console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
+            connect();
+          }, reconnectInterval);
         }
-        
-        if (messageData.type === 'message' || messageData.data) {
+      };
 
-          console.log("Message Data : ", messageData)
-          const newMessage: Message = {
-            key: generateUUID(),
-            text: messageData.data || messageData.message || JSON.stringify(messageData),
-            mine: messageData.sender === 'Me',
-            user: messageData.sender || 'Server',
-            sent: true,
-          };
-          console.log('Adding new message:', newMessage);
-          console.log("sender :",newMessage.user)
-          setMessages((prevMessages) => [...prevMessages, newMessage]);
-        } else {
-          console.log('Unhandled message type:', messageData.type);
-        }
-      } catch (error) {
-        console.error('Error parsing message:', error);
-      }
-    };
+      setWs(newWs);
+    }
 
-    newWs.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-
-    newWs.onclose = (event) => {
-      console.log('WebSocket connection closed:', event.code, event.reason);
-    };
-
-    setWs(newWs);
+    connect();
 
     return () => {
-      newWs.close();
+      if (ws) {
+        ws.close();
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (isConnected && ws) {
+      const heartbeatInterval = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'heartbeat' }));
+        }
+      }, 30000); // Send a heartbeat every 30 seconds
+
+      return () => clearInterval(heartbeatInterval);
+    }
+  }, [isConnected, ws]);
+
+  useEffect(() => {
+    if (isConnected && messageQueue.length > 0) {
+      console.log('Connection restored. Sending queued messages.');
+      messageQueue.forEach((msg) => {
+        ws.send(JSON.stringify(msg));
+      });
+      setMessageQueue([]);
+    }
+  }, [isConnected, messageQueue]);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
   function sendMessage() {
-    if (inputText.trim() && ws) {
-      const messageKey = generateUUID();
-      const newMessage: Message = {
-        key: messageKey,
-        text: inputText,
-        mine: true,
-        user: 'Me',
-        sent: false,
-      };
-  
-      // Immediately add the message to the UI
-      setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
-      // Clear the input text
-      setInputText('');
-  
-      // Prepare the message to send
+    if (inputText.trim()) {
+      const messageId = generateUUID();
       const messageToSend = {
         type: 'message',
+        id: messageId,
         data: inputText,
-        user: 'Me'   //use session details here
+        user: username
       };
-  
+
       console.log('Sending message:', messageToSend);
-  
-      // Send the message
-      ws.send(JSON.stringify(messageToSend));
-  
-      // Mark the message as sent after a short delay
-      setTimeout(() => {
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.key === messageKey ? { ...msg, sent: true } : msg
-          )
-        );
-      }, 500);
+
+      if (!isConnected || !ws) {
+        console.log('Not connected. Queueing message.');
+        setMessageQueue((prev) => [...prev, messageToSend]);
+      } else {
+        ws.send(JSON.stringify(messageToSend));
+      }
+
+      const newMessage: Message = {
+        key: messageId,
+        text: inputText,
+        mine: true,
+        user: username,
+        sent: false,
+      };
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
+      setInputText('');
+
+      // Set up acknowledgment timeout
+      const ackTimeout = setTimeout(() => {
+        console.log(`No acknowledgment received for message ${messageId}`);
+        handleAcknowledgment(messageId);  // Assume message was sent if no ack received
+      }, 5000);
+      setAckTimeouts((prev) => ({ ...prev, [messageId]: ackTimeout }));
     }
   }
-  
 
+  function handleAcknowledgment(messageId) {
+    console.log(`Acknowledgment received for message ${messageId}`);
+    clearTimeout(ackTimeouts[messageId]);
+    setAckTimeouts((prev) => {
+      const newTimeouts = { ...prev };
+      delete newTimeouts[messageId];
+      return newTimeouts;
+    });
+    setMessages((prevMessages) =>
+      prevMessages.map((msg) =>
+        msg.key === messageId ? { ...msg, sent: true } : msg
+      )
+    );
+  }
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -189,6 +257,13 @@ export default function Chatroom() {
           </Link>
         </XStack>
 
+        {/* Connection status and refresh button */}
+        <XStack justifyContent="space-between" paddingHorizontal="$4" paddingBottom="$2">
+          <Text color={isConnected ? 'green' : 'red'}>
+            {isConnected ? 'Connected' : 'Disconnected'}
+          </Text>
+        </XStack>
+
         {/* Chat messages */}
         <View style={{ flex: 1 }}>
           <Animated.ScrollView
@@ -205,7 +280,7 @@ export default function Chatroom() {
                       style={[
                         styles.messageItem,
                         {
-                          backgroundColor: item.mine ? 'white' : '#E4E7EB',
+                          backgroundColor: item.user === username ? 'white' : '#E4E7EB',
                           alignSelf: item.mine ? 'flex-end' : 'flex-start',
                           opacity: item.sent ? 1 : 0.5,
                         },
