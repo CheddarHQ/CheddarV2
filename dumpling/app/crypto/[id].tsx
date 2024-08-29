@@ -245,38 +245,42 @@ const HorizontalTabs = () => {
     </Tabs>
   );
 };
+//C:\Users\Asus\Downloads\ormon-sucks\Cheddar\dumpling\components\encryptionUtils.tsx
+//C:\Users\Asus\Downloads\ormon-sucks\Cheddar\dumpling\app\WalletConnectScreen.tsx
 
 const MoneyEx = () => {
   const [phantomWalletPublicKey, setPhantomWalletPublicKey] = React.useState(null);
   const router = useRouter();
+  const [isConnected, setIsConnected] = useState(false);
 
   const handleDeepLink = useCallback((event: any) => {
     const data = Linking.parse(event.url);
     console.log('Deep link data:', data);
     if (data.queryParams && data.queryParams.phantom_encryption_public_key) {
-      // This is just an example, you might need to handle the data differently
       setPhantomWalletPublicKey(new PublicKey(data.queryParams.phantom_encryption_public_key));
+      setIsConnected(true);
     }
   }, []);
 
   useEffect(() => {
-    // Set up the listener for deep links
     const subscription = Linking.addEventListener('url', handleDeepLink);
 
-    // Check for any pending initial URL
     Linking.getInitialURL().then((url) => {
       if (url) {
         handleDeepLink({ url });
       }
     });
 
-    // Clean up the listener when the component unmounts
     return () => {
       subscription.remove();
     };
   }, [handleDeepLink]);
 
   const connectToPhantom = async () => {
+    if (isConnected) {
+      console.log('Already connected to Phantom');
+      return;
+    }
     try {
       const dappPublicKey = await getPublicKey();
       const redirectUrl = Linking.createURL('wallet-connect');
@@ -306,10 +310,12 @@ const MoneyEx = () => {
             backgroundColor="transparent"
           />
         </Link>
+
         <Button
-          icon={<FontAwesome5 name="wallet" size={24} color="white" />}
+          icon={<FontAwesome5 name="wallet" size={24} color={isConnected ? 'gray' : 'white'} />}
           backgroundColor="transparent"
           onPress={connectToPhantom}
+          disabled={isConnected}
         />
       </XStack>
       {phantomWalletPublicKey && <Text>Connected: {phantomWalletPublicKey.toString()}</Text>}
