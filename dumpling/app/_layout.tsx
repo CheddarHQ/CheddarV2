@@ -47,14 +47,13 @@ export default function RootLayout() {
           <Stack.Screen name="analytics" options={{ headerShown: false, presentation: 'modal' }} />
           <Stack.Screen name="thing" options={{ headerShown: false }} />
           <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="WalletConnectScreen.tsx" options={{ headerShown: false }} />
           <Stack.Screen
             name="cryptoGraph"
             options={{ headerShown: false, presentation: 'modal' }}
           />
           <Stack.Screen
             name="modal"
-            options={{ title: 'Modal', presentation: 'modal', headerShown: false }}
+            options={{ title: 'Modal', headerShown: false, presentation: 'modal' }}
           />
           <Stack.Screen
             name="moneyEx"
