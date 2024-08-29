@@ -270,7 +270,7 @@ const MyChart: React.FC = () => {
 
 const styles = StyleSheet.create({
   chart: {
-    width: width - 40,
+    width: width,
     height: 300,
   },
   infoContainer: {
