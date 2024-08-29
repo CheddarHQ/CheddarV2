@@ -9,10 +9,6 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
 import { point } from '@shopify/react-native-skia';
-//<AntDesign name="up" size={24} color="black" />
-//<AntDesign name="caretup" size={24} color="black" />
-//<AntDesign name="down" size={24} color="black" />
-//<AntDesign name="caretdown" size={24} color="black" />
 const randomPrice = (min: number, max: number): number => Math.random() * (max - min) + min;
 
 interface DataPoint {

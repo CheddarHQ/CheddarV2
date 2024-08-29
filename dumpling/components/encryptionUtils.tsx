@@ -1,8 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// @ts-ignore
 import nacl from 'tweetnacl';
 import * as Crypto from 'expo-crypto';
-// @ts-ignore
 import bs58 from 'bs58';
 
 const STORAGE_KEY = 'PHANTOM_ENCRYPTION_KEY_PAIR';
@@ -20,7 +18,11 @@ export const getOrCreateKeyPair = async () => {
     // Try to get existing key pair from storage
     const storedKeyPair = await AsyncStorage.getItem(STORAGE_KEY);
     if (storedKeyPair) {
-      return JSON.parse(storedKeyPair);
+      const parsedKeyPair = JSON.parse(storedKeyPair);
+      return {
+        publicKey: bs58.decode(parsedKeyPair.publicKey),
+        secretKey: bs58.decode(parsedKeyPair.secretKey),
+      };
     }
 
     // If no existing key pair, create a new one
@@ -33,7 +35,10 @@ export const getOrCreateKeyPair = async () => {
     // Store the new key pair
     await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(keyPairToStore));
 
-    return keyPairToStore;
+    return {
+      publicKey: newKeyPair.publicKey,
+      secretKey: newKeyPair.secretKey,
+    };
   } catch (error) {
     console.error('Error in getOrCreateKeyPair:', error);
     throw error;
@@ -41,6 +46,11 @@ export const getOrCreateKeyPair = async () => {
 };
 
 export const getPublicKey = async () => {
-  const keyPair = await getOrCreateKeyPair();
-  return keyPair.publicKey;
+  try {
+    const keyPair = await getOrCreateKeyPair();
+    return bs58.encode(keyPair.publicKey);
+  } catch (error) {
+    console.error('Error retrieving public key:', error);
+    throw error;
+  }
 };

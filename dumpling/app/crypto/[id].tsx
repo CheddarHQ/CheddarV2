@@ -1,4 +1,8 @@
+import { Buffer } from 'buffer'; // Import Buffer polyfill
+global.Buffer = Buffer; // Set global Buffer
+
 import { Dimensions, Pressable } from 'react-native';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import type { TabsContentProps } from 'tamagui';
 import Feather from '@expo/vector-icons/Feather';
 import { Text, SizableText, Tabs, XStack, YStack, Button, Card, CardHeader, Avatar } from 'tamagui';
@@ -7,11 +11,33 @@ import { Link, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
 import { useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
-import { PublicKey } from '@solana/web3.js';
+import * as Random from 'expo-random';
+import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
 import { getPublicKey } from '~/components/encryptionUtils';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
-import React, { useEffect, useCallback, useState } from 'react';
-import { useRouter } from 'expo-router';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { Alert } from 'react-native';
+import nacl from 'tweetnacl';
+import ActionSheet from 'react-native-actions-sheet';
+import { encryptPayload } from '~/utils/ecryptPayload';
+import Toast from 'react-native-toast-message';
+import { decryptPayload } from '~/utils/decryptPayload';
+import bs58 from 'bs58';
+import Button2 from '~/components/Button2';
+
+nacl.setPRNG((x, n) => {
+  const randomBytes = Random.getRandomBytes(n);
+  for (let i = 0; i < n; i++) {
+    x[i] = randomBytes[i];
+  }
+});
+
+const onConnectRedirectLink = Linking.createURL('onConnect');
+const onDisconnectRedirectLink = Linking.createURL('onDisconnect');
+const onSignAndSendTransactionRedirectLink = Linking.createURL('onSignAndSendTransaction');
+
+const connection = new Connection(clusterApiUrl('devnet'));
 
 interface TokenBasicInfo {
   name: string;
@@ -245,62 +271,138 @@ const HorizontalTabs = () => {
     </Tabs>
   );
 };
-//C:\Users\Asus\Downloads\ormon-sucks\Cheddar\dumpling\components\encryptionUtils.tsx
-//C:\Users\Asus\Downloads\ormon-sucks\Cheddar\dumpling\app\WalletConnectScreen.tsx
 
 const MoneyEx = () => {
-  const [phantomWalletPublicKey, setPhantomWalletPublicKey] = React.useState(null);
-  const router = useRouter();
-  const [isConnected, setIsConnected] = useState(false);
+  const [deeplink, setDeepLink] = useState('');
+  const [dappKeyPair] = useState(nacl.box.keyPair());
+  const [sharedSecret, setSharedSecret] = useState();
+  const [session, setSession] = useState();
+  const [phantomWalletPublicKey, setPhantomWalletPublicKey] = useState(null);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
-  const handleDeepLink = useCallback((event: any) => {
-    const data = Linking.parse(event.url);
-    console.log('Deep link data:', data);
-    if (data.queryParams && data.queryParams.phantom_encryption_public_key) {
-      setPhantomWalletPublicKey(new PublicKey(data.queryParams.phantom_encryption_public_key));
-      setIsConnected(true);
-    }
+  const handleDeepLink = useCallback(({ url }: { url: string }) => {
+    console.log('Received deeplink:', url);
+    setDeepLink(url);
   }, []);
 
   useEffect(() => {
-    const subscription = Linking.addEventListener('url', handleDeepLink);
-
-    Linking.getInitialURL().then((url) => {
-      if (url) {
-        handleDeepLink({ url });
+    const initializeDeeplinks = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      console.log('Initial URL:', initialUrl);
+      if (initialUrl) {
+        setDeepLink(initialUrl);
       }
-    });
+    };
 
+    initializeDeeplinks();
+    const listener = Linking.addEventListener('url', handleDeepLink);
     return () => {
-      subscription.remove();
+      listener.remove();
     };
   }, [handleDeepLink]);
 
-  const connectToPhantom = async () => {
-    if (isConnected) {
-      console.log('Already connected to Phantom');
+  useEffect(() => {
+    if (!deeplink) return;
+
+    console.log('Processing deeplink:', deeplink);
+    const url = new URL(deeplink);
+    const params = url.searchParams;
+
+    if (params.get('errorCode')) {
+      const error = Object.fromEntries([...params]);
+      const message = error?.errorMessage ?? JSON.stringify(error, null, 2);
+      console.error('Phantom error:', message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: message,
+      });
       return;
     }
-    try {
-      const dappPublicKey = await getPublicKey();
-      const redirectUrl = Linking.createURL('wallet-connect');
-      const url = `https://phantom.app/ul/v1/connect?app_url=${encodeURIComponent(redirectUrl)}&dapp_encryption_public_key=${encodeURIComponent(dappPublicKey)}&redirect_link=${encodeURIComponent(redirectUrl)}`;
 
-      console.log('Phantom connection URL:', url);
+    if (/onConnect/.test(url.pathname)) {
+      console.log('Handling onConnect');
+      try {
+        const phantomPublicKey = params.get('phantom_encryption_public_key');
+        const data = params.get('data');
+        const nonce = params.get('nonce');
 
-      const supported = await Linking.canOpenURL(url);
+        if (!phantomPublicKey || !data || !nonce) {
+          throw new Error('Missing required parameters');
+        }
 
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        console.log('Phantom app is not installed');
-        // You might want to show a message to the user here
+        const sharedSecretDapp = nacl.box.before(
+          bs58.decode(phantomPublicKey),
+          dappKeyPair.secretKey
+        );
+        const connectData = decryptPayload(data, nonce, sharedSecretDapp);
+        console.log('Connect data:', connectData);
+        setSharedSecret(sharedSecretDapp);
+        setSession(connectData.session);
+        if (connectData.public_key) {
+          setPhantomWalletPublicKey(new PublicKey(connectData.public_key));
+        }
+        setConnectionStatus('connected');
+        console.log(`Connected to ${connectData.public_key?.toString()}`);
+      } catch (error) {
+        console.error('Error processing onConnect:', error);
+        // Handle the error appropriately, maybe set an error state or show a message to the user
       }
+    }
+
+    if (/onDisconnect/.test(url.pathname)) {
+      console.log('Handling onDisconnect');
+      setPhantomWalletPublicKey(null);
+      setConnectionStatus('disconnected');
+      console.log('Disconnected');
+    }
+  }, [deeplink, dappKeyPair.secretKey]);
+
+  const connect = async () => {
+    console.log('Initiating connection...');
+    setConnectionStatus('connecting');
+    const params = new URLSearchParams({
+      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+      cluster: 'devnet', // mark this thing for soon, could have to change this based on production or dev build
+      app_url: 'http://172.31.71.237:8081', // Replace with your actual app URL
+      redirect_link: Linking.createURL('onConnect'),
+    });
+    const url = buildUrl('connect', params);
+    console.log('Connection URL:', url);
+    try {
+      await Linking.openURL(url);
     } catch (error) {
-      console.error('Error connecting to Phantom:', error);
-      // You might want to show an error message to the user here
+      console.error('Error opening URL:', error);
+      setConnectionStatus('disconnected');
     }
   };
+
+  const disconnect = async () => {
+    console.log('Initiating disconnection...');
+    setConnectionStatus('disconnecting');
+    if (!sharedSecret) {
+      console.error('No shared secret available for disconnection');
+      setConnectionStatus('disconnected');
+      return;
+    }
+    const payload = { session };
+    const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+    const params = new URLSearchParams({
+      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+      nonce: bs58.encode(nonce),
+      redirect_link: Linking.createURL('onDisconnect'),
+      payload: bs58.encode(encryptedPayload),
+    });
+    const url = buildUrl('disconnect', params);
+    console.log('Disconnection URL:', url);
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error('Error opening URL:', error);
+      setConnectionStatus('connected');
+    }
+  };
+
   return (
     <YStack flex={1} backgroundColor="#000000" paddingHorizontal={20}>
       <XStack width="100%" justifyContent="space-between" marginBottom={10}>
@@ -311,17 +413,81 @@ const MoneyEx = () => {
           />
         </Link>
 
-        <Button
-          icon={<FontAwesome5 name="wallet" size={24} color={isConnected ? 'gray' : 'white'} />}
-          backgroundColor="transparent"
-          onPress={connectToPhantom}
-          disabled={isConnected}
+        <Button2
+          title={connectionStatus === 'connected' ? 'Disconnect' : 'Connect Phantom'}
+          onPress={connectionStatus === 'connected' ? disconnect : connect}
+          disabled={['connecting', 'disconnecting'].includes(connectionStatus)}
         />
       </XStack>
-      {phantomWalletPublicKey && <Text>Connected: {phantomWalletPublicKey.toString()}</Text>}
+
+      {phantomWalletPublicKey && (
+        <View style={styles.wallet}>
+          <View style={styles.greenDot} />
+          <Text style={styles.text} numberOfLines={1} ellipsizeMode="middle">
+            {`Connected to: ${phantomWalletPublicKey.toString()}`}
+          </Text>
+        </View>
+      )}
+
+      <Text style={styles.statusText}>Status: {connectionStatus}</Text>
+
       <HorizontalTabs />
     </YStack>
   );
 };
 
 export default MoneyEx;
+
+export const BASE_URL = 'https://phantom.app/ul/v1/';
+
+const buildUrl = (path: string, params: URLSearchParams) =>
+  `${BASE_URL}${path}?${params.toString()}`;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#808080',
+    flexGrow: 1,
+    position: 'relative',
+  },
+  statusText: {
+    color: 'white',
+    marginBottom: 10,
+  },
+  errorText: {
+    color: 'red',
+    marginBottom: 10,
+  },
+  greenDot: {
+    height: 8,
+    width: 8,
+    borderRadius: 10,
+    marginRight: 5,
+    backgroundColor: '#fff',
+  },
+  header: {
+    width: '95%',
+    marginLeft: 'auto',
+    marginRight: 'auto',
+  },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
+  },
+  spinner: {
+    position: 'absolute',
+    alignSelf: 'center',
+    top: '50%',
+    zIndex: 1000,
+  },
+  text: {
+    color: 'gray',
+    width: '100%',
+  },
+  wallet: {
+    alignItems: 'center',
+    margin: 10,
+    marginBottom: 15,
+  },
+});
