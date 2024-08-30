@@ -37,7 +37,7 @@ const onConnectRedirectLink = Linking.createURL('onConnect');
 const onDisconnectRedirectLink = Linking.createURL('onDisconnect');
 const onSignAndSendTransactionRedirectLink = Linking.createURL('onSignAndSendTransaction');
 
-const connection = new Connection('https://api.devnet.solana.com');
+const connection = new Connection('https://api.mainnet-beta.solana.com');
 
 interface TokenBasicInfo {
   name: string;
@@ -309,7 +309,7 @@ const MoneyEx = () => {
   useEffect(() => {
     if (!deeplink) return;
 
-    console.log('Processing deeplink:', deeplink);
+    // console.log('Processing deeplink:', deeplink);
     const url = new URL(deeplink);
     const params = url.searchParams;
 
@@ -344,7 +344,7 @@ const MoneyEx = () => {
           dappKeyPair.secretKey
         );
         const connectData = decryptPayload(data, nonce, sharedSecretDapp);
-        console.log('Connect data:', connectData);
+        // console.log('Connect data:', connectData);
         setSharedSecret(sharedSecretDapp);
         setSession(connectData.session);
         if (connectData.public_key) {
@@ -365,9 +365,15 @@ const MoneyEx = () => {
       setConnectionStatus('disconnected');
       console.log('Disconnected');
     }
+
     if(/onSignAndSendTransaction/.test(url.pathname)) {
       console.log('Handling onSignAndSendTransaction');
-      handleOnSignAndSendTransaction(params);
+      const signAndSendTransactionData = decryptPayload(
+        params.get("data")!,
+        params.get("nonce")!,
+        sharedSecret
+      );
+      // console.log("signAndSendTrasaction: ", signAndSendTransactionData);
     }
   }, [deeplink, dappKeyPair.secretKey]);
 
@@ -376,7 +382,7 @@ const MoneyEx = () => {
     setConnectionStatus('connecting');
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-      cluster: 'devnet',
+      cluster: 'mainnet-beta',
       app_url: `http://192.168.29.125:8081/crypto/${id}`,
       redirect_link: Linking.createURL('onConnect'),
     });
@@ -416,38 +422,45 @@ const MoneyEx = () => {
       setConnectionStatus('connected');
     }
   };
-  const signAndSendTransaction = async (transaction: VersionedTransaction) => {
+  const signAndSendTransaction = async (transaction: Transaction) => {
     if (!phantomWalletPublicKey) return;
-  
+
+    transaction.feePayer = phantomWalletPublicKey;
+    // console.log('Transaction:', transaction);
+
     const serializedTransaction = transaction.serialize({
       requireAllSignatures: false,
     });
-    console.log('Serialized transaction:', serializedTransaction);
+    // console.log('Serialized transaction:', serializedTransaction);
   
     const payload = {
       session,
       transaction: bs58.encode(serializedTransaction),
     };
-    console.log('Payload:', payload);
+    // console.log('Payload:', payload);
   
     // Encrypt the payload
     const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
   
-    console.log('Encrypted payload:', encryptedPayload);
-    console.log('Nonce:', nonce);
+    // console.log('Encrypted payload:', encryptedPayload);
+    // console.log('Nonce:', nonce);
+
+    // console.log('Dapp Public Key:', bs58.encode(dappKeyPair.publicKey));
+    // console.log('Nonce:', nonce);
+    // console.log('Encrypted Payload:', encryptedPayload);
+    // console.log('Redirect Link:', onSignAndSendTransactionRedirectLink);    
 
     const params = new URLSearchParams({
-      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-      nonce: bs58.encode(nonce),
+      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey), // shi
+      nonce: bs58.encode(nonce), // shi
       redirect_link: onSignAndSendTransactionRedirectLink,
-      payload: bs58.encode(encryptedPayload),
+      payload: bs58.encode(encryptedPayload), // shi
     });
-    console.log('Params:', params);
   
     const url = buildUrl("signAndSendTransaction", params);
-    console.log('Sign and send transaction URL:', url);
-  
+    // console.log('Sign and send transaction URL:', url);
     Linking.openURL(url);
+
   };
 
 
@@ -456,16 +469,16 @@ const handleOnSignAndSendTransaction = async (params) => {
   const nonce = params.get('nonce');
 
   const decryptedData = decryptPayload(data, nonce, sharedSecret);
-  console.log('Transaction signature:', decryptedData.signature);
+  // console.log('Transaction signature:', decryptedData.signature);
   
-  const connection = new Connection(clusterApiUrl('devnet'));
+  const connection = new Connection('https://api.mainnet-beta.solana.com');
   console.log(connection);
 
   const txid = await connection.sendRawTransaction(
       decryptedData.signedTransaction,
       { skipPreflight: false, preflightCommitment: 'confirmed' }
   );
-  console.log('Transaction sent:', txid);
+  // console.log('Transaction sent:', txid);
 
   const confirmation = await connection.confirmTransaction(txid);
   console.log('Transaction confirmed:', confirmation);
@@ -481,12 +494,12 @@ const performSwap = async () => {
             quoteResponse: {
               inputMint: "So11111111111111111111111111111111111111112",
               outputMint: "4Cnk9EPnW5ixfLZatCPJjDB1PUtcRpVVgTQukm9epump",
-              amount: 100,
+              amount: 10000,
               slippage: 50,
               platformFees: 10,
           },
           // users public key
-          userPubkey: "BnLKmRS3dUe9CPpbTnVa8MZpiQVf2KRYMAg7RR8etGKW",
+          userPubkey: phantomWalletPublicKey.toString(),
           wrapAndUnwrapSol: true,
           feeAccount: "44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2"
       })
@@ -503,19 +516,27 @@ const performSwap = async () => {
       // send to phantom
       const signedTransaction = await signAndSendTransaction(transaction);
 
-// CONFIRM WHETHER THIS IS BEING SERIRALIZED OR NOT
-
+      // console.log('Signed transaction:', signedTransaction);
       if (signedTransaction) {
+        const latestBlockHash = await connection.getLatestBlockhash();
+
+        
+      // Execute the transaction
+      const rawTransaction = transaction.serialize()
         const txid = await connection.sendRawTransaction(signedTransaction, {
           skipPreflight: true,
           maxRetries: 2
         });
-        await connection.confirmTransaction(txid);
-        console.log(`Transaction confirmed: https://solscan.io/tx/${txid}`);
+        await connection.confirmTransaction({
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          signature: txid
+         });
+         console.log(`https://solscan.io/tx/${txid}`);         
         navigation.navigate('crypto');
       }
     } else {
-      console.error('Response error:', data);
+      console.error('Response error signedTransaction:', data);
     }
   } else {
     console.error('Phantom wallet public key is not available.');
