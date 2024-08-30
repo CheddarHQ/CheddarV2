@@ -18,6 +18,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 
+
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -42,17 +43,14 @@ function generateUUID() {
 
 export default function Chatroom() {
   const route = useRoute();
-  const { username } = route.params;
+  const { username}  = route.params
 
+  const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollY = useSharedValue(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-  const [lastMessageTime, setLastMessageTime] = useState(0);
-  const [messageQueue, setMessageQueue] = useState([]);
-  const [ackTimeouts, setAckTimeouts] = useState({});
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -61,171 +59,113 @@ export default function Chatroom() {
   });
 
   useEffect(() => {
-    let reconnectAttempts = 0;
-    const maxReconnectAttempts = 5;
-    const reconnectInterval = 5000; // 5 seconds
+    const newWs = new WebSocket(
+      'ws://baklava.cheddar-io.workers.dev/api/room/testroom/websocket'
+    );
 
-    function connect() {
-      console.log('Attempting to connect to WebSocket...');
-      const newWs = new WebSocket(
-        'wss://baklava.cheddar-io.workers.dev/api/room/hhh/websocket'
-      );
+    newWs.onopen = () => {
+      console.log('WebSocket connected');
+      setIsConnected(true);
+    };
 
-      newWs.onopen = () => {
-        console.log('WebSocket connected at:', new Date().toISOString());
-        setIsConnected(true);
-        reconnectAttempts = 0;
-        newWs.send(JSON.stringify({ type: 'init', data: username }));
-      };
+    newWs.onmessage = (event) => {
+      try {
+        const messageData = JSON.parse(event.data);
+        console.log('Parsed message:', messageData);
 
-      newWs.onmessage = (event) => {
-        console.log('Message received at:', new Date().toISOString());
-        console.log('Raw message:', event.data);
-        try {
-          const messageData = JSON.parse(event.data);
-          console.log('Parsed message:', messageData);
-
-          if (messageData.type === 'ack') {
-            handleAcknowledgment(messageData.id);
-            return;
-          }
-
-          if (messageData.type === 'heartbeat') {
-            console.log('Heartbeat received');
-            return;
-          }
-
-          if (messageData.sender === 'Server') {
-            console.log('Server message:', messageData);
-            return;
-          }
-
-          if (messageData.type === 'message' && messageData.data && messageData.sender !== username) {
-            const newMessage: Message = {
-              key: messageData.id || generateUUID(),
-              text: messageData.data,
-              mine: false,
-              user: messageData.sender || 'Unknown',
-              sent: true,
-            };
-            console.log('Adding new message:', newMessage);
-            setMessages((prevMessages) => [...prevMessages, newMessage]);
-            setLastMessageTime(Date.now());
-          } else {
-            console.log('Unhandled message type:', messageData.type);
-          }
-        } catch (error) {
-          console.error('Error parsing message:', error);
+        if (messageData.type === 'heartbeat') {
+          console.log('Heartbeat received');
+          return;
         }
-      };
 
-      newWs.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setIsConnected(false);
-      };
-
-      newWs.onclose = (event) => {
-        console.log('WebSocket connection closed:', event.code, event.reason);
-        setIsConnected(false);
-        if (reconnectAttempts < maxReconnectAttempts) {
-          setTimeout(() => {
-            reconnectAttempts++;
-            console.log(`Attempting to reconnect (${reconnectAttempts}/${maxReconnectAttempts})...`);
-            connect();
-          }, reconnectInterval);
+        if(messageData.sender == 'Server'){
+          return;
         }
-      };
+        
+        if (messageData.type === 'message' || messageData.data) {
 
-      setWs(newWs);
-    }
-
-    connect();
-
-    return () => {
-      if (ws) {
-        ws.close();
+          console.log("Message Data : ", messageData)
+          const newMessage: Message = {
+            key: generateUUID(),
+            text: messageData.data || messageData.message || JSON.stringify(messageData),
+            mine: messageData.sender === username,
+            user: messageData.sender || 'Server',
+            sent: true,
+          };
+          console.log('Adding new message:', newMessage.text);
+          console.log("sender :",newMessage.user)
+          setMessages((prevMessages) => [...prevMessages, newMessage]);
+        } else {
+          console.log('Unhandled message type:', messageData.type);
+        }
+      } catch (error) {
+        console.error('Error parsing message:', error);
       }
     };
+
+    newWs.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      setIsConnected(false);
+    };
+
+    newWs.onclose = (event) => {
+      console.log('WebSocket connection closed:', event.code, event.reason);
+      setIsConnected(false);
+    };
+
+    setWs(newWs);
+
+    return () => {
+      newWs.close();
+    };
   }, []);
-
-  useEffect(() => {
-    if (isConnected && ws) {
-      const heartbeatInterval = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({ type: 'heartbeat' }));
-        }
-      }, 30000); // Send a heartbeat every 30 seconds
-
-      return () => clearInterval(heartbeatInterval);
-    }
-  }, [isConnected, ws]);
-
-  useEffect(() => {
-    if (isConnected && messageQueue.length > 0) {
-      console.log('Connection restored. Sending queued messages.');
-      messageQueue.forEach((msg) => {
-        ws.send(JSON.stringify(msg));
-      });
-      setMessageQueue([]);
-    }
-  }, [isConnected, messageQueue]);
 
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
 
   function sendMessage() {
-    if (inputText.trim()) {
-      const messageId = generateUUID();
-      const messageToSend = {
-        type: 'message',
-        id: messageId,
-        data: inputText,
-        user: username
-      };
-
-      console.log('Sending message:', messageToSend);
-
-      if (!isConnected || !ws) {
-        console.log('Not connected. Queueing message.');
-        setMessageQueue((prev) => [...prev, messageToSend]);
-      } else {
-        ws.send(JSON.stringify(messageToSend));
-      }
-
+    if (inputText.trim() && ws) {
+      const messageKey = generateUUID();
       const newMessage: Message = {
-        key: messageId,
+        key: messageKey,
         text: inputText,
         mine: true,
         user: username,
         sent: false,
       };
+  
+      // Immediately add the message to the UI
       setMessages((prevMessages) => [...prevMessages, newMessage]);
+  
+      // Clear the input text
       setInputText('');
-
-      // Set up acknowledgment timeout
-      const ackTimeout = setTimeout(() => {
-        console.log(`No acknowledgment received for message ${messageId}`);
-        handleAcknowledgment(messageId);  // Assume message was sent if no ack received
-      }, 5000);
-      setAckTimeouts((prev) => ({ ...prev, [messageId]: ackTimeout }));
+      
+  
+      // Prepare the message to send
+      const messageToSend = {
+        type: 'message',
+        data: inputText,
+        user: username   
+      };
+  
+      console.log('Sending message:', messageToSend);
+  
+      // Send the message
+      ws.send(JSON.stringify(messageToSend));
+  
+      // Mark the message as sent after a short delay
+      setTimeout(() => {
+        setMessages((prevMessages) =>
+          prevMessages.map((msg) =>
+            msg.key === messageKey ? { ...msg, sent: true } : msg
+          )
+        );
+      }, 500);
     }
   }
+  
 
-  function handleAcknowledgment(messageId) {
-    console.log(`Acknowledgment received for message ${messageId}`);
-    clearTimeout(ackTimeouts[messageId]);
-    setAckTimeouts((prev) => {
-      const newTimeouts = { ...prev };
-      delete newTimeouts[messageId];
-      return newTimeouts;
-    });
-    setMessages((prevMessages) =>
-      prevMessages.map((msg) =>
-        msg.key === messageId ? { ...msg, sent: true } : msg
-      )
-    );
-  }
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -257,9 +197,9 @@ export default function Chatroom() {
           </Link>
         </XStack>
 
-        {/* Connection status and refresh button */}
-        <XStack justifyContent="space-between" paddingHorizontal="$4" paddingBottom="$2">
-          <Text color={isConnected ? 'green' : 'red'}>
+         {/* Connection status and refresh button */}
+         <XStack justifyContent="space-between" paddingHorizontal="$4" paddingBottom="$2">
+          <Text color={isConnected ? '#96ff64' : 'red'}>
             {isConnected ? 'Connected' : 'Disconnected'}
           </Text>
         </XStack>
@@ -280,7 +220,7 @@ export default function Chatroom() {
                       style={[
                         styles.messageItem,
                         {
-                          backgroundColor: item.user === username ? 'white' : '#E4E7EB',
+                          backgroundColor: item.user==username ? 'white' : '#E4E7EB',
                           alignSelf: item.mine ? 'flex-end' : 'flex-start',
                           opacity: item.sent ? 1 : 0.5,
                         },
@@ -307,7 +247,7 @@ export default function Chatroom() {
                       transform: [{ translateY: scrollY }],
                     },
                   ]}
-                  colors={['#FD84AA', '#A38CF9', '#09E0FF']}
+                  colors={['#A38CF9','#FD84AA','#ba351f',  '#09E0FF']}
                 />
                 <FlatList
                   scrollEnabled={false}
@@ -325,7 +265,8 @@ export default function Chatroom() {
                       ]}>
                       <Text color={'#fff'} style={{ color: 'white' }}>{item.text}</Text>
                       <Text
-                        color={'#fff'}
+                        color={"white"}
+                        opacity={0.5}
                         style={{
                           fontSize: 12,
                           color: 'rgba(255,100,255,0.7)',
@@ -358,8 +299,8 @@ export default function Chatroom() {
               {inputText && (
                 <Button
                   position="absolute"
-                  right="$2"
-                  bottom="$2"
+                  right="$6"
+                  bottom="$6"
                   size="$3"
                   circular
                   onPress={sendMessage}
