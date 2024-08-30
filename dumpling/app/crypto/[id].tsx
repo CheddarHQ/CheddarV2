@@ -12,7 +12,7 @@ import { useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import * as Random from 'expo-random';
-import { clusterApiUrl, Connection, PublicKey, Transaction } from '@solana/web3.js';
+import { clusterApiUrl, Connection, PublicKey, sendAndConfirmTransaction, VersionedTransaction, Transaction} from '@solana/web3.js';
 import { getPublicKey } from '~/components/encryptionUtils';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import React, { useEffect, useCallback, useRef, useState } from 'react';
@@ -37,7 +37,7 @@ const onConnectRedirectLink = Linking.createURL('onConnect');
 const onDisconnectRedirectLink = Linking.createURL('onDisconnect');
 const onSignAndSendTransactionRedirectLink = Linking.createURL('onSignAndSendTransaction');
 
-const connection = new Connection(clusterApiUrl('devnet'));
+const connection = new Connection('https://api.devnet.solana.com');
 
 interface TokenBasicInfo {
   name: string;
@@ -353,8 +353,7 @@ const MoneyEx = () => {
         setConnectionStatus('connected');
         console.log(`Connected to ${connectData.public_key?.toString()}`);
 
-        // Navigate back to the original page or desired state
-        navigation.navigate('crypto'); // Replace 'OriginalPage' with your page or screen name
+        navigation.navigate('crypto');
       } catch (error) {
         console.error('Error processing onConnect:', error);
       }
@@ -366,6 +365,10 @@ const MoneyEx = () => {
       setConnectionStatus('disconnected');
       console.log('Disconnected');
     }
+    if(/onSignAndSendTransaction/.test(url.pathname)) {
+      console.log('Handling onSignAndSendTransaction');
+      handleOnSignAndSendTransaction(params);
+    }
   }, [deeplink, dappKeyPair.secretKey]);
 
   const connect = async () => {
@@ -373,8 +376,8 @@ const MoneyEx = () => {
     setConnectionStatus('connecting');
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-      cluster: 'devnet', // mark this thing for soon, could have to change this based on production or dev build
-      app_url: `http://172.31.71.237:8081/crypto/${id}`, // Replace with your actual app URL
+      cluster: 'devnet',
+      app_url: `http://192.168.29.125:8081/crypto/${id}`,
       redirect_link: Linking.createURL('onConnect'),
     });
     const url = buildUrl('connect', params);
@@ -386,6 +389,7 @@ const MoneyEx = () => {
       setConnectionStatus('disconnected');
     }
   };
+
 
   const disconnect = async () => {
     console.log('Initiating disconnection...');
@@ -412,6 +416,114 @@ const MoneyEx = () => {
       setConnectionStatus('connected');
     }
   };
+  const signAndSendTransaction = async (transaction: VersionedTransaction) => {
+    if (!phantomWalletPublicKey) return;
+  
+    const serializedTransaction = transaction.serialize({
+      requireAllSignatures: false,
+    });
+    console.log('Serialized transaction:', serializedTransaction);
+  
+    const payload = {
+      session,
+      transaction: bs58.encode(serializedTransaction),
+    };
+    console.log('Payload:', payload);
+  
+    // Encrypt the payload
+    const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+  
+    console.log('Encrypted payload:', encryptedPayload);
+    console.log('Nonce:', nonce);
+
+    const params = new URLSearchParams({
+      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+      nonce: bs58.encode(nonce),
+      redirect_link: onSignAndSendTransactionRedirectLink,
+      payload: bs58.encode(encryptedPayload),
+    });
+    console.log('Params:', params);
+  
+    const url = buildUrl("signAndSendTransaction", params);
+    console.log('Sign and send transaction URL:', url);
+  
+    Linking.openURL(url);
+  };
+
+
+const handleOnSignAndSendTransaction = async (params) => {
+  const data = params.get('data');
+  const nonce = params.get('nonce');
+
+  const decryptedData = decryptPayload(data, nonce, sharedSecret);
+  console.log('Transaction signature:', decryptedData.signature);
+  
+  const connection = new Connection(clusterApiUrl('devnet'));
+  console.log(connection);
+
+  const txid = await connection.sendRawTransaction(
+      decryptedData.signedTransaction,
+      { skipPreflight: false, preflightCommitment: 'confirmed' }
+  );
+  console.log('Transaction sent:', txid);
+
+  const confirmation = await connection.confirmTransaction(txid);
+  console.log('Transaction confirmed:', confirmation);
+};
+
+const performSwap = async () => {
+  try {
+    if(phantomWalletPublicKey){
+      const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quoteResponse: {
+              inputMint: "So11111111111111111111111111111111111111112",
+              outputMint: "4Cnk9EPnW5ixfLZatCPJjDB1PUtcRpVVgTQukm9epump",
+              amount: 100,
+              slippage: 50,
+              platformFees: 10,
+          },
+          // users public key
+          userPubkey: "BnLKmRS3dUe9CPpbTnVa8MZpiQVf2KRYMAg7RR8etGKW",
+          wrapAndUnwrapSol: true,
+          feeAccount: "44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2"
+      })
+    });
+    const data = await response.json();
+    console.log('API Response:', JSON.stringify(data, null, 2));
+
+    if (response.ok && data.unsignedTransaction) {
+      // Deserialize the transaction
+      const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
+      var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+      console.log('Deserialized transaction:', transaction);
+
+      // send to phantom
+      const signedTransaction = await signAndSendTransaction(transaction);
+
+// CONFIRM WHETHER THIS IS BEING SERIRALIZED OR NOT
+
+      if (signedTransaction) {
+        const txid = await connection.sendRawTransaction(signedTransaction, {
+          skipPreflight: true,
+          maxRetries: 2
+        });
+        await connection.confirmTransaction(txid);
+        console.log(`Transaction confirmed: https://solscan.io/tx/${txid}`);
+        navigation.navigate('crypto');
+      }
+    } else {
+      console.error('Response error:', data);
+    }
+  } else {
+    console.error('Phantom wallet public key is not available.');
+  }
+} catch (error) {
+  console.error('Error performing swap:', error);
+}
+};
 
   return (
     <YStack flex={1} backgroundColor="#000000" paddingHorizontal={20}>
@@ -422,12 +534,18 @@ const MoneyEx = () => {
             backgroundColor="transparent"
           />
         </Link>
-
+{/* Add button somewhere here */}
         <Button2
           title={connectionStatus === 'connected' ? 'Disconnect' : 'Connect Phantom'}
           onPress={connectionStatus === 'connected' ? disconnect : connect}
           disabled={['connecting', 'disconnecting'].includes(connectionStatus)}
         />
+                    {/* Add a swap button if needed */}
+      {connectionStatus === 'connected' && (
+        <Button
+        onPress={performSwap}
+        ><Text>SWAP</Text></Button>
+      )}
       </XStack>
 
       {phantomWalletPublicKey && (
@@ -438,9 +556,7 @@ const MoneyEx = () => {
           </Text>
         </View>
       )}
-
       <Text style={styles.statusText}>Status: {connectionStatus}</Text>
-
       <HorizontalTabs connectionStatus={connectionStatus} />
     </YStack>
   );
@@ -492,7 +608,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   text: {
-    color: 'gray',
+    color: '#fff',
     width: '100%',
   },
   wallet: {
