@@ -12,7 +12,7 @@ import { useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import * as Random from 'expo-random';
-import { clusterApiUrl, Connection, PublicKey, sendAndConfirmTransaction, VersionedTransaction } from '@solana/web3.js';
+import { clusterApiUrl, Connection, PublicKey, sendAndConfirmTransaction, VersionedTransaction, Transaction} from '@solana/web3.js';
 import { getPublicKey } from '~/components/encryptionUtils';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import React, { useEffect, useCallback, useRef, useState } from 'react';
@@ -299,7 +299,6 @@ const MoneyEx = () => {
       }
     };
 
-    // GOOD
     initializeDeeplinks();
     const listener = Linking.addEventListener('url', handleDeepLink);
     return () => {
@@ -354,8 +353,7 @@ const MoneyEx = () => {
         setConnectionStatus('connected');
         console.log(`Connected to ${connectData.public_key?.toString()}`);
 
-        // Navigate back to the original page or desired state
-        navigation.navigate('crypto'); // Replace 'OriginalPage' with your page or screen name
+        navigation.navigate('crypto');
       } catch (error) {
         console.error('Error processing onConnect:', error);
       }
@@ -373,14 +371,13 @@ const MoneyEx = () => {
     }
   }, [deeplink, dappKeyPair.secretKey]);
 
-  // Shi hai
   const connect = async () => {
     console.log('Initiating connection...');
     setConnectionStatus('connecting');
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-      cluster: 'devnet', // mark this thing for soon, could have to change this based on production or dev build
-      app_url: `http://192.168.29.125:8081/crypto/${id}`, // Replace with your actual app URL
+      cluster: 'devnet',
+      app_url: `http://192.168.29.125:8081/crypto/${id}`,
       redirect_link: Linking.createURL('onConnect'),
     });
     const url = buildUrl('connect', params);
@@ -394,12 +391,6 @@ const MoneyEx = () => {
   };
 
 
-
-  // NEED TO UNDETSTAND THE /ONconnect/ deep linking 
-
-
-
-  // COOL
   const disconnect = async () => {
     console.log('Initiating disconnection...');
     setConnectionStatus('disconnecting');
@@ -425,36 +416,39 @@ const MoneyEx = () => {
       setConnectionStatus('connected');
     }
   };
-
-const signAndSendTransaction = async (transaction:VersionedTransaction) => {
-  if (!sharedSecret || !session || !phantomWalletPublicKey) {
-    console.error('Not connected to Phantom wallet');
-    return;
-  }
-  try {
-    const serializedTransaction = Buffer.from(transaction.serialize()).toString('base64');
-    
-    const payload = { 
-      session, 
-      transaction: serializedTransaction 
+  const signAndSendTransaction = async (transaction: VersionedTransaction) => {
+    if (!phantomWalletPublicKey) return;
+  
+    const serializedTransaction = transaction.serialize({
+      requireAllSignatures: false,
+    });
+    console.log('Serialized transaction:', serializedTransaction);
+  
+    const payload = {
+      session,
+      transaction: bs58.encode(serializedTransaction),
     };
+    console.log('Payload:', payload);
+  
+    // Encrypt the payload
     const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+  
+    console.log('Encrypted payload:', encryptedPayload);
+    console.log('Nonce:', nonce);
 
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
       nonce: bs58.encode(nonce),
-      redirect_link: Linking.createURL('onSignTransaction'),
+      redirect_link: onSignAndSendTransactionRedirectLink,
       payload: bs58.encode(encryptedPayload),
     });
-
-    const url = `https://phantom.app/ul/v1/signTransaction?${params.toString()}`;
-    await Linking.openURL(url);
-    return null;
-  } catch (error) {
-    console.error('Error signing transaction with Phantom:', error);
-    return null;
-  }
-};
+    console.log('Params:', params);
+  
+    const url = buildUrl("signAndSendTransaction", params);
+    console.log('Sign and send transaction URL:', url);
+  
+    Linking.openURL(url);
+  };
 
 
 const handleOnSignAndSendTransaction = async (params) => {
