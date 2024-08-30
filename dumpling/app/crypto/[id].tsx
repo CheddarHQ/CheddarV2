@@ -48,6 +48,9 @@ interface TokenBasicInfo {
   priceChange: number;
   symbol: string;
 }
+interface HorizontalTabsProps {
+  connectionStatus: string;
+}
 
 interface TokenData {
   basicInfo: TokenBasicInfo[];
@@ -56,8 +59,7 @@ interface TokenData {
 
 const { width } = Dimensions.get('window');
 
-const HorizontalTabs = () => {
-  const { id } = useLocalSearchParams<{ id: string }>();
+const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
   const navigation = useNavigation();
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
   const [tokenInfo, setTokenInfo] = useState<TokenBasicInfo | null>(null);
@@ -273,6 +275,8 @@ const HorizontalTabs = () => {
 };
 
 const MoneyEx = () => {
+  const navigation = useNavigation();
+  const { id } = useLocalSearchParams<{ id: string }>();
   const [deeplink, setDeepLink] = useState('');
   const [dappKeyPair] = useState(nacl.box.keyPair());
   const [sharedSecret, setSharedSecret] = useState();
@@ -282,6 +286,7 @@ const MoneyEx = () => {
 
   const handleDeepLink = useCallback(({ url }: { url: string }) => {
     console.log('Received deeplink:', url);
+    const parsedUrl = new URL(url);
     setDeepLink(url);
   }, []);
 
@@ -320,6 +325,9 @@ const MoneyEx = () => {
       return;
     }
 
+    const parsedUrl = new URL(url);
+    const pathname = parsedUrl.pathname;
+
     if (/onConnect/.test(url.pathname)) {
       console.log('Handling onConnect');
       try {
@@ -344,9 +352,11 @@ const MoneyEx = () => {
         }
         setConnectionStatus('connected');
         console.log(`Connected to ${connectData.public_key?.toString()}`);
+
+        // Navigate back to the original page or desired state
+        navigation.navigate('crypto'); // Replace 'OriginalPage' with your page or screen name
       } catch (error) {
         console.error('Error processing onConnect:', error);
-        // Handle the error appropriately, maybe set an error state or show a message to the user
       }
     }
 
@@ -364,7 +374,7 @@ const MoneyEx = () => {
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
       cluster: 'devnet', // mark this thing for soon, could have to change this based on production or dev build
-      app_url: 'http://172.31.71.237:8081', // Replace with your actual app URL
+      app_url: `http://172.31.71.237:8081/crypto/${id}`, // Replace with your actual app URL
       redirect_link: Linking.createURL('onConnect'),
     });
     const url = buildUrl('connect', params);
@@ -431,7 +441,7 @@ const MoneyEx = () => {
 
       <Text style={styles.statusText}>Status: {connectionStatus}</Text>
 
-      <HorizontalTabs />
+      <HorizontalTabs connectionStatus={connectionStatus} />
     </YStack>
   );
 };
