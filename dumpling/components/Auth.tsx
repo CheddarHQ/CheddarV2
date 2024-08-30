@@ -108,12 +108,12 @@ export default function Auth() {
   return (
     <View>
             {userName ? (
-                 <Link href={'/thing'} asChild>
-                  <ForwardedButton title="Enter"/>
+                 <Link href={{
+                  pathname : '/thing',
+                  params : {username : userName}
+                  }} asChild>
+                <Button title="Enter the chat"  />
                </Link>
-              
-                
-                
             ) : (
                 <Button onPress={handleSignIn} title="Sign in with Twitter" />
             )}

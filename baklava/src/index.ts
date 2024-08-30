@@ -15,7 +15,8 @@ interface messageProps{
   type: string, 
   sender?: string,
  data: string,
- clientId : string
+ clientId : string,
+ timestamp : string
 }
 
 
@@ -133,8 +134,12 @@ export class durableSocketServer extends DurableObject {
       return new Response("Expected WebSocket", { status: 426 });
     }
 
+    
+
     const pair = new WebSocketPair();
     const [client, server] = Object.values(pair);
+
+    const oldMessages = await this.state.storage.get<Array<object>>('messages') || [];
 
     server.accept();
 
@@ -150,7 +155,7 @@ export class durableSocketServer extends DurableObject {
     console.log(`${clientId} joined the chat`);
 
     // Send all previous messages to the new connection
-    const oldMessages = await this.state.storage.get<Array<object>>('messages') || [];
+   
     console.log("Sending old messages:", oldMessages);
 
     oldMessages.forEach(message => {
@@ -163,7 +168,7 @@ export class durableSocketServer extends DurableObject {
       try {
         const message = JSON.parse(event.data as string);
         const user = message.user;
-        console.log(`Received message from client ${user}:`, message);
+        console.log(`Received message from client ${user}:`, message.data);
 
         const client = this.clients.get(clientId);
         if (client) {
@@ -175,14 +180,28 @@ export class durableSocketServer extends DurableObject {
           console.log(`${user} is leaving the chat`);
           this.clients.delete(clientId);
           server.close();
-          this.broadcast({ type: "leave", data: `Client ${user} left the chat`, clientId : clientId });
+          this.broadcast({ type: "leave", data: `Client ${user} left the chat`, clientId : clientId, timestamp: new Date().toISOString(), sender : "server" } );
           return;
         }
 
         // Store the new message
         const newMessage = { type: "message", sender: user, data: message.data, timestamp: new Date().toISOString(), clientId : clientId };
+
+        const MAX_MESSAGES = 20; 
+        if (oldMessages.length >= MAX_MESSAGES) {
+          oldMessages.shift(); // Remove the oldest message
+        }
         oldMessages.push(newMessage);
-        await this.state.storage.put('messages', oldMessages);
+        console.log("Old messages :", oldMessages)
+
+        await this.state.storage.transaction(async (txn) => {
+          let messages = await txn.get('messages') || [];
+          messages.push(newMessage);
+          if (messages.length > MAX_MESSAGES) {
+            messages = messages.slice(-MAX_MESSAGES);
+          }
+          await txn.put('messages', messages);
+        });
 
         // Broadcast the message to all clients, including the sender
         this.broadcast(newMessage);
