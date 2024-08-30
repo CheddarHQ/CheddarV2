@@ -9,6 +9,8 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
 import { point } from '@shopify/react-native-skia';
+import MyCard from '~/components/MyCard';
+import { formatValue } from '~/components/FormatValue';
 const randomPrice = (min: number, max: number): number => Math.random() * (max - min) + min;
 
 interface DataPoint {
@@ -40,6 +42,7 @@ interface TokenInfo {
   symbol: string;
   liquidityUsd: string;
   marginTop: string;
+  volH6: string;
   volH24: string;
 }
 
@@ -158,30 +161,26 @@ const MyChart: React.FC = () => {
         </Card>
         {displayPoint && (
           <YStack alignItems="flex-end" paddingRight={7}>
-            <Text style={styles.infoText}>{formatPriceTitle(displayPoint)}</Text>
-            <XStack gap={4}>
-              {percentageChange >= 0 ? (
+            <Text style={styles.infoText} color={'#fff'}>
+              {formatPriceTitle(displayPoint)}
+            </Text>
+            {percentageChange >= 0 ? (
+              <XStack gap={4}>
                 <FontAwesome name="caret-up" size={20} color="#4caf50" />
-              ) : (
+                <Text color={'#4caf50'}>{percentageChange.toFixed(2)}%</Text>
+              </XStack>
+            ) : (
+              <XStack gap={4}>
                 <FontAwesome name="caret-down" size={20} color="#f44336" />
-              )}
-              <Text
-                style={[
-                  styles.infoText,
-                  percentageChange >= 0 ? styles.positiveChange : styles.negativeChange,
-                ]}>
-                {percentageChange.toFixed(2)}%
-              </Text>
-            </XStack>
-            <Text style={styles.infoText}>{formatTimeTitle(displayPoint)}</Text>
+                <Text color={'#f44336'}>{percentageChange.toFixed(2)}%</Text>
+              </XStack>
+            )}
+            <Text style={styles.infoText} color={'#fff'}>
+              {formatTimeTitle(displayPoint)}
+            </Text>
           </YStack>
         )}
       </XStack>
-      {/* {percentageChange >= 0 ? (
-                <FontAwesome name="caret-up" size={20} color="#4caf50" />
-              ) : (
-                <FontAwesome name="caret-down" size={20} color="#f44336" />
-              )} */}
       {percentageChange >= 0 ? (
         <LineGraph
           points={priceHistory}
@@ -245,17 +244,17 @@ const MyChart: React.FC = () => {
           justifyContent="center">
           <MyCard
             text="liquidity"
-            value={tokenInfo.liquidityUsd}
+            value={formatValue(tokenInfo.liquidityUsd)}
             icon={<Entypo name="drop" size={20} color="white" />}
           />
           <MyCard
-            text="market cap"
-            value={tokenInfo.marginTop}
+            text="6h Vol"
+            value={formatValue(tokenInfo.volH6)}
             icon={<Entypo name="area-graph" size={20} color="white" />}
           />
           <MyCard
             text="24h Vol"
-            value={tokenInfo.volH24}
+            value={formatValue(tokenInfo.volH24)}
             icon={<Entypo name="bar-graph" size={20} color="white" />}
           />
         </XStack>
@@ -308,9 +307,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   activeButton: {
-    backgroundColor: '#000000',
+    backgroundColor: '#141414',
     textDecorationColor: '#000000',
-    borderWidth: 1,
     borderColor: '#808080',
   },
   buttonText: {
@@ -320,28 +318,3 @@ const styles = StyleSheet.create({
 });
 
 export default MyChart;
-
-function MyCard({ text, value, icon }: { text: string; value: string; icon: JSX.Element }) {
-  return (
-    <YStack
-      borderWidth={2}
-      borderRadius={20}
-      backgroundColor={'#141414'}
-      padding={20}
-      width={110}
-      height={80}
-      alignContent="center"
-      alignItems="center"
-      justifyContent="center">
-      <XStack alignContent="center" alignItems="center" justifyContent="center" gap={5}>
-        <SizableText size="$5" color={'#fff'} fontWeight={'bold'}>
-          {value}
-        </SizableText>
-        {icon}
-      </XStack>
-      <SizableText size="$2" color={'#808080'}>
-        {text}
-      </SizableText>
-    </YStack>
-  );
-}
