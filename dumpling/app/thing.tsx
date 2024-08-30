@@ -247,7 +247,7 @@ export default function Chatroom() {
                       transform: [{ translateY: scrollY }],
                     },
                   ]}
-                  colors={['#FD84AA', '#A38CF9', '#09E0FF']}
+                  colors={['#A38CF9','#FD84AA','#ba351f',  '#09E0FF']}
                 />
                 <FlatList
                   scrollEnabled={false}
@@ -265,7 +265,8 @@ export default function Chatroom() {
                       ]}>
                       <Text color={'#fff'} style={{ color: 'white' }}>{item.text}</Text>
                       <Text
-                        color={'#fff'}
+                        color={"white"}
+                        opacity={0.5}
                         style={{
                           fontSize: 12,
                           color: 'rgba(255,100,255,0.7)',
@@ -298,8 +299,8 @@ export default function Chatroom() {
               {inputText && (
                 <Button
                   position="absolute"
-                  right="$2"
-                  bottom="$2"
+                  right="$6"
+                  bottom="$6"
                   size="$3"
                   circular
                   onPress={sendMessage}
