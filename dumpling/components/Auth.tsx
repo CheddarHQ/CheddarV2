@@ -6,6 +6,7 @@ import * as Linking from "expo-linking";
 import { supabase } from "~/lib/supabase";
 import { Link } from 'expo-router';
 import {Image } from 'tamagui';
+import ForwardedButton from "./ForwardedButton";
 
 
 
@@ -108,7 +109,7 @@ export default function Auth() {
     <View>
             {userName ? (
                  <Link href={'/thing'} asChild>
-                <Button title ="Enter"/>
+                  <ForwardedButton title="Enter"/>
                </Link>
               
                 
