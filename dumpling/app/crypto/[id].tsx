@@ -431,18 +431,23 @@ const signAndSendTransaction = async (transaction:string) => {
     console.error('Not connected to Phantom wallet');
     return;
   }
-  const payload = { session, transaction };
-  const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+  try {
+    const payload = { session, transaction };
+    const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
 
-  const params = new URLSearchParams({
-    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
-    nonce: bs58.encode(nonce),
-    redirect_link: Linking.createURL('onSignAndSendTransaction'),
-    payload: bs58.encode(encryptedPayload),
-  });
+    const params = new URLSearchParams({
+      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+      nonce: bs58.encode(nonce),
+      redirect_link: Linking.createURL('onSignAndSendTransaction'),
+      payload: bs58.encode(encryptedPayload),
+    });
 
-  const url = `https://phantom.app/ul/v1/signAndSendTransaction?${params.toString()}`;
-  await Linking.openURL(url);
+    const url = `https://phantom.app/ul/v1/signAndSendTransaction?${params.toString()}`;
+    await Linking.openURL(url);
+    console.log('Transaction request sent to Phantom wallet.');
+  } catch (error) {
+    console.error('Error signing and sending transaction:', error);
+  }
 }
 
 const handleOnSignAndSendTransaction = async (params) => {
@@ -484,21 +489,20 @@ const performSwap = async () => {
       })
     });
     const data = await response.json();
-      if (response.ok) {
-        console.log(data);
-      } else {
-        console.error('Response error:', data);
-      }
-      } else {
-      console.error('Phantom wallet public key is not available.');
-    }
-    // FIX
-      const { unsignedTransaction } = await response.json();
+    if (response.ok) {
+      const unsignedTransaction = data.unsignedTransaction;
       await signAndSendTransaction(unsignedTransaction);
+
       navigation.navigate('crypto');
-  } catch (error) {
-      console.error('Error performing swap:', error);
+    } else {
+      console.error('Response error:', data);
+    }
+  } else {
+    console.error('Phantom wallet public key is not available.');
   }
+} catch (error) {
+  console.error('Error performing swap:', error);
+}
 };
 
   return (
