@@ -505,13 +505,13 @@ const performSwap = async () => {
       })
     });
     const data = await response.json();
-    console.log('API Response:', JSON.stringify(data, null, 2));
+    // console.log('API Response:', JSON.stringify(data, null, 2));
 
     if (response.ok && data.unsignedTransaction) {
       // Deserialize the transaction
       const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
       var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-      console.log('Deserialized transaction:', transaction);
+      // console.log('Deserialized transaction:', transaction);
 
       // send to phantom
       const signedTransaction = await signAndSendTransaction(transaction);
