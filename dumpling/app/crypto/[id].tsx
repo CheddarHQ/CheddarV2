@@ -449,8 +449,7 @@ const signAndSendTransaction = async (transaction:VersionedTransaction) => {
 
     const url = `https://phantom.app/ul/v1/signTransaction?${params.toString()}`;
     await Linking.openURL(url);
-    const signedSerializedTransaction = await waitForPhantomResponse();
-    return signedSerializedTransaction;
+    return null;
   } catch (error) {
     console.error('Error signing transaction with Phantom:', error);
     return null;
