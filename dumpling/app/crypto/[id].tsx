@@ -367,6 +367,10 @@ const MoneyEx = () => {
       setConnectionStatus('disconnected');
       console.log('Disconnected');
     }
+    if(/onSignAndSendTransaction/.test(url.pathname)) {
+      console.log('Handling onSignAndSendTransaction');
+      handleOnSignAndSendTransaction(params);
+    }
   }, [deeplink, dappKeyPair.secretKey]);
 
   // Shi hai
@@ -440,28 +444,6 @@ const signAndSendTransaction = async (transaction:string) => {
   const url = `https://phantom.app/ul/v1/signAndSendTransaction?${params.toString()}`;
   await Linking.openURL(url);
 }
-const handleOnConnect = (params) => {
-  const phantomPublicKey = params.get('phantom_encryption_public_key');
-  const data = params.get('data');
-  const nonce = params.get('nonce');
-
-  const sharedSecretDapp = nacl.box.before(
-      bs58.decode(phantomPublicKey),
-      dappKeyPair.secretKey
-  );
-  const connectData = decryptPayload(data, nonce, sharedSecretDapp);
-  
-  setSharedSecret(sharedSecretDapp);
-  setSession(connectData.session);
-  setPhantomWalletPublicKey(new PublicKey(connectData.public_key));
-  setConnectionStatus('connected');
-};
-
-const handleOnDisconnect = () => {
-  setPhantomWalletPublicKey(null);
-  setConnectionStatus('disconnected');
-};
-
 
 const handleOnSignAndSendTransaction = async (params) => {
   const data = params.get('data');
@@ -470,7 +452,7 @@ const handleOnSignAndSendTransaction = async (params) => {
   const decryptedData = decryptPayload(data, nonce, sharedSecret);
   console.log('Transaction signature:', decryptedData.signature);
   
-  const connection = new Connection(clusterApiUrl('mainnet-beta'));
+  const connection = new Connection(clusterApiUrl('devnet'));
   const txid = await connection.sendRawTransaction(
       decryptedData.signedTransaction,
       { skipPreflight: false, preflightCommitment: 'confirmed' }
@@ -483,26 +465,37 @@ const handleOnSignAndSendTransaction = async (params) => {
 
 const performSwap = async () => {
   try {
+    if(phantomWalletPublicKey){
       const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             quoteResponse: {
               inputMint: "So11111111111111111111111111111111111111112",
-              outputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+              outputMint: "4Cnk9EPnW5ixfLZatCPJjDB1PUtcRpVVgTQukm9epump",
               amount: 100,
               slippage: 50,
               platformFees: 10,
           },
           // users public key
-          userPubkey: "7DyWpi9NwKsF84ERrSJNd7JBwDjbrGRB8xvisr112ZLc",
+          userPubkey: "44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2",
           wrapAndUnwrapSol: true,
           feeAccount: "44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2"
       })
     });
-
+    const data = await response.json();
+      if (response.ok) {
+        console.log(data);
+      } else {
+        console.error('Response error:', data);
+      }
+      } else {
+      console.error('Phantom wallet public key is not available.');
+    }
+    // FIX
       const { unsignedTransaction } = await response.json();
       await signAndSendTransaction(unsignedTransaction);
+      navigation.navigate('crypto');
   } catch (error) {
       console.error('Error performing swap:', error);
   }
@@ -591,7 +584,7 @@ const styles = StyleSheet.create({
     zIndex: 1000,
   },
   text: {
-    color: 'gray',
+    color: '#fff',
     width: '100%',
   },
   wallet: {
