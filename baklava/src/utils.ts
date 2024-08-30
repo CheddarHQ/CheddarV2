@@ -9,6 +9,7 @@ export function heartBeat(socket: WebSocket, clientId: string, room: durableSock
     if (socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify({ type: "heartbeat" }));
     } else {
+      console.log("Delete client id :", clientId)
       clearInterval(intervalId);
       room.clients.delete(clientId);
     }
@@ -16,6 +17,5 @@ export function heartBeat(socket: WebSocket, clientId: string, room: durableSock
 }
 
 export function generateClientId() {
-  // GET TWIITER USERNAME FROM FRONTEND
-    return "usb";
+  return Math.floor(Math.random() * 200) + 1;
 }

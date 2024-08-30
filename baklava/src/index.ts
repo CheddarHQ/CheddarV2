@@ -10,6 +10,16 @@ import { generateClientId, heartBeat } from "./utils";
  * Main request handler for the Worker.
  * Routes requests to appropriate handlers based on the URL path.
  */
+
+interface messageProps{
+  type: string, 
+  sender?: string,
+ data: string,
+ clientId : string
+}
+
+
+
 export default {
   async fetch(request: Request, env: Env) {
     console.log(`Received request: ${request.method} ${request.url}`);
@@ -138,12 +148,22 @@ export class durableSocketServer extends DurableObject {
     this.clients.set(clientId, { socket: server, info: clientInfo });
 
     console.log(`${clientId} joined the chat`);
-    this.broadcast({ type: "join", data: `Client ${clientId} joined the chat` });
+
+    // Send all previous messages to the new connection
+    const oldMessages = await this.state.storage.get<Array<object>>('messages') || [];
+    console.log("Sending old messages:", oldMessages);
+
+    oldMessages.forEach(message => {
+      server.send(JSON.stringify(message));
+    });
+
+    
 
     server.addEventListener("message", async (event) => {
       try {
         const message = JSON.parse(event.data as string);
-        console.log(`Received message from client ${clientId}:`, message);
+        const user = message.user;
+        console.log(`Received message from client ${user}:`, message);
 
         const client = this.clients.get(clientId);
         if (client) {
@@ -152,14 +172,22 @@ export class durableSocketServer extends DurableObject {
         }
 
         if (message.type === "leave") {
-          console.log(`${clientId} is leaving the chat`);
+          console.log(`${user} is leaving the chat`);
           this.clients.delete(clientId);
           server.close();
-          this.broadcast({ type: "leave", data: `Client ${clientId} left the chat` });
+          this.broadcast({ type: "leave", data: `Client ${user} left the chat`, clientId : clientId });
           return;
         }
 
-        this.broadcast({ type: "message", sender: clientId, data: message.data });
+        // Store the new message
+        const newMessage = { type: "message", sender: user, data: message.data, timestamp: new Date().toISOString(), clientId : clientId };
+        oldMessages.push(newMessage);
+        await this.state.storage.put('messages', oldMessages);
+
+        // Broadcast the message to all clients, including the sender
+        this.broadcast(newMessage);
+
+
       } catch (error) {
         console.error("Error processing message:", error);
         server.send(JSON.stringify({ type: "error", message: "Error processing your message" }));
@@ -168,12 +196,12 @@ export class durableSocketServer extends DurableObject {
 
     server.addEventListener('close', () => {
       console.log(`${clientId} left the chat`);
+      
       this.clients.delete(clientId);
-      this.broadcast({ type: "leave", data: `Client ${clientId} left the chat` });
       server.close();
     });
 
-    heartBeat(server, clientId, this.clients);
+    
 
     // Start periodic cleanup of inactive users
     setInterval(() => this.cleanupInactiveUsers(), 5 * 60 * 1000); // Run every 5 minutes
@@ -188,11 +216,21 @@ export class durableSocketServer extends DurableObject {
    * Broadcasts a message to all connected clients.
    * @param message - The message to broadcast
    */
-  broadcast(message: string | object) {
+  broadcast(message: messageProps) {
     const messageString = typeof message === 'string' ? message : JSON.stringify(message);
+
+
+    const userId = message.clientId;
+    console.log("UserID : ", userId)
+
     this.clients.forEach((client, clientId) => {
       try {
-        client.socket.send(messageString);
+        console.log("Client :", client.info.id);
+        console.log("clientId : ", clientId)
+
+        if(userId != clientId){
+          client.socket.send(messageString);
+        }
       } catch (error) {
         console.error(`Failed to send message to client ${clientId}:`, error);
         this.clients.delete(clientId);
@@ -226,7 +264,7 @@ export class durableSocketServer extends DurableObject {
       if (now.getTime() - client.info.lastActive.getTime() > 30 * 60 * 1000) { // 30 minutes
         this.clients.delete(id);
         client.socket.close();
-        this.broadcast({ type: "leave", data: `Client ${id} timed out` });
+        this.broadcast({ type: "leave", data: `Client ${id} timed out`, clientId : id });
       }
     }
   }
