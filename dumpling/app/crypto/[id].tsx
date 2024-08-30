@@ -299,6 +299,7 @@ const MoneyEx = () => {
       }
     };
 
+    // GOOD
     initializeDeeplinks();
     const listener = Linking.addEventListener('url', handleDeepLink);
     return () => {
@@ -368,13 +369,14 @@ const MoneyEx = () => {
     }
   }, [deeplink, dappKeyPair.secretKey]);
 
+  // Shi hai
   const connect = async () => {
     console.log('Initiating connection...');
     setConnectionStatus('connecting');
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
       cluster: 'devnet', // mark this thing for soon, could have to change this based on production or dev build
-      app_url: `http://172.31.71.237:8081/crypto/${id}`, // Replace with your actual app URL
+      app_url: `http://192.168.29.125:8081/crypto/${id}`, // Replace with your actual app URL
       redirect_link: Linking.createURL('onConnect'),
     });
     const url = buildUrl('connect', params);
@@ -387,6 +389,13 @@ const MoneyEx = () => {
     }
   };
 
+
+
+  // NEED TO UNDETSTAND THE /ONconnect/ deep linking 
+
+
+
+  // COOL
   const disconnect = async () => {
     console.log('Initiating disconnection...');
     setConnectionStatus('disconnecting');
@@ -413,6 +422,92 @@ const MoneyEx = () => {
     }
   };
 
+const signAndSendTransaction = async (transaction:string) => {
+  if (!sharedSecret || !session || !phantomWalletPublicKey) {
+    console.error('Not connected to Phantom wallet');
+    return;
+  }
+  const payload = { session, transaction };
+  const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+
+  const params = new URLSearchParams({
+    dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+    nonce: bs58.encode(nonce),
+    redirect_link: Linking.createURL('onSignAndSendTransaction'),
+    payload: bs58.encode(encryptedPayload),
+  });
+
+  const url = `https://phantom.app/ul/v1/signAndSendTransaction?${params.toString()}`;
+  await Linking.openURL(url);
+}
+const handleOnConnect = (params) => {
+  const phantomPublicKey = params.get('phantom_encryption_public_key');
+  const data = params.get('data');
+  const nonce = params.get('nonce');
+
+  const sharedSecretDapp = nacl.box.before(
+      bs58.decode(phantomPublicKey),
+      dappKeyPair.secretKey
+  );
+  const connectData = decryptPayload(data, nonce, sharedSecretDapp);
+  
+  setSharedSecret(sharedSecretDapp);
+  setSession(connectData.session);
+  setPhantomWalletPublicKey(new PublicKey(connectData.public_key));
+  setConnectionStatus('connected');
+};
+
+const handleOnDisconnect = () => {
+  setPhantomWalletPublicKey(null);
+  setConnectionStatus('disconnected');
+};
+
+
+const handleOnSignAndSendTransaction = async (params) => {
+  const data = params.get('data');
+  const nonce = params.get('nonce');
+
+  const decryptedData = decryptPayload(data, nonce, sharedSecret);
+  console.log('Transaction signature:', decryptedData.signature);
+  
+  const connection = new Connection(clusterApiUrl('mainnet-beta'));
+  const txid = await connection.sendRawTransaction(
+      decryptedData.signedTransaction,
+      { skipPreflight: false, preflightCommitment: 'confirmed' }
+  );
+  console.log('Transaction sent:', txid);
+
+  const confirmation = await connection.confirmTransaction(txid);
+  console.log('Transaction confirmed:', confirmation);
+};
+
+const performSwap = async () => {
+  try {
+      const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quoteResponse: {
+              inputMint: "So11111111111111111111111111111111111111112",
+              outputMint: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+              amount: 100,
+              slippage: 50,
+              platformFees: 10,
+          },
+          // users public key
+          userPubkey: "7DyWpi9NwKsF84ERrSJNd7JBwDjbrGRB8xvisr112ZLc",
+          wrapAndUnwrapSol: true,
+          feeAccount: "44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2"
+      })
+    });
+
+      const { unsignedTransaction } = await response.json();
+      await signAndSendTransaction(unsignedTransaction);
+  } catch (error) {
+      console.error('Error performing swap:', error);
+  }
+};
+
   return (
     <YStack flex={1} backgroundColor="#000000" paddingHorizontal={20}>
       <XStack width="100%" justifyContent="space-between" marginBottom={10}>
@@ -422,12 +517,18 @@ const MoneyEx = () => {
             backgroundColor="transparent"
           />
         </Link>
-
+{/* Add button somewhere here */}
         <Button2
           title={connectionStatus === 'connected' ? 'Disconnect' : 'Connect Phantom'}
           onPress={connectionStatus === 'connected' ? disconnect : connect}
           disabled={['connecting', 'disconnecting'].includes(connectionStatus)}
         />
+                    {/* Add a swap button if needed */}
+      {connectionStatus === 'connected' && (
+        <Button
+        onPress={performSwap}
+        ><Text>SWAP</Text></Button>
+      )}
       </XStack>
 
       {phantomWalletPublicKey && (
@@ -438,9 +539,7 @@ const MoneyEx = () => {
           </Text>
         </View>
       )}
-
       <Text style={styles.statusText}>Status: {connectionStatus}</Text>
-
       <HorizontalTabs connectionStatus={connectionStatus} />
     </YStack>
   );
