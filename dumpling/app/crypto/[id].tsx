@@ -1,6 +1,5 @@
-import { Buffer } from 'buffer'; // Import Buffer polyfill
-global.Buffer = Buffer; // Set global Buffer
-
+import { Buffer } from 'buffer';
+global.Buffer = Buffer;
 import { Dimensions, Pressable } from 'react-native';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import type { TabsContentProps } from 'tamagui';
@@ -13,18 +12,15 @@ import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
 import * as Random from 'expo-random';
 import { clusterApiUrl, Connection, PublicKey, sendAndConfirmTransaction, VersionedTransaction, Transaction} from '@solana/web3.js';
-import { getPublicKey } from '~/components/encryptionUtils';
-import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { Alert } from 'react-native';
 import nacl from 'tweetnacl';
-import ActionSheet from 'react-native-actions-sheet';
 import { encryptPayload } from '~/utils/ecryptPayload';
 import Toast from 'react-native-toast-message';
 import { decryptPayload } from '~/utils/decryptPayload';
 import bs58 from 'bs58';
 import Button2 from '~/components/Button2';
+import Web3Button from '~/components/ButtonCustom';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 
 nacl.setPRNG((x, n) => {
   const randomBytes = Random.getRandomBytes(n);
@@ -33,11 +29,18 @@ nacl.setPRNG((x, n) => {
   }
 });
 
-const onConnectRedirectLink = Linking.createURL('onConnect');
-const onDisconnectRedirectLink = Linking.createURL('onDisconnect');
-const onSignAndSendTransactionRedirectLink = Linking.createURL('onSignAndSendTransaction');
+const onConnectRedirectLink = Linking.createURL("onConnect");
+const onDisconnectRedirectLink = Linking.createURL("onDisconnect");
+const onSignAndSendTransactionRedirectLink = Linking.createURL("onSignAndSendTransaction");
 
 const connection = new Connection('https://api.mainnet-beta.solana.com');
+
+const useUniversalLinks = false; // set as true when deploying to production
+
+const buildUrl = (path: string, params: URLSearchParams) =>
+  `${useUniversalLinks ? "https://phantom.app/ul/" : "phantom://"}v1/${path}?${params.toString()}`;
+
+const NETWORK = clusterApiUrl("mainnet-beta");
 
 interface TokenBasicInfo {
   name: string;
@@ -298,8 +301,8 @@ const MoneyEx = () => {
         setDeepLink(initialUrl);
       }
     };
-
     initializeDeeplinks();
+    
     const listener = Linking.addEventListener('url', handleDeepLink);
     return () => {
       listener.remove();
@@ -383,8 +386,8 @@ const MoneyEx = () => {
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
       cluster: 'mainnet-beta',
-      app_url: `http://192.168.29.125:8081/crypto/${id}`,
-      redirect_link: Linking.createURL('onConnect'),
+      app_url: "https://phantom.app",
+      redirect_link: onConnectRedirectLink,
     });
     const url = buildUrl('connect', params);
     console.log('Connection URL:', url);
@@ -395,7 +398,6 @@ const MoneyEx = () => {
       setConnectionStatus('disconnected');
     }
   };
-
 
   const disconnect = async () => {
     console.log('Initiating disconnection...');
@@ -410,7 +412,7 @@ const MoneyEx = () => {
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
       nonce: bs58.encode(nonce),
-      redirect_link: Linking.createURL('onDisconnect'),
+      redirect_link: onDisconnectRedirectLink,
       payload: bs58.encode(encryptedPayload),
     });
     const url = buildUrl('disconnect', params);
@@ -422,33 +424,22 @@ const MoneyEx = () => {
       setConnectionStatus('connected');
     }
   };
+
   const signAndSendTransaction = async (transaction: Transaction) => {
     if (!phantomWalletPublicKey) return;
 
     transaction.feePayer = phantomWalletPublicKey;
-    // console.log('Transaction:', transaction);
 
     const serializedTransaction = transaction.serialize({
       requireAllSignatures: false,
     });
-    // console.log('Serialized transaction:', serializedTransaction);
   
     const payload = {
       session,
       transaction: bs58.encode(serializedTransaction),
     };
-    // console.log('Payload:', payload);
-  
-    // Encrypt the payload
-    const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
-  
-    // console.log('Encrypted payload:', encryptedPayload);
-    // console.log('Nonce:', nonce);
 
-    // console.log('Dapp Public Key:', bs58.encode(dappKeyPair.publicKey));
-    // console.log('Nonce:', nonce);
-    // console.log('Encrypted Payload:', encryptedPayload);
-    // console.log('Redirect Link:', onSignAndSendTransactionRedirectLink);    
+    const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
 
     const params = new URLSearchParams({
       dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey), // shi
@@ -458,32 +449,30 @@ const MoneyEx = () => {
     });
   
     const url = buildUrl("signAndSendTransaction", params);
-    // console.log('Sign and send transaction URL:', url);
     Linking.openURL(url);
-
   };
 
-
-const handleOnSignAndSendTransaction = async (params) => {
-  const data = params.get('data');
-  const nonce = params.get('nonce');
-
-  const decryptedData = decryptPayload(data, nonce, sharedSecret);
-  // console.log('Transaction signature:', decryptedData.signature);
+  const handleOnSignAndSendTransaction = async (params) => {
+    const data = params.get('data');
+    const nonce = params.get('nonce');
   
-  const connection = new Connection('https://api.mainnet-beta.solana.com');
-  console.log(connection);
+    const decryptedData = decryptPayload(data, nonce, sharedSecret);
+    // console.log('Transaction signature:', decryptedData.signature);
+    
+    const connection = new Connection('https://api.mainnet-beta.solana.com');
+    console.log(connection);
+  
+    const txid = await connection.sendRawTransaction(
+        decryptedData.signedTransaction,
+        { skipPreflight: false, preflightCommitment: 'confirmed' }
+    );
+    // console.log('Transaction sent:', txid);
+  
+    const confirmation = await connection.confirmTransaction(txid);
+    console.log('Transaction confirmed:', confirmation);
+  };
 
-  const txid = await connection.sendRawTransaction(
-      decryptedData.signedTransaction,
-      { skipPreflight: false, preflightCommitment: 'confirmed' }
-  );
-  // console.log('Transaction sent:', txid);
-
-  const confirmation = await connection.confirmTransaction(txid);
-  console.log('Transaction confirmed:', confirmation);
-};
-
+  // ADD STATE MANAGEMENT FOR TRANSACTIONS
 const performSwap = async () => {
   try {
     if(phantomWalletPublicKey){
@@ -505,23 +494,17 @@ const performSwap = async () => {
       })
     });
     const data = await response.json();
-    // console.log('API Response:', JSON.stringify(data, null, 2));
 
     if (response.ok && data.unsignedTransaction) {
-      // Deserialize the transaction
+
       const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
       var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-      // console.log('Deserialized transaction:', transaction);
 
-      // send to phantom
       const signedTransaction = await signAndSendTransaction(transaction);
 
-      // console.log('Signed transaction:', signedTransaction);
       if (signedTransaction) {
         const latestBlockHash = await connection.getLatestBlockhash();
 
-        
-      // Execute the transaction
       const rawTransaction = transaction.serialize()
         const txid = await connection.sendRawTransaction(signedTransaction, {
           skipPreflight: true,
@@ -550,25 +533,26 @@ const performSwap = async () => {
     <YStack flex={1} backgroundColor="#000000" paddingHorizontal={20}>
       <XStack width="100%" justifyContent="space-between" marginBottom={10}>
         <Link href="/settings" asChild>
+
+        {/* ADD THE ALL THE BUTTONS BELOW THE KEYPAD*/}
           <Button
             icon={<Feather name="settings" size={24} color="white" />}
+            backgroundColor="transparent"/>
+        </Link>
+          <Button
+            icon={<FontAwesome name="refresh" size={24} color="white" />}
             backgroundColor="transparent"
           />
-        </Link>
-{/* Add button somewhere here */}
         <Button2
           title={connectionStatus === 'connected' ? 'Disconnect' : 'Connect Phantom'}
           onPress={connectionStatus === 'connected' ? disconnect : connect}
-          disabled={['connecting', 'disconnecting'].includes(connectionStatus)}
-        />
-                    {/* Add a swap button if needed */}
+          disabled={['connecting', 'disconnecting'].includes(connectionStatus)}/>
       {connectionStatus === 'connected' && (
-        <Button
+        <Web3Button
         onPress={performSwap}
-        ><Text>SWAP</Text></Button>
+        ></Web3Button>
       )}
       </XStack>
-
       {phantomWalletPublicKey && (
         <View style={styles.wallet}>
           <View style={styles.greenDot} />
@@ -583,58 +567,84 @@ const performSwap = async () => {
   );
 };
 
-export default MoneyEx;
-
 export const BASE_URL = 'https://phantom.app/ul/v1/';
 
-const buildUrl = (path: string, params: URLSearchParams) =>
-  `${BASE_URL}${path}?${params.toString()}`;
-
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#808080',
-    flexGrow: 1,
-    position: 'relative',
+    backgroundColor: '#000000',
   },
-  statusText: {
+  amountText: {
+    fontSize: 48,
+    fontWeight: 'bold',
     color: 'white',
-    marginBottom: 10,
+    textAlign: 'center',
   },
-  errorText: {
-    color: 'red',
-    marginBottom: 10,
+  usdText: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
   },
-  greenDot: {
-    height: 8,
-    width: 8,
-    borderRadius: 10,
-    marginRight: 5,
-    backgroundColor: '#fff',
+  tokenIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFA07A',
+    marginRight: 10,
   },
-  header: {
-    width: '95%',
-    marginLeft: 'auto',
-    marginRight: 'auto',
+  tokenText: {
+    color: 'white',
+    fontSize: 16,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
-  },
-  spinner: {
-    position: 'absolute',
-    alignSelf: 'center',
-    top: '50%',
-    zIndex: 1000,
-  },
-  text: {
-    color: '#fff',
-    width: '100%',
-  },
-  wallet: {
+  numButton: {
+    width: width * 0.2,
+    height: width * 0.2,
+    justifyContent: 'center',
     alignItems: 'center',
-    margin: 10,
-    marginBottom: 15,
+  },
+  numButtonText: {
+    fontSize: 24,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  tabButton: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeTabButton: {
+    backgroundColor: '#00FF00',
+  },
+  tabButtonText: {
+    color: '#888',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  activeTabText: {
+    color: 'black',
+  },
+  connectButton: {
+    backgroundColor: '#00FF00',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+  },
+  connectButtonText: {
+    color: 'black',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  secureText: {
+    color: '#888',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
+
+export default MoneyEx;
