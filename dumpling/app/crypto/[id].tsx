@@ -1,13 +1,46 @@
-import React, { useEffect, useState } from 'react';
+import { Buffer } from 'buffer';
+global.Buffer = Buffer;
 import { Dimensions, Pressable } from 'react-native';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import type { TabsContentProps } from 'tamagui';
+import Feather from '@expo/vector-icons/Feather';
 import { Text, SizableText, Tabs, XStack, YStack, Button, Card, CardHeader, Avatar } from 'tamagui';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { Link, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
 import { useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
-import Feather from '@expo/vector-icons/Feather';
+import * as Random from 'expo-random';
+import { clusterApiUrl, Connection, PublicKey, sendAndConfirmTransaction, VersionedTransaction, Transaction} from '@solana/web3.js';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
+import nacl from 'tweetnacl';
+import { encryptPayload } from '~/utils/ecryptPayload';
+import Toast from 'react-native-toast-message';
+import { decryptPayload } from '~/utils/decryptPayload';
+import bs58 from 'bs58';
+import Button2 from '~/components/Button2';
+import Web3Button from '~/components/ButtonCustom';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+
+nacl.setPRNG((x, n) => {
+  const randomBytes = Random.getRandomBytes(n);
+  for (let i = 0; i < n; i++) {
+    x[i] = randomBytes[i];
+  }
+});
+
+const onConnectRedirectLink = Linking.createURL("onConnect");
+const onDisconnectRedirectLink = Linking.createURL("onDisconnect");
+const onSignAndSendTransactionRedirectLink = Linking.createURL("onSignAndSendTransaction");
+
+const connection = new Connection('https://api.mainnet-beta.solana.com');
+
+const useUniversalLinks = false; // set as true when deploying to production
+
+const buildUrl = (path: string, params: URLSearchParams) =>
+  `${useUniversalLinks ? "https://phantom.app/ul/" : "phantom://"}v1/${path}?${params.toString()}`;
+
+const NETWORK = clusterApiUrl("mainnet-beta");
 
 interface TokenBasicInfo {
   name: string;
@@ -18,6 +51,9 @@ interface TokenBasicInfo {
   priceChange: number;
   symbol: string;
 }
+interface HorizontalTabsProps {
+  connectionStatus: string;
+}
 
 interface TokenData {
   basicInfo: TokenBasicInfo[];
@@ -25,10 +61,6 @@ interface TokenData {
 }
 
 const { width } = Dimensions.get('window');
-
-interface HorizontalTabsProps {
-  connectionStatus: string;
-}
 
 const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
   const navigation = useNavigation();
@@ -211,7 +243,7 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
           {tokenInfo ? (
             <CryptoCard item={tokenInfo} input={buyInput} onPress={closeModal} />
           ) : (
-            <Text>Loading token information...</Text>
+            <Text>No token information available</Text>
           )}
           {renderNumpad('buy')}
         </YStack>
@@ -246,72 +278,373 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
 };
 
 const MoneyEx = () => {
+  const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
+  const [deeplink, setDeepLink] = useState('');
+  const [dappKeyPair] = useState(nacl.box.keyPair());
+  const [sharedSecret, setSharedSecret] = useState();
+  const [session, setSession] = useState();
+  const [phantomWalletPublicKey, setPhantomWalletPublicKey] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
+
+  const handleDeepLink = useCallback(({ url }: { url: string }) => {
+    console.log('Received deeplink:', url);
+    const parsedUrl = new URL(url);
+    setDeepLink(url);
+  }, []);
+
+  useEffect(() => {
+    const initializeDeeplinks = async () => {
+      const initialUrl = await Linking.getInitialURL();
+      console.log('Initial URL:', initialUrl);
+      if (initialUrl) {
+        setDeepLink(initialUrl);
+      }
+    };
+    initializeDeeplinks();
+    
+    const listener = Linking.addEventListener('url', handleDeepLink);
+    return () => {
+      listener.remove();
+    };
+  }, [handleDeepLink]);
+
+  useEffect(() => {
+    if (!deeplink) return;
+
+    // console.log('Processing deeplink:', deeplink);
+    const url = new URL(deeplink);
+    const params = url.searchParams;
+
+    if (params.get('errorCode')) {
+      const error = Object.fromEntries([...params]);
+      const message = error?.errorMessage ?? JSON.stringify(error, null, 2);
+      console.error('Phantom error:', message);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: message,
+      });
+      return;
+    }
+
+    const parsedUrl = new URL(url);
+    const pathname = parsedUrl.pathname;
+
+    if (/onConnect/.test(url.pathname)) {
+      console.log('Handling onConnect');
+      try {
+        const phantomPublicKey = params.get('phantom_encryption_public_key');
+        const data = params.get('data');
+        const nonce = params.get('nonce');
+
+        if (!phantomPublicKey || !data || !nonce) {
+          throw new Error('Missing required parameters');
+        }
+
+        const sharedSecretDapp = nacl.box.before(
+          bs58.decode(phantomPublicKey),
+          dappKeyPair.secretKey
+        );
+        const connectData = decryptPayload(data, nonce, sharedSecretDapp);
+        // console.log('Connect data:', connectData);
+        setSharedSecret(sharedSecretDapp);
+        setSession(connectData.session);
+        if (connectData.public_key) {
+          setPhantomWalletPublicKey(new PublicKey(connectData.public_key));
+        }
+        setConnectionStatus('connected');
+        console.log(`Connected to ${connectData.public_key?.toString()}`);
+
+        navigation.navigate('crypto');
+      } catch (error) {
+        console.error('Error processing onConnect:', error);
+      }
+    }
+
+    if (/onDisconnect/.test(url.pathname)) {
+      console.log('Handling onDisconnect');
+      setPhantomWalletPublicKey(null);
+      setConnectionStatus('disconnected');
+      console.log('Disconnected');
+    }
+
+    if(/onSignAndSendTransaction/.test(url.pathname)) {
+      console.log('Handling onSignAndSendTransaction');
+      const signAndSendTransactionData = decryptPayload(
+        params.get("data")!,
+        params.get("nonce")!,
+        sharedSecret
+      );
+      // console.log("signAndSendTrasaction: ", signAndSendTransactionData);
+    }
+  }, [deeplink, dappKeyPair.secretKey]);
+
+  const connect = async () => {
+    console.log('Initiating connection...');
+    setConnectionStatus('connecting');
+    const params = new URLSearchParams({
+      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+      cluster: 'mainnet-beta',
+      app_url: "https://phantom.app",
+      redirect_link: onConnectRedirectLink,
+    });
+    const url = buildUrl('connect', params);
+    console.log('Connection URL:', url);
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error('Error opening URL:', error);
+      setConnectionStatus('disconnected');
+    }
+  };
+
+  const disconnect = async () => {
+    console.log('Initiating disconnection...');
+    setConnectionStatus('disconnecting');
+    if (!sharedSecret) {
+      console.error('No shared secret available for disconnection');
+      setConnectionStatus('disconnected');
+      return;
+    }
+    const payload = { session };
+    const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+    const params = new URLSearchParams({
+      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey),
+      nonce: bs58.encode(nonce),
+      redirect_link: onDisconnectRedirectLink,
+      payload: bs58.encode(encryptedPayload),
+    });
+    const url = buildUrl('disconnect', params);
+    console.log('Disconnection URL:', url);
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error('Error opening URL:', error);
+      setConnectionStatus('connected');
+    }
+  };
+
+  const signAndSendTransaction = async (transaction: Transaction) => {
+    if (!phantomWalletPublicKey) return;
+
+    transaction.feePayer = phantomWalletPublicKey;
+
+    const serializedTransaction = transaction.serialize({
+      requireAllSignatures: false,
+    });
+  
+    const payload = {
+      session,
+      transaction: bs58.encode(serializedTransaction),
+    };
+
+    const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
+
+    const params = new URLSearchParams({
+      dapp_encryption_public_key: bs58.encode(dappKeyPair.publicKey), // shi
+      nonce: bs58.encode(nonce), // shi
+      redirect_link: onSignAndSendTransactionRedirectLink,
+      payload: bs58.encode(encryptedPayload), // shi
+    });
+  
+    const url = buildUrl("signAndSendTransaction", params);
+    Linking.openURL(url);
+  };
+
+  const handleOnSignAndSendTransaction = async (params) => {
+    const data = params.get('data');
+    const nonce = params.get('nonce');
+  
+    const decryptedData = decryptPayload(data, nonce, sharedSecret);
+    // console.log('Transaction signature:', decryptedData.signature);
+    
+    const connection = new Connection('https://api.mainnet-beta.solana.com');
+    console.log(connection);
+  
+    const txid = await connection.sendRawTransaction(
+        decryptedData.signedTransaction,
+        { skipPreflight: false, preflightCommitment: 'confirmed' }
+    );
+    // console.log('Transaction sent:', txid);
+  
+    const confirmation = await connection.confirmTransaction(txid);
+    console.log('Transaction confirmed:', confirmation);
+  };
+
+  // ADD STATE MANAGEMENT FOR TRANSACTIONS
+const performSwap = async () => {
+  try {
+    if(phantomWalletPublicKey){
+      const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            quoteResponse: {
+              inputMint: "So11111111111111111111111111111111111111112",
+              outputMint: "4Cnk9EPnW5ixfLZatCPJjDB1PUtcRpVVgTQukm9epump",
+              amount: 10000,
+              slippage: 50,
+              platformFees: 10,
+          },
+          // users public key
+          userPubkey: phantomWalletPublicKey.toString(),
+          wrapAndUnwrapSol: true,
+          feeAccount: "44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2"
+      })
+    });
+    const data = await response.json();
+
+    if (response.ok && data.unsignedTransaction) {
+
+      const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
+      var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+
+      const signedTransaction = await signAndSendTransaction(transaction);
+
+      if (signedTransaction) {
+        const latestBlockHash = await connection.getLatestBlockhash();
+
+      const rawTransaction = transaction.serialize()
+        const txid = await connection.sendRawTransaction(signedTransaction, {
+          skipPreflight: true,
+          maxRetries: 2
+        });
+        await connection.confirmTransaction({
+          blockhash: latestBlockHash.blockhash,
+          lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+          signature: txid
+         });
+         console.log(`https://solscan.io/tx/${txid}`);         
+        navigation.navigate('crypto');
+      }
+    } else {
+      console.error('Response error signedTransaction:', data);
+    }
+  } else {
+    console.error('Phantom wallet public key is not available.');
+  }
+} catch (error) {
+  console.error('Error performing swap:', error);
+}
+};
 
   return (
     <YStack flex={1} backgroundColor="#000000" paddingHorizontal={20}>
       <XStack width="100%" justifyContent="space-between" marginBottom={10}>
         <Link href="/settings" asChild>
+
+        {/* ADD THE ALL THE BUTTONS BELOW THE KEYPAD*/}
           <Button
             icon={<Feather name="settings" size={24} color="white" />}
+            backgroundColor="transparent"/>
+        </Link>
+          <Button
+            icon={<FontAwesome name="refresh" size={24} color="white" />}
             backgroundColor="transparent"
           />
-        </Link>
+        <Button2
+          title={connectionStatus === 'connected' ? 'Disconnect' : 'Connect Phantom'}
+          onPress={connectionStatus === 'connected' ? disconnect : connect}
+          disabled={['connecting', 'disconnecting'].includes(connectionStatus)}/>
+      {connectionStatus === 'connected' && (
+        <Web3Button
+        onPress={performSwap}
+        ></Web3Button>
+      )}
       </XStack>
+      {phantomWalletPublicKey && (
+        <View style={styles.wallet}>
+          <View style={styles.greenDot} />
+          <Text style={styles.text} numberOfLines={1} ellipsizeMode="middle">
+            {`Connected to: ${phantomWalletPublicKey.toString()}`}
+          </Text>
+        </View>
+      )}
       <Text style={styles.statusText}>Status: {connectionStatus}</Text>
       <HorizontalTabs connectionStatus={connectionStatus} />
     </YStack>
   );
 };
 
-export default MoneyEx;
+export const BASE_URL = 'https://phantom.app/ul/v1/';
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
   container: {
     flex: 1,
-    backgroundColor: '#808080',
-    flexGrow: 1,
-    position: 'relative',
+    backgroundColor: '#000000',
   },
-  statusText: {
+  amountText: {
+    fontSize: 48,
+    fontWeight: 'bold',
     color: 'white',
-    marginBottom: 10,
+    textAlign: 'center',
   },
-  errorText: {
-    color: 'red',
-    marginBottom: 10,
+  usdText: {
+    fontSize: 16,
+    color: '#888',
+    textAlign: 'center',
   },
-  greenDot: {
-    height: 8,
-    width: 8,
-    borderRadius: 10,
-    marginRight: 5,
-    backgroundColor: '#fff',
+  tokenIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#FFA07A',
+    marginRight: 10,
   },
-  header: {
-    width: '95%',
-    marginLeft: 'auto',
-    marginRight: 'auto',
+  tokenText: {
+    color: 'white',
+    fontSize: 16,
   },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
-  },
-  spinner: {
-    position: 'absolute',
-    alignSelf: 'center',
-    top: '50%',
-    zIndex: 1000,
-  },
-  text: {
-    color: '#fff',
-    width: '100%',
-  },
-  wallet: {
+  numButton: {
+    width: width * 0.2,
+    height: width * 0.2,
+    justifyContent: 'center',
     alignItems: 'center',
-    margin: 10,
-    marginBottom: 15,
+  },
+  numButtonText: {
+    fontSize: 24,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  tabButton: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeTabButton: {
+    backgroundColor: '#00FF00',
+  },
+  tabButtonText: {
+    color: '#888',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  activeTabText: {
+    color: 'black',
+  },
+  connectButton: {
+    backgroundColor: '#00FF00',
+    borderRadius: 10,
+    padding: 15,
+    alignItems: 'center',
+  },
+  connectButtonText: {
+    color: 'black',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  secureText: {
+    color: '#888',
+    fontSize: 14,
+    textAlign: 'center',
   },
 });
+
+export default MoneyEx;

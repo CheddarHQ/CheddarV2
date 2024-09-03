@@ -4,6 +4,7 @@
     "slug": "dumpling",
     "version": "1.0.0",
     "scheme": "cheddarchat",
+    "associatedDomains": ["applinks:phantom.app"],
     "deepLinking": {
       "enabled": true
     },

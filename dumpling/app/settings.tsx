@@ -1,102 +1,143 @@
-import { View } from 'react-native';
 import React, { useState } from 'react';
-import { ToggleGroup, Heading, XStack, YStack, Text, Input, Slider } from 'tamagui';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import Fontisto from '@expo/vector-icons/Fontisto';
-import { Pop } from '~/components/Popover';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 const Settings = () => {
-  const [value, setValue] = useState(null);
-
-  const onPressHandler = () => {};
-  //@ts-ignore
-  const handleCustomInputChange = (e) => {
-    // Handle the custom input change, making sure the value is a number and not more than 100
-    const newValue = Math.min(Math.max(parseFloat(e.nativeEvent.text) || 0, 0), 100);
-    //@ts-ignore
-    setValue(newValue);
-  };
+  const [secureSpeed, setSecureSpeed] = useState('Normal');
+  const [slippage, setSlippage] = useState('5%');
 
   return (
-    <YStack backgroundColor={'#000000'} fullscreen>
-      {/* @ts-ignore */}
-      <Heading fontFamily={'Press2P'} alignSelf="center" color="white">
-        SETTINGS
-      </Heading>
-      <XStack alignItems="center" marginTop={'$6'} marginBottom={'$2'} marginHorizontal={'$2'}>
-        <MaterialIcons name="speed" size={24} color="white" />
-        <Text color={'white'} paddingLeft={'$2'} fontWeight={'bold'}>
-          Secure Speed
-        </Text>
-      </XStack>
-      <XStack alignSelf="center">
-        <ToggleGroup
-          marginTop={'$3'}
-          orientation={'horizontal'}
-          type={'single'}
-          size={'$7'}
-          disableDeactivation={true}>
-          <ToggleGroup.Item value="Medium" aria-label="Medium Speed">
-            <Text color={'white'}>Med</Text>
-          </ToggleGroup.Item>
-          <ToggleGroup.Item value="High" aria-label="High Speed">
-            <Text color={'white'}>High</Text>
-          </ToggleGroup.Item>
-          <ToggleGroup.Item value="VeryHigh" aria-label="Very High Speed">
-            <Text color={'white'}>Ultra</Text>
-          </ToggleGroup.Item>
-        </ToggleGroup>
-      </XStack>
-      <XStack alignItems="center" marginTop={'$6'} marginBottom={'$2'} marginHorizontal={'$2'}>
-        <Fontisto name="beach-slipper" size={24} color="white" />
-        <Text color={'white'} paddingLeft={'$2'} fontWeight={'bold'}>
-          Slippage
-        </Text>
-      </XStack>
-      <XStack alignSelf="center">
-        <ToggleGroup
-          marginTop={'$3'}
-          orientation={'horizontal'}
-          type={'single'}
-          size={'$5'}
-          disableDeactivation={true}>
-          <ToggleGroup.Item value="0.1" aria-label="0.1% Slippage">
-            <Text color={'white'}>0.1%</Text>
-          </ToggleGroup.Item>
-          <ToggleGroup.Item value="1" aria-label="1% Slippage">
-            <Text color={'white'}>1%</Text>
-          </ToggleGroup.Item>
-          <ToggleGroup.Item value="custom" aria-label="Custom Slippage">
-            <Pop
-              placement="top"
-              Icon={<MaterialIcons name="dashboard-customize" size={24} color="white" />}
-              Name="top-popover"
-            />
-          </ToggleGroup.Item>
-        </ToggleGroup>
-      </XStack>
-      <XStack alignSelf={'center'} marginTop={'$10'}>
-        <Slider size="$4" width={200} defaultValue={[50]} max={100} step={20}>
-          <Slider.Track>
-            <Slider.TrackActive />
-          </Slider.Track>
-          <Slider.Thumb circular index={0} />
-        </Slider>
-      </XStack>
-    </YStack>
+    <View style={styles.container}>
+      <Text style={styles.title}>SETTINGS</Text>
+      
+      <View style={styles.settingItem}>
+        <View style={styles.settingIcon}>
+          <Ionicons name="reload-circle-outline" size={24} color="white" />
+        </View>
+        <Text style={styles.settingText}>Secure Speed</Text>
+      </View>
+      
+      <TouchableOpacity 
+        style={[styles.speedButton, { backgroundColor: '#FFFF00' }]}
+        onPress={() => setSecureSpeed('Normal')}
+      >
+        <Text style={styles.buttonText}>Normal</Text>
+      </TouchableOpacity>
+
+      <View style={styles.settingItem}>
+        <View style={styles.settingIcon}>
+          <Ionicons name="swap-horizontal-outline" size={24} color="white" />
+        </View>
+        <Text style={styles.settingText}>Slippage</Text>
+      </View>
+      
+      <View style={styles.slippageContainer}>
+        {['0.1%', '1%', '5%'].map((value) => (
+          <TouchableOpacity 
+            key={value}
+            style={[
+              styles.slippageButton, 
+              slippage === value && styles.slippageButtonActive
+
+            ]}
+            onPress={() => setSlippage(value)}
+          >
+            <Text style={styles.slippageButtonText}>{value}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.settingItem}>
+        <View style={styles.settingIcon}>
+          <Ionicons name="notifications-outline" size={24} color="white" />
+        </View>
+        <Text style={styles.settingText}>Subscribed to...</Text>
+      </View>
+
+      <View style={styles.settingItem}>
+        <View style={styles.settingIcon}>
+          <Ionicons name="flag-outline" size={24} color="white" />
+        </View>
+        <Text style={styles.settingText}>Report Bugs & Errors</Text>
+      </View>
+
+      <View style={styles.settingItem}>
+        <View style={styles.settingIcon}>
+          <Ionicons name="help-circle-outline" size={24} color="white" />
+        </View>
+        <Text style={styles.settingText}>I need help</Text>
+      </View>
+
+      <View style={styles.settingItem}>
+        <View style={styles.settingIcon}>
+          <Ionicons name="log-out-outline" size={24} color="white" />
+        </View>
+        <Text style={styles.settingText}>Logout</Text>
+      </View>
+    </View>
   );
 };
 
-export default Settings;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000000',
+    padding: 20,
+  },
+  title: {
+    color: '#FFFFFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  settingItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  settingIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#333333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  settingText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+  },
+  speedButton: {
+    backgroundColor: '#FFFF00',
+    padding: 10,
+    borderRadius: 20,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: '#000000',
+    fontWeight: 'bold',
+  },
+  slippageContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+    color: '#000000',
+  },
+  slippageButton: {
+    backgroundColor: '#333333',
+    padding: 10,
+    borderRadius: 20,
+    width: '30%',
+    alignItems: 'center',
+  },
+  slippageButtonActive: {
+    backgroundColor: '#FFFF00',
+  },
+  slippageButtonText: {
+    color: '#FFFFFF',
+  },
+});
 
-{
-  /* <Input
-              keyboardType="numeric"
-              onChange={handleCustomInputChange}
-              placeholder="Custom"
-              //@ts-ignore
-              value={value !== null ? value.toString() : ''}
-              returnKeyType="done" // Shows a 'Done' button on the keyboard
-              textAlign="center" // Center the text in the input field
-            /> */
-}
+export default Settings;
