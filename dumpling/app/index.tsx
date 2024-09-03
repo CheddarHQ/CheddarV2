@@ -20,7 +20,6 @@ export default function Home() {
           fontFamily="Press2P">
           CHEDDAR
         </Text>
-      
       <Auth />
     </YStack>
   );
