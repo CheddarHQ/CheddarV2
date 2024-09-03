@@ -18,12 +18,13 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 
-
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 import { YStack, XStack, Text, Input, Button, AnimatePresence } from 'tamagui';
 import { Link } from 'expo-router';
+import GridComponent from '~/components/Grid';
+
 
 interface Message {
   key: string;
@@ -164,15 +165,39 @@ export default function Chatroom() {
       }, 500);
     }
   }
-  
-
+  const GridBackground = () => {
   return (
+    <View style={styles.gridContainer}>
+      {[...Array(20)].map((_, i) => (
+        <LinearGradient
+          key={`v${i}`}
+          colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']} // Colorful gradient
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={[styles.gridLine, styles.vertical, { left: `${(i + 1) * 5}%` }]}
+        />
+      ))}
+      {[...Array(20)].map((_, i) => (
+        <LinearGradient
+          key={`h${i}`}
+          colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']} // Colorful gradient
+          start={{ x: 0, y: 0 }}
+          end={{ x: 2, y: 1 }}
+          style={[styles.gridLine, styles.horizontal, { top: `${(i + 1) * 5}%` }]}
+        />
+      ))}
+    </View>  
+    );
+};  
+return (
+
+
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}>
       <YStack flex={1} backgroundColor="#000000">
-        {/* Header */}
-        <XStack
+
+   <XStack
           backgroundColor="#000000"
           paddingTop="$8"
           paddingHorizontal="$4"
@@ -182,6 +207,7 @@ export default function Chatroom() {
           <Link href={'/analytics'}>
             <MaterialIcons name="query-stats" size={24} color="white" padding={5} />
           </Link>
+
           <Text
             color="white"
             fontSize="$8"
@@ -198,13 +224,29 @@ export default function Chatroom() {
         </XStack>
 
          {/* Connection status and refresh button */}
-         <XStack justifyContent="space-between" paddingHorizontal="$4" paddingBottom="$2">
-          <Text color={isConnected ? '#96ff64' : 'red'}>
-            {isConnected ? 'Connected' : 'Disconnected'}
-          </Text>
-        </XStack>
+        {/*  <XStack justifyContent="space-between" paddingHorizontal="$4" paddingBottom="$2"> */}
+        {/*   <Text color={isConnected ? '#96ff64' : 'red'}> */}
+        {/*     {isConnected ? 'Connected' : 'Disconnected'} */}
+        {/*   </Text> */}
+        {/* </XStack> */}
 
-        {/* Chat messages */}
+
+        {/* Header */}
+        {/* {/* Top Background Layer  */}
+        <View style={styles.topBackgroundLayer}>
+
+  <GridBackground />
+        </View>
+        {/**/}
+         {/* Gradient Overlay */}
+       {/* Bottom Background Layer */} 
+        <View style={styles.bottomBackgroundLayer}>
+        
+          <GridBackground/>
+          </View>
+        {/**/}
+        {/* {/* Additional Bottom Gradient */} 
+      {/* Chat messages */}
         <View style={{ flex: 1 }}>
           <Animated.ScrollView
             ref={scrollRef}
@@ -289,8 +331,8 @@ export default function Chatroom() {
               value={inputText}
               onChangeText={setInputText}
               placeholder="Type a message..."
-              borderRadius="$10"
-              height="$5"
+              borderRadius="$8"
+              height="$4"
               paddingHorizontal="$3"
               paddingRight={inputText ? '$8' : '$3'}
               onSubmitEditing={sendMessage}
@@ -321,7 +363,7 @@ export default function Chatroom() {
 const styles = StyleSheet.create({
   messageItem: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 12,
     margin: 12,
     marginBottom: 1,
     borderRadius: 12,
@@ -329,4 +371,73 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignSelf: 'flex-start',
   },
+  topBackgroundLayer: {
+    position: 'absolute',
+    top: -220,
+    left: 0,
+    right: 0,
+    height: '80%',
+    backgroundColor: '#000000',
+    transform: [{ perspective: 300 }, { rotateX: '-45deg' }],
+    zIndex: -15,
+    pointerEvents: 'none',
+  },
+  gradientOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'linear-gradient(to top, #000000, transparent)',
+    zIndex: -10,
+    pointerEvents: 'none',
+  },
+  bottomBackgroundLayer: {
+    position: 'absolute',
+    bottom: -230,
+    left: 0,
+    right: 0,
+    height: '80%',
+    backgroundColor: '#000000',
+    transform: [{ perspective: 300 }, { rotateX: '40deg' }],
+    zIndex: -14,
+    pointerEvents: 'none',
+  },
+  additionalBottomGradient: {
+    position: 'absolute',
+    bottom: 100,
+    left: 0,
+    right: 0,
+    height: '50%',
+    backgroundColor: 'linear-gradient(to bottom, #000000, transparent)',
+    zIndex: -14,
+    pointerEvents: 'none',
+  },
+  gridContainer: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  right: 0,
+  bottom: 0,
+  opacity: 0.35,
+},
+// gridContainer: {
+//     flex: 1,
+//     position: 'relative',
+//   },
+  gridLine: {
+    position: 'absolute',
+    backgroundColor: 'transparent', // Override default background color
+  },
+  vertical: {
+    width: 1,
+    top: 0,
+    bottom: 0,
+  },
+  horizontal: {
+    height: 1,
+    left: 0,
+    right: 0,
+  },
 });
+
