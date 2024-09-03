@@ -190,142 +190,145 @@ export default function Chatroom() {
     );
 };  
 return (
-
-
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}>
+      style={{ flex: 1 }}
+    >
       <YStack flex={1} backgroundColor="#000000">
-
-   <XStack
-          backgroundColor="#000000"
-          paddingTop="$8"
-          paddingHorizontal="$4"
-          alignItems="center"
-          justifyContent="space-between"
-          paddingBottom="$3">
-          <Link href={'/analytics'}>
-            <MaterialIcons name="query-stats" size={24} color="white" padding={5} />
-          </Link>
-
-          <Text
-            color="white"
-            fontSize="$8"
-            fontWeight="bold"
-            fontFamily={'Press2P'}
-            paddingTop={'$2'}
-            paddingLeft={'$3'}
-            alignSelf="center">
-            CHEDDAR
-          </Text>
-          <Link href={'/modal'} asChild>
-            <AntDesign name="pluscircle" size={24} color="white" />
-          </Link>
-        </XStack>
-
-         {/* Connection status and refresh button */}
-        {/*  <XStack justifyContent="space-between" paddingHorizontal="$4" paddingBottom="$2"> */}
-        {/*   <Text color={isConnected ? '#96ff64' : 'red'}> */}
-        {/*     {isConnected ? 'Connected' : 'Disconnected'} */}
-        {/*   </Text> */}
-        {/* </XStack> */}
-
-
-        {/* Header */}
-        {/* {/* Top Background Layer  */}
-        <View style={styles.topBackgroundLayer}>
-
-  <GridBackground />
-        </View>
-        {/**/}
-         {/* Gradient Overlay */}
-       {/* Bottom Background Layer */} 
-        <View style={styles.bottomBackgroundLayer}>
-        
-          <GridBackground/>
+        {/* Background layers */}
+        <View style={[StyleSheet.absoluteFill, { zIndex: 0 }]}>
+          <View style={styles.topBackgroundLayer}>
+            <GridBackground />
           </View>
-        {/**/}
-        {/* {/* Additional Bottom Gradient */} 
-      {/* Chat messages */}
-        <View style={{ flex: 1 }}>
-          <Animated.ScrollView
-            ref={scrollRef}
-            scrollEventThrottle={16}
-            onScroll={scrollHandler}
-            style={{ flex: 1 }}>
-            <MaskedView
-              maskElement={
-                <View style={{ backgroundColor: 'transparent' }}>
-                  {messages.map((item) => (
-                    <View
-                      key={item.key}
-                      style={[
-                        styles.messageItem,
-                        {
-                          backgroundColor: item.user==username ? 'white' : '#E4E7EB',
-                          alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                          opacity: item.sent ? 1 : 0.5,
-                        },
-                      ]}>
-                      <Text style={{ color: item.mine ? 'white' : '#111927' }}>{item.text}</Text>
-                      <Text
-                        style={{
-                          fontSize: 12,
-                          color: item.mine ? 'rgba(255,255,255,0.7)' : 'rgba(17,25,39,0.7)',
-                          alignSelf: 'flex-end',
-                          marginTop: 4,
-                        }}>
-                        {item.user} {!item.sent && '(Sending...)'}
-                      </Text>
-                    </View>
-                  ))}
+          <View style={styles.bottomBackgroundLayer}>
+            <GridBackground />
+          </View>
+        </View>
+  
+        {/* Main content */}
+        <View style={{ flex: 1, zIndex: 1 }}>
+          {/* Header */}
+          <XStack
+            backgroundColor="rgba(0,0,0,0.5)"
+            paddingTop="$8"
+            paddingHorizontal="$4"
+            alignItems="center"
+            justifyContent="space-between"
+            paddingBottom="$3"
+          >
+            <Link href={'/analytics'}>
+              <MaterialIcons name="query-stats" size={24} color="white" padding={5} />
+            </Link>
+            <Text
+              color="white"
+              fontSize="$8"
+              fontWeight="bold"
+              fontFamily={'Press2P'}
+              paddingTop={'$2'}
+              paddingLeft={'$3'}
+              alignSelf="center"
+            >
+              CHEDDAR
+            </Text>
+            <Link href={'/modal'} asChild>
+              <AntDesign name="pluscircle" size={24} color="white" />
+            </Link>
+          </XStack>
+  
+          {/* Connection status */}
+          <XStack justifyContent="space-between" paddingHorizontal="$4" paddingBottom="$2">
+            <Text color={isConnected ? '#96ff64' : 'red'}>
+              {isConnected ? 'Connected' : 'Disconnected'}
+            </Text>
+          </XStack>
+  
+          {/* Chat messages */}
+          <View style={{ flex: 1 }}>
+            <Animated.ScrollView
+              ref={scrollRef}
+              scrollEventThrottle={16}
+              onScroll={scrollHandler}
+              style={{ flex: 1 }}
+            >
+              <MaskedView
+                maskElement={
+                  <View style={{ backgroundColor: 'transparent' }}>
+                    {messages.map((item) => (
+                      <View
+                        key={item.key}
+                        style={[
+                          styles.messageItem,
+                          {
+                            backgroundColor: item.user === username ? 'white' : '#E4E7EB',
+                            alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                            opacity: item.sent ? 1 : 0.5,
+                          },
+                        ]}
+                      >
+                        <Text style={{ color: item.mine ? 'white' : '#111927' }}>{item.text}</Text>
+                        <Text
+                          style={{
+                            fontSize: 12,
+                            color: item.mine ? 'rgba(255,255,255,0.7)' : 'rgba(17,25,39,0.7)',
+                            alignSelf: 'flex-end',
+                            marginTop: 4,
+                          }}
+                        >
+                          {item.user} {!item.sent && '(Sending...)'}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                }
+              >
+                <View style={{ flex: 1 }}>
+                  <AnimatedLinearGradient
+                    style={[
+                      StyleSheet.absoluteFillObject,
+                      {
+                        transform: [{ translateY: scrollY }],
+                      },
+                    ]}
+                    colors={['#A38CF9','#FD84AA','#ba351f',  '#09E0FF']}
+                  />
+                  <FlatList
+                    scrollEnabled={false}
+                    data={messages}
+                    keyExtractor={(item) => item.key}
+                    renderItem={({ item }) => (
+                      <View
+                        style={[
+                          styles.messageItem,
+                          {
+                            backgroundColor: item.mine ? 'transparent' : '#141414',
+                            alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                            opacity: item.sent ? 1 : 0.5,
+                          },
+                        ]}
+                      >
+                        <Text color={'#fff'} style={{ color: 'white' }}>{item.text}</Text>
+                        <Text
+                          color="white"
+                          opacity={0.5}
+                          style={{
+                            fontSize: 12,
+                            color: 'rgba(255,100,255,0.7)',
+                            alignSelf: 'flex-end',
+                            marginTop: 4,
+                          }}
+                        >
+                          {item.user} {!item.sent && '(Sending...)'}
+                        </Text>
+                      </View>
+                    )}
+                  />
                 </View>
-              }>
-              <View style={{ flex: 1 }}>
-                <AnimatedLinearGradient
-                  style={[
-                    StyleSheet.absoluteFillObject,
-                    {
-                      transform: [{ translateY: scrollY }],
-                    },
-                  ]}
-                  colors={['#A38CF9','#FD84AA','#ba351f',  '#09E0FF']}
-                />
-                <FlatList
-                  scrollEnabled={false}
-                  data={messages}
-                  keyExtractor={(item) => item.key}
-                  renderItem={({ item }) => (
-                    <View
-                      style={[
-                        styles.messageItem,
-                        {
-                          backgroundColor: item.mine ? 'transparent' : '#141414',
-                          alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                          opacity: item.sent ? 1 : 0.5,
-                        },
-                      ]}>
-                      <Text color={'#fff'} style={{ color: 'white' }}>{item.text}</Text>
-                      <Text
-                        color={"white"}
-                        opacity={0.5}
-                        style={{
-                          fontSize: 12,
-                          color: 'rgba(255,100,255,0.7)',
-                          alignSelf: 'flex-end',
-                          marginTop: 4,
-                        }}>
-                        {item.user} {!item.sent && '(Sending...)'}
-                      </Text>
-                    </View>
-                  )}
-                />
-              </View>
-            </MaskedView>
-          </Animated.ScrollView>
-
+              </MaskedView>
+            </Animated.ScrollView>
+          </View>
+  
           {/* Input area */}
-          <XStack padding="$5">
+          <XStack padding="$5" backgroundColor="rgba(0,0,0,0.5)">
             <Input
               flex={1}
               value={inputText}
@@ -336,6 +339,9 @@ return (
               paddingHorizontal="$3"
               paddingRight={inputText ? '$8' : '$3'}
               onSubmitEditing={sendMessage}
+              backgroundColor="#ffffff"
+              color="#ffffff"
+              fontWeight={500}
             />
             <AnimatePresence>
               {inputText && (
@@ -348,7 +354,8 @@ return (
                   onPress={sendMessage}
                   animation="quick"
                   enterStyle={{ opacity: 0, scale: 0.8 }}
-                  exitStyle={{ opacity: 0, scale: 0.8 }}>
+                  exitStyle={{ opacity: 0, scale: 0.8 }}
+                >
                   <Feather name="send" size={24} color="white" />
                 </Button>
               )}
@@ -359,6 +366,7 @@ return (
     </KeyboardAvoidingView>
   );
 }
+
 
 const styles = StyleSheet.create({
   messageItem: {
@@ -379,7 +387,7 @@ const styles = StyleSheet.create({
     height: '80%',
     backgroundColor: '#000000',
     transform: [{ perspective: 300 }, { rotateX: '-45deg' }],
-    zIndex: -15,
+    zIndex: -10,
     pointerEvents: 'none',
   },
   gradientOverlay: {
@@ -421,13 +429,9 @@ const styles = StyleSheet.create({
   bottom: 0,
   opacity: 0.35,
 },
-// gridContainer: {
-//     flex: 1,
-//     position: 'relative',
-//   },
   gridLine: {
     position: 'absolute',
-    backgroundColor: 'transparent', // Override default background color
+    backgroundColor: 'transparent',
   },
   vertical: {
     width: 1,
@@ -440,4 +444,3 @@ const styles = StyleSheet.create({
     right: 0,
   },
 });
-
