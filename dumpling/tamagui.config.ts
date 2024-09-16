@@ -52,13 +52,14 @@ export const Subtitle = styled(SizableText, {
 });
 
 export const Button = styled(ButtonTamagui, {
-  backgroundColor: '#6366F1',
+  backgroundColor: '#FFDF00',
   borderRadius: 28,
+  paddingHorizontal: 100,
   hoverStyle: {
-    backgroundColor: '#5a5fcf',
+    backgroundColor: '#FFEF00',
   },
   pressStyle: {
-    backgroundColor: '#5a5fcf',
+    backgroundColor: '#FFEF00',
   },
   maxWidth: 500,
 
@@ -72,8 +73,8 @@ export const Button = styled(ButtonTamagui, {
   shadowRadius: 3.84,
 
   // Button text
-  color: '#FFFFFF',
-  fontWeight: '600',
+  color: '#000000',
+  fontWeight: 'bold',
   fontSize: 16,
 });
 
