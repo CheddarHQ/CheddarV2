@@ -78,13 +78,11 @@ const performOAuth = async () => {
   console.log("Auth session result:", res);
 
   if (res.type === "success" && res.url) {
-    const response = await createSessionFromUrl(res.url);
-    if (response) {
-      return response.profile.username;
-    }
+    return res.url;
   }
   return null;
 };
+
 export default function Auth() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
@@ -104,32 +102,69 @@ export default function Auth() {
     try {
       const response = await performOAuth();
       if (response) {
-        setUserProfile(response.profile);
+        const sessionData = await createSessionFromUrl(response);
+        if (sessionData && sessionData.profile) {
+          setUserProfile(sessionData.profile);
+        }
       }
     } catch (error) {
       console.error("Error during sign in:", error);
     }
   };
-
   return (
-    <View>
+    <View style={styles.container}>
       {userProfile ? (
-        <View>
-          <Image source={{ uri: userProfile.avatar_url }} style={{ width: 100, height: 100 }} />
-          <Text>Welcome, {userProfile.name}!</Text>
-          <Text>Username: {userProfile.username}</Text>
-          <Text>Email: {userProfile.email}</Text>
-          <Text>User ID: {userProfile.id}</Text>
-          <Link href={{
-            pathname: '/thing',
-            params: { username: userProfile.username }
-          }} asChild>
-            <Button title="Enter the chat" />
+        <View style={styles.profileContainer}>
+          <Image 
+            source={{ uri: userProfile.avatar_url }} 
+            style={styles.avatar}
+          />
+        <Text style={styles.title}>Welcome! {userProfile.name}</Text>
+          <Link 
+            href={{
+              pathname: '/thing',
+              params: { username: userProfile.username }
+            }} 
+            asChild
+          >
+            <Button title="Enter chat" color="#007AFF" />
           </Link>
         </View>
       ) : (
-        <Button onPress={handleSignIn} title="Sign in with Twitter" />
+        <Button 
+          onPress={handleSignIn} 
+          title="Sign in with Twitter" 
+          color="#007AFF"
+        />
       )}
     </View>
   );
 }
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: 'black',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    logo: {
+      width: 200,
+      height: 200,
+      marginBottom: 20,
+    },
+    title: {
+      color: 'white',
+      fontSize: 14,
+      fontWeight: 'bold',
+      marginBottom: 20,
+    },
+    profileContainer: {
+      alignItems: 'center',
+    },
+    avatar: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      marginBottom: 20,
+    },
+  });
