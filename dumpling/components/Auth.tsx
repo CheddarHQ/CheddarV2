@@ -8,10 +8,12 @@ import { Link } from 'expo-router';
 import {Image } from 'tamagui';
 import ForwardedButton from "./ForwardedButton";
 
-
-
 interface UserProfile {
   username: string;
+  name: string;
+  email: string;
+  avatar_url: string;
+  id: string;
 }
 
 interface AuthResponse {
@@ -34,20 +36,26 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
 
   if (!access_token || !refresh_token) return;
 
-  // Set session in Supabase
   const { data, error } = await supabase.auth.setSession({
     access_token,
     refresh_token,
   });
   if (error) throw error;
 
-  // Extract user profile data from the JWT token
   const tokenPayload = JSON.parse(atob(access_token.split('.')[1]));
-  const userProfile = {
+  const userProfile: UserProfile = {
     username: tokenPayload.user_metadata.user_name,
-    // Add other profile fields as needed
+    name: tokenPayload.user_metadata.full_name,
+    email: tokenPayload.email,
+    avatar_url: tokenPayload.user_metadata.avatar_url,
+    id: tokenPayload.sub,
   };
 
+  console.log("Extracted user profile:", userProfile);
+// Extract info from this 
+/*
+Extracted user profile: {"avatar_url": "https://pbs.twimg.com/profile_images/1809189990599127040/mti8M7jE_normal.jpg", "email": "sarthakkapila27x@gmail.com", "id": "4c75869e-1204-41f1-a051-d40861e855e3", "name": "Sarthak Kapila", "username": "sarthakkapila0"}
+*/
   return { session: data.session, profile: userProfile };
 };
 
@@ -72,23 +80,21 @@ const performOAuth = async () => {
   if (res.type === "success" && res.url) {
     const response = await createSessionFromUrl(res.url);
     if (response) {
-      console.log('User Profile:', response.profile);
       return response.profile.username;
     }
   }
   return null;
 };
-
 export default function Auth() {
-  const [userName, setUserName] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
-  // Handle linking into app from email app.
   const url = Linking.useURL();
   useEffect(() => {
     if (url) {
       createSessionFromUrl(url).then(response => {
+        console.log('User Profile:', response?.profile);
         if (response) {
-          setUserName(response.profile.username); 
+          setUserProfile(response.profile);
         }
       }).catch(error => console.error(error));
     }
@@ -96,9 +102,9 @@ export default function Auth() {
 
   const handleSignIn = async () => {
     try {
-      const username = await performOAuth();
-      if (username) {
-        setUserName(username);
+      const response = await performOAuth();
+      if (response) {
+        setUserProfile(response.profile);
       }
     } catch (error) {
       console.error("Error during sign in:", error);
@@ -107,23 +113,23 @@ export default function Auth() {
 
   return (
     <View>
-            {userName ? (
-                 <Link href={{
-                  pathname : '/thing',
-                  params : {username : userName}
-                  }} asChild>
-                <Button title="Enter the chat"  />
-               </Link>
-            ) : (
-                <Button onPress={handleSignIn} title="Sign in with Twitter" />
-            )}
+      {userProfile ? (
+        <View>
+          <Image source={{ uri: userProfile.avatar_url }} style={{ width: 100, height: 100 }} />
+          <Text>Welcome, {userProfile.name}!</Text>
+          <Text>Username: {userProfile.username}</Text>
+          <Text>Email: {userProfile.email}</Text>
+          <Text>User ID: {userProfile.id}</Text>
+          <Link href={{
+            pathname: '/thing',
+            params: { username: userProfile.username }
+          }} asChild>
+            <Button title="Enter the chat" />
+          </Link>
+        </View>
+      ) : (
+        <Button onPress={handleSignIn} title="Sign in with Twitter" />
+      )}
     </View>
   );
 }
-
-
-const styles = StyleSheet.create({
-  welcomeText: {
-      color: 'white', // Set the text color to white
-  },
-});
