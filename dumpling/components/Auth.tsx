@@ -159,18 +159,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 20,
-<<<<<<< stateManagement
-  },
-  profileContainer: {
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
-=======
->>>>>>> main
   },
   profileContainer: {
     alignItems: 'center',

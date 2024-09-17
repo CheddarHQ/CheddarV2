@@ -47,8 +47,3 @@ export default function Home() {
   );
 }
 
-<<<<<<< stateManagement
-//<Auth />
-=======
-//<Auth />
->>>>>>> main
