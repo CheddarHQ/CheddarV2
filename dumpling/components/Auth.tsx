@@ -7,6 +7,8 @@ import { supabase } from "~/lib/supabase";
 import { Link } from 'expo-router';
 import {Image } from 'tamagui';
 import ForwardedButton from "./ForwardedButton";
+import { useRecoilState } from "recoil";
+import { userAtom } from "~/state/atoms";
 
 
 
@@ -81,6 +83,7 @@ const performOAuth = async () => {
 
 export default function Auth() {
   const [userName, setUserName] = useState<string | null>(null);
+  const [recoilUsername, setRecoilUsername] = useRecoilState(userAtom);
   
   // Handle linking into app from email app.
   const url = Linking.useURL();
@@ -88,7 +91,7 @@ export default function Auth() {
     if (url) {
       createSessionFromUrl(url).then(response => {
         if (response) {
-          setUserName(response.profile.username); 
+          setRecoilUsername(response.profile.username); 
         }
       }).catch(error => console.error(error));
     }
@@ -98,21 +101,20 @@ export default function Auth() {
     try {
       const username = await performOAuth();
       if (username) {
-        setUserName(username);
+        setRecoilUsername(username);
       }
     } catch (error) {
       console.error("Error during sign in:", error);
     }
   };
-
   return (
     <View>
-            {userName ? (
+            {recoilUsername ? (
                  <Link href={{
                   pathname : '/thing',
-                  params : {username : userName}
+                  params : {username : recoilUsername}
                   }} asChild>
-                <Button title="Enter the chat"  />
+                <Button title="Enter the chat"/>
                </Link>
             ) : (
                 <Button onPress={handleSignIn} title="Sign in with Twitter" />

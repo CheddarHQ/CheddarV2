@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { useRoute } from '@react-navigation/native';
+import { ParamListBase, RouteProp, useRoute } from '@react-navigation/native';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -23,15 +23,21 @@ const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
 import { YStack, XStack, Text, Input, Button, AnimatePresence } from 'tamagui';
 import { Link } from 'expo-router';
-import GridComponent from '~/components/Grid';
+// import GridComponent from '~/components/Grid';
+import { userAtom, messagesAtom } from '~/state/atoms';
+import { useRecoilState, useRecoilValue } from 'recoil';
 
 
-interface Message {
+export interface MessageProps {
   key: string;
   text: string;
   mine: boolean;
   user: string;
   sent: boolean;
+}
+
+interface Route{
+  params:string
 }
 
 function generateUUID() {
@@ -43,11 +49,12 @@ function generateUUID() {
 }
 
 export default function Chatroom() {
-  const route = useRoute();
-  const { username}  = route.params
+  const route:RouteProp<ParamListBase> = useRoute();
+  const username = useRecoilValue(userAtom)
+  // const { username}  = route.params
 
   const [isConnected, setIsConnected] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useRecoilState<MessageProps[]>(messagesAtom);
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollY = useSharedValue(0);
@@ -86,7 +93,7 @@ export default function Chatroom() {
         if (messageData.type === 'message' || messageData.data) {
 
           console.log("Message Data : ", messageData)
-          const newMessage: Message = {
+          const newMessage: MessageProps = {
             key: generateUUID(),
             text: messageData.data || messageData.message || JSON.stringify(messageData),
             mine: messageData.sender === username,
@@ -117,7 +124,8 @@ export default function Chatroom() {
     setWs(newWs);
 
     return () => {
-      newWs.close();
+      setMessages([]);
+      // newWs.close();
     };
   }, []);
 

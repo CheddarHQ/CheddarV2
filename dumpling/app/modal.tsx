@@ -32,7 +32,7 @@ export default function Modal() {
   useEffect(() => {
     async function fetchMetadata(ids: string) {
       try {
-        setLoading(true);
+        setLoading(true); 
         console.log('Fetching data...');
         const response = await fetch(
           `https://sushi.cheddar-io.workers.dev/api/data/fetchmetadata?ids=${ids}`
@@ -116,6 +116,7 @@ export default function Modal() {
                 );
                 if (detailedInfo) {
                   const detailedInfoString = JSON.stringify(detailedInfo);
+                  console.log("detailedInfoString", detailedInfoString);
                   router.push({
                     //@ts-ignore
                     pathname: `/crypto/${item.baseAddress}`,
