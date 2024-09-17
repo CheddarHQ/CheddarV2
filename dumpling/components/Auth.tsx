@@ -5,8 +5,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { supabase } from '~/lib/supabase';
 import { Link } from 'expo-router';
-import { Image, XStack } from 'tamagui';
-import ForwardedButton from './ForwardedButton';
+import { Image } from 'tamagui';
 import { Button } from './Button';
 interface UserProfile {
   username: string;
