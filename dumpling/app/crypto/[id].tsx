@@ -21,6 +21,11 @@ import bs58 from 'bs58';
 import Button2 from '~/components/Button2';
 import Web3Button from '~/components/ButtonCustom';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
+import {useRecoilState} from "recoil"
+import {useRecoilValue, SetRecoilState} from "recoil"
+
+import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom} from "~/state/atoms"
+
 
 nacl.setPRNG((x, n) => {
   const randomBytes = Random.getRandomBytes(n);
@@ -63,9 +68,16 @@ interface TokenData {
 const { width } = Dimensions.get('window');
 
 const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
+  const [chainId , setChainId] = useRecoilState(chainIdAtom)
+  const [outputMint, setOutputMint] = useRecoilState(outputMintAtom)
+  const [inputMint, setInputMint ] = useRecoilState(inputMintAtom)
   const navigation = useNavigation();
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
+
+  console.log("Detailed info in [id].tsx: ", detailedInfo)
   const [tokenInfo, setTokenInfo] = useState<TokenBasicInfo | null>(null);
+
+
 
   const closeModal = () => {
     navigation.goBack();
@@ -75,7 +87,19 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
     try {
       const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
       console.log('Parsed detailedInfo:', parsedDetailedInfo);
+
+      setChainId(parsedDetailedInfo.chainId)
+
+      if(chainId === "ethereum"){
+        setInputMint("0x1234567890abcdef1234567890abcdef12345678")
+      }
+      
+
+      setOutputMint(parsedDetailedInfo.baseAddress)
+      
+      
       setTokenInfo(parsedDetailedInfo);
+     
     } catch (error) {
       console.error('Error parsing detailedInfo:', error);
       setTokenInfo(null);
@@ -284,8 +308,13 @@ const MoneyEx = () => {
   const [dappKeyPair] = useState(nacl.box.keyPair());
   const [sharedSecret, setSharedSecret] = useState();
   const [session, setSession] = useState();
-  const [phantomWalletPublicKey, setPhantomWalletPublicKey] = useState(null);
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const [phantomWalletPublicKey, setPhantomWalletPublicKey] = useRecoilState(phantomPublicKey);
+  const [connectionStatus, setConnectionStatus] = useRecoilState(phantomStatus);
+  const outputMintAddress = useRecoilValue(outputMintAtom);
+  const inputMintAddress = useRecoilValue(inputMintAtom);
+
+  console.log("OutputMintAddress : ", outputMintAddress);
+  console.log("InputMintAddress : ",inputMintAddress);
 
   const handleDeepLink = useCallback(({ url }: { url: string }) => {
     console.log('Received deeplink:', url);
@@ -351,8 +380,11 @@ const MoneyEx = () => {
         setSharedSecret(sharedSecretDapp);
         setSession(connectData.session);
         if (connectData.public_key) {
+          console.log("Public key obtained")
           setPhantomWalletPublicKey(new PublicKey(connectData.public_key));
+          console.log("phatomWalleyKeyUpdated : ", phantomWalletPublicKey)
         }
+
         setConnectionStatus('connected');
         console.log(`Connected to ${connectData.public_key?.toString()}`);
 
@@ -481,8 +513,8 @@ const performSwap = async () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             quoteResponse: {
-              inputMint: "So11111111111111111111111111111111111111112",
-              outputMint: "4Cnk9EPnW5ixfLZatCPJjDB1PUtcRpVVgTQukm9epump",
+              inputMint: inputMintAddress,
+              outputMint: outputMintAddress,
               amount: 10000,
               slippage: 50,
               platformFees: 10,

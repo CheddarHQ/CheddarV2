@@ -13,6 +13,7 @@ import { TamaguiProvider } from 'tamagui';
 import { StatusBar } from 'expo-status-bar';
 import { PortalProvider } from '@tamagui/portal';
 import config from '../tamagui.config';
+import { RecoilRoot } from 'recoil';
 
 ExpoRouterSplashScreen.preventAutoHideAsync();
 
@@ -38,6 +39,8 @@ export default function RootLayout() {
   if (!loaded) return null;
 
   return (
+    <RecoilRoot>
+
     <TamaguiProvider config={config}>
       <StatusBar style="auto" />
       <GestureHandlerRootView style={{ flex: 1 }}>
@@ -51,11 +54,11 @@ export default function RootLayout() {
           <Stack.Screen
             name="cryptoGraph"
             options={{ headerShown: false, presentation: 'modal' }}
-          />
+            />
           <Stack.Screen
             name="modal"
             options={{ title: 'Modal', headerShown: false, presentation: 'modal' }}
-          />
+            />
           <Stack.Screen
             name="moneyEx"
             options={{ title: 'moneyEx', headerShown: false, presentation: 'modal' }}
@@ -63,5 +66,6 @@ export default function RootLayout() {
         </Stack>
       </GestureHandlerRootView>
     </TamaguiProvider>
+    </RecoilRoot>
   );
 }
