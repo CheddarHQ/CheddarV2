@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { Button, Text, View, StyleSheet } from "react-native";
-import { makeRedirectUri } from "expo-auth-session";
-import * as WebBrowser from "expo-web-browser";
-import * as Linking from "expo-linking";
-import { supabase } from "~/lib/supabase";
+import React, { useState, useEffect } from 'react';
+import { Text, View, StyleSheet } from 'react-native';
+import { makeRedirectUri } from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
+import { supabase } from '~/lib/supabase';
 import { Link } from 'expo-router';
-import {Image } from 'tamagui';
-import ForwardedButton from "./ForwardedButton";
-
+import { Image } from 'tamagui';
+import { Button } from './Button';
+        
 interface UserProfile {
   username: string;
   name: string;
@@ -24,8 +24,8 @@ interface AuthResponse {
 WebBrowser.maybeCompleteAuthSession();
 
 const redirectTo = makeRedirectUri({
-  scheme: "cheddarchat",
-  path: "auth/callback",
+  scheme: 'cheddarchat',
+  path: 'auth/callback',
 });
 
 const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefined> => {
@@ -50,6 +50,7 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
     avatar_url: tokenPayload.user_metadata.avatar_url,
     id: tokenPayload.sub,
   };
+  console.log("Extracted user profile:", userProfile);
 
   console.log("Extracted user profile:", userProfile);
 // Extract info from this 
@@ -112,9 +113,9 @@ export default function Auth() {
     }
   };
   return (
-    <View style={styles.container}>
-      {userProfile ? (
-        <View style={styles.profileContainer}>
+    <View>
+  {userProfile ? (
+        <View style={styles.container}>
           <Image 
             source={{ uri: userProfile.avatar_url }} 
             style={styles.avatar}
@@ -140,31 +141,32 @@ export default function Auth() {
     </View>
   );
 }
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: 'black',
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    logo: {
-      width: 200,
-      height: 200,
-      marginBottom: 20,
-    },
-    title: {
-      color: 'white',
-      fontSize: 14,
-      fontWeight: 'bold',
-      marginBottom: 20,
-    },
-    profileContainer: {
-      alignItems: 'center',
-    },
-    avatar: {
-      width: 100,
-      height: 100,
-      borderRadius: 50,
-      marginBottom: 20,
-    },
-  });
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logo: {
+    width: 200,
+    height: 200,
+    marginBottom: 20,
+  },
+  title: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  profileContainer: {
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 20,
+  },
+});

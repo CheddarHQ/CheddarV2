@@ -1,6 +1,6 @@
 import { ComponentProps, forwardRef } from 'react';
 //@ts-ignore
-import { TamaguiElement } from 'tamagui';
+import { TamaguiElement, Text } from 'tamagui';
 
 import { Button as TButton } from '../tamagui.config';
 
@@ -11,7 +11,7 @@ type ButtonProps = {
 export const Button = forwardRef<TamaguiElement, ButtonProps>(({ title, ...tButtonProps }, ref) => {
   return (
     <TButton {...tButtonProps} ref={ref}>
-      {title}
+      <Text fontWeight={'bold'}>{title}</Text>
     </TButton>
   );
 });
