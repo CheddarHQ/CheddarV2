@@ -7,6 +7,7 @@ import { supabase } from '~/lib/supabase';
 import { Link } from 'expo-router';
 import { Image } from 'tamagui';
 import { Button } from './Button';
+        
 interface UserProfile {
   username: string;
   name: string;
@@ -35,14 +36,12 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
 
   if (!access_token || !refresh_token) return;
 
-  // Set session in Supabase
   const { data, error } = await supabase.auth.setSession({
     access_token,
     refresh_token,
   });
   if (error) throw error;
 
-  // Extract user profile data from the JWT token
   const tokenPayload = JSON.parse(atob(access_token.split('.')[1]));
   const userProfile: UserProfile = {
     username: tokenPayload.user_metadata.user_name,
@@ -53,6 +52,11 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
   };
   console.log("Extracted user profile:", userProfile);
 
+  console.log("Extracted user profile:", userProfile);
+// Extract info from this 
+/*
+Extracted user profile: {"avatar_url": "https://pbs.twimg.com/profile_images/1809189990599127040/mti8M7jE_normal.jpg", "email": "sarthakkapila27x@gmail.com", "id": "4c75869e-1204-41f1-a051-d40861e855e3", "name": "Sarthak Kapila", "username": "sarthakkapila0"}
+*/
   return { session: data.session, profile: userProfile };
 };
 
@@ -82,18 +86,16 @@ const performOAuth = async () => {
 
 export default function Auth() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-
-  // Handle linking into app from email app.
+  
   const url = Linking.useURL();
   useEffect(() => {
     if (url) {
-      createSessionFromUrl(url)
-        .then((response) => {
-          if (response) {
-            setUserProfile(response.profile);
-          }
-        })
-        .catch((error) => console.error(error));
+      createSessionFromUrl(url).then(response => {
+        console.log('User Profile:', response?.profile);
+        if (response) {
+          setUserProfile(response.profile);
+        }
+      }).catch(error => console.error(error));
     }
   }, [url]);
 
@@ -110,7 +112,6 @@ export default function Auth() {
       console.error("Error during sign in:", error);
     }
   };
-
   return (
     <View>
   {userProfile ? (
@@ -140,6 +141,7 @@ export default function Auth() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,

@@ -4,36 +4,15 @@ import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { LineGraph } from 'react-native-graph';
 import { Card, Text, XStack, YStack, Avatar, SizableText } from 'tamagui';
 const { width } = Dimensions.get('window');
-import { dummyGraphData } from '../../test/message';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
-import { point } from '@shopify/react-native-skia';
 import MyCard from '~/components/MyCard';
 import { formatValue } from '~/components/FormatValue';
-const randomPrice = (min: number, max: number): number => Math.random() * (max - min) + min;
-
-interface DataPoint {
-  time: number;
-  open: number;
-  close: number;
-  high: number;
-  low: number;
-}
 
 interface PriceHistoryPoint {
   date: Date;
   value: number;
-}
-
-interface TokenBasicInfo {
-  name: string;
-  baseAddress: string;
-  priceUsd: string;
-  priceNative: string;
-  imageUrl: string;
-  priceChange: number;
-  symbol: string;
 }
 
 interface TokenInfo {
@@ -46,79 +25,127 @@ interface TokenInfo {
   volH24: string;
 }
 
-const generateDayData = (): DataPoint[] => {
-  const data: DataPoint[] = dummyGraphData.Data.Data.map((point) => ({
-    time: point.time * 1000, // Convert seconds to milliseconds
-    open: point.open,
-    close: point.close,
-    high: point.high,
-    low: point.low,
-  }));
+type TimeRange = '30min' | '1hour' | '6hours' | '24hours';
 
-  console.log('Number of data points:', data.length);
-
-  return data;
+const formatCoinName = (name: string): string => {
+  return name.toLowerCase().replace(/\s+/g, '-');
 };
 
-const realData: DataPoint[] = generateDayData();
+const fetchCoinId = async (coinName: string): Promise<string | null> => {
+  try {
+    const formattedName = formatCoinName(coinName);
+    const response = await fetch(`https://coinmarketcap.com/currencies/${formattedName}/`);
+    const html = await response.text();
+    const match = html.match(/\/static\/img\/coins\/\d+x\d+\/(\d+)\.png/);
+    return match ? match[1] : null;
+  } catch (error) {
+    console.error('Error fetching coin ID:', error);
+    return null;
+  }
+};
 
-type TimeRange = '30min' | '1hour' | '6hours' | '24hours';
+const fetchCoinData = async (coinId: string, range: string): Promise<PriceHistoryPoint[]> => {
+  try {
+    const response = await fetch(`https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=${coinId}&range=${range}`);
+    const data = await response.json();
+    return Object.entries(data.data.points).map(([timestamp, point]: [string, any]) => ({
+      date: new Date(parseInt(timestamp) * 1000),
+      value: point.v[0],
+    }));
+  } catch (error) {
+    console.error('Error fetching coin data:', error);
+    return [];
+  }
+};
 
 const MyChart: React.FC = () => {
   const { id } = useLocalSearchParams();
   const [selectedPoint, setSelectedPoint] = useState<PriceHistoryPoint | null>(null);
   const [timeRange, setTimeRange] = useState<TimeRange>('24hours');
+  const [coinId, setCoinId] = useState<string | null>(null);
 
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
   const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
+  const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>([]);
 
   useEffect(() => {
-    try {
-      const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
-      console.log('Parsed detailedInfo:', parsedDetailedInfo);
-      setTokenInfo(parsedDetailedInfo);
-    } catch (error) {
-      console.error('Error parsing detailedInfo:', error);
-      setTokenInfo(null);
-    }
+    const fetchData = async () => {
+      try {
+        const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
+        console.log('Parsed detailedInfo:', parsedDetailedInfo);
+        setTokenInfo(parsedDetailedInfo);
+
+        if (parsedDetailedInfo && parsedDetailedInfo.name) {
+          const fetchedCoinId = await fetchCoinId(parsedDetailedInfo.name);
+          if (fetchedCoinId) {
+            setCoinId(fetchedCoinId);
+            const chartData = await fetchCoinData(fetchedCoinId, '1D');
+            setPriceHistory(chartData);
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing detailedInfo or fetching data:', error);
+        setTokenInfo(null);
+      }
+    };
+
+    fetchData();
   }, [detailedInfo]);
 
-  const filteredData = useMemo(() => {
-    const now = realData[realData.length - 1].time;
+  useEffect(() => {
+    if (coinId) {
+      const fetchData = async () => {
+        let range: string;
+        switch (timeRange) {
+          case '30min':
+            range = '1H';
+            break;
+          case '1hour':
+            range = '1H';
+            break;
+          case '6hours':
+            range = '1D';
+            break;
+          case '24hours':
+            range = '1D';
+            break;
+          default:
+            range = '1D';
+        }
+        const chartData = await fetchCoinData(coinId, range);
+        setPriceHistory(chartData);
+      };
+      fetchData();
+    }
+  }, [coinId, timeRange]);
+
+  const filteredPriceHistory = useMemo(() => {
+    const now = new Date();
     switch (timeRange) {
       case '30min':
-        return realData.filter((d) => now - d.time <= 30 * 60 * 1000);
+        return priceHistory.filter((d) => now.getTime() - d.date.getTime() <= 30 * 60 * 1000);
       case '1hour':
-        return realData.filter((d) => now - d.time <= 60 * 60 * 1000);
+        return priceHistory.filter((d) => now.getTime() - d.date.getTime() <= 60 * 60 * 1000);
       case '6hours':
-        return realData.filter((d) => now - d.time <= 6 * 60 * 60 * 1000);
+        return priceHistory.filter((d) => now.getTime() - d.date.getTime() <= 6 * 60 * 60 * 1000);
       case '24hours':
-        return realData.filter((d) => now - d.time <= 24 * 60 * 60 * 1000);
+        return priceHistory;
       default:
-        return realData;
+        return priceHistory;
     }
-  }, [timeRange]);
-
-  const priceHistory = useMemo(
-    () =>
-      filteredData.map((point) => ({
-        date: new Date(point.time),
-        value: point.close,
-      })),
-    [filteredData]
-  );
+  }, [timeRange, priceHistory]);
 
   const latestPoint = useMemo(
-    () => (priceHistory.length > 0 ? priceHistory[priceHistory.length - 1] : null),
-    [priceHistory]
+    () => (filteredPriceHistory.length > 0 ? filteredPriceHistory[filteredPriceHistory.length - 1] : null),
+    [filteredPriceHistory]
   );
 
   const percentageChange = useMemo(() => {
-    if (priceHistory.length < 2) return 0;
-    const firstPrice = priceHistory[0].value;
-    const lastPrice = priceHistory[priceHistory.length - 1].value;
+    if (filteredPriceHistory.length < 2) return 0;
+    const firstPrice = filteredPriceHistory[0].value;
+    const lastPrice = filteredPriceHistory[filteredPriceHistory.length - 1].value;
     return ((lastPrice - firstPrice) / firstPrice) * 100;
-  }, [priceHistory]);
+  }, [filteredPriceHistory]);
 
   const formatPriceTitle = useCallback((point: PriceHistoryPoint) => {
     return `$${point.value.toFixed(2)}`;
@@ -146,7 +173,7 @@ const MyChart: React.FC = () => {
             {tokenInfo && (
               <XStack alignItems="center">
                 <Avatar circular size="$3">
-                  <Avatar.Image accessibilityLabel="Cam" src={tokenInfo.imageUrl} />
+                  <Avatar.Image accessibilityLabel="Coin" src={tokenInfo.imageUrl} />
                   <Avatar.Fallback backgroundColor="$blue10" />
                 </Avatar>
                 <YStack paddingLeft="$3">
@@ -181,22 +208,11 @@ const MyChart: React.FC = () => {
           </YStack>
         )}
       </XStack>
-      {percentageChange >= 0 ? (
+      {filteredPriceHistory.length > 0 && (
         <LineGraph
-          points={priceHistory}
+          points={filteredPriceHistory}
           animated={true}
-          color="#0FFF50"
-          style={styles.chart}
-          enablePanGesture={true}
-          panGestureDelay={300}
-          onPointSelected={handlePointSelected}
-          onGestureEnd={handleGestureEnd}
-        />
-      ) : (
-        <LineGraph
-          points={priceHistory}
-          animated={true}
-          color="#f44336"
+          color={percentageChange >= 0 ? "#0FFF50" : "#f44336"}
           style={styles.chart}
           enablePanGesture={true}
           panGestureDelay={300}
@@ -268,32 +284,10 @@ const styles = StyleSheet.create({
     width: width,
     height: 300,
   },
-  infoContainer: {
-    padding: 10,
-    backgroundColor: '#333',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
   infoText: {
     color: '#fff',
     fontSize: 16,
     marginBottom: 5,
-  },
-  positiveChange: {
-    color: '#4caf50',
-  },
-  negativeChange: {
-    color: '#f44336',
-  },
-  priceTitleContainer: {
-    marginTop: 20,
-    padding: 10,
-    backgroundColor: '#333',
-    borderRadius: 10,
-  },
-  priceTitleText: {
-    color: '#fff',
-    fontSize: 16,
   },
   buttonContainer: {
     flexDirection: 'row',
