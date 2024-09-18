@@ -18,6 +18,7 @@ import Animated, {
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
 
+
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
@@ -50,8 +51,10 @@ function generateUUID() {
 
 export default function Chatroom() {
   const route:RouteProp<ParamListBase> = useRoute();
-  const username = useRecoilValue(userAtom)
+  
   // const { username}  = route.params
+  const userProfile = useRecoilValue(userAtom)
+  const username = userProfile.username;
 
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useRecoilState<MessageProps[]>(messagesAtom);
@@ -91,8 +94,6 @@ export default function Chatroom() {
         }
         
         if (messageData.type === 'message' || messageData.data) {
-
-          console.log("Message Data : ", messageData)
           const newMessage: MessageProps = {
             key: generateUUID(),
             text: messageData.data || messageData.message || JSON.stringify(messageData),
@@ -100,8 +101,8 @@ export default function Chatroom() {
             user: messageData.sender || 'Server',
             sent: true,
           };
-          console.log('Adding new message:', newMessage.text);
-          console.log("sender :",newMessage.user)
+        
+         
           setMessages((prevMessages) => [...prevMessages, newMessage]);
         } else {
           console.log('Unhandled message type:', messageData.type);
@@ -125,7 +126,7 @@ export default function Chatroom() {
 
     return () => {
       setMessages([]);
-      // newWs.close();
+      newWs.close();
     };
   }, []);
 

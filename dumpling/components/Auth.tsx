@@ -7,8 +7,10 @@ import { supabase } from '~/lib/supabase';
 import { Link } from 'expo-router';
 import { Image } from 'tamagui';
 import { Button } from './Button';
-        
-interface UserProfile {
+import { useRecoilState } from "recoil";
+import { userAtom } from "~/state/atoms";
+
+export interface UserProfile {
   username: string;
   name: string;
   email: string;
@@ -43,6 +45,7 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
   if (error) throw error;
 
   const tokenPayload = JSON.parse(atob(access_token.split('.')[1]));
+
   const userProfile: UserProfile = {
     username: tokenPayload.user_metadata.user_name,
     name: tokenPayload.user_metadata.full_name,
@@ -52,11 +55,13 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
   };
   console.log("Extracted user profile:", userProfile);
 
-  console.log("Extracted user profile:", userProfile);
 // Extract info from this 
 /*
 Extracted user profile: {"avatar_url": "https://pbs.twimg.com/profile_images/1809189990599127040/mti8M7jE_normal.jpg", "email": "sarthakkapila27x@gmail.com", "id": "4c75869e-1204-41f1-a051-d40861e855e3", "name": "Sarthak Kapila", "username": "sarthakkapila0"}
 */
+
+console.log("Session Details : ", data.session)
+
   return { session: data.session, profile: userProfile };
 };
 
@@ -85,13 +90,18 @@ const performOAuth = async () => {
 };
 
 export default function Auth() {
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useRecoilState(userAtom)
   
+
   const url = Linking.useURL();
+  
+  
+
+
   useEffect(() => {
     if (url) {
       createSessionFromUrl(url).then(response => {
-        console.log('User Profile:', response?.profile);
+        console.log('User Profile :', response);
         if (response) {
           setUserProfile(response.profile);
         }
@@ -114,7 +124,7 @@ export default function Auth() {
   };
   return (
     <View>
-  {userProfile ? (
+  {userProfile.name ? (
         <View style={styles.container}>
           <Image 
             source={{ uri: userProfile.avatar_url }} 
