@@ -38,7 +38,6 @@ export default function Modal() {
           `https://sushi.cheddar-io.workers.dev/api/data/fetchmetadata?ids=${ids}`
         );
         const data: TokenData = await response.json();
-        console.log('Fetched data:', data);
         setTokenData(data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -69,7 +68,7 @@ export default function Modal() {
         }
 
         const data: TokenData = await response.json();
-        console.log('Fetched data from search:', data);
+       
         setTokenData(data);
       } catch (error) {
         console.error('Error fetching data:', error);

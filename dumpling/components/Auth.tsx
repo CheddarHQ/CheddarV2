@@ -81,7 +81,7 @@ const performOAuth = async () => {
     data?.url ?? "",
     redirectTo
   );
-  console.log("Auth session result:", res);
+ 
 
   if (res.type === "success" && res.url) {
     return res.url;

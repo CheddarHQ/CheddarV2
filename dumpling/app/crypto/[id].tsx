@@ -10,7 +10,7 @@ import { Link, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
 import { useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
-import * as Random from 'expo-random';
+import * as Random from 'expo-crypto';
 import { clusterApiUrl, Connection, PublicKey, sendAndConfirmTransaction, VersionedTransaction, Transaction} from '@solana/web3.js';
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import nacl from 'tweetnacl';
@@ -21,10 +21,15 @@ import bs58 from 'bs58';
 import Button2 from '~/components/Button2';
 import Web3Button from '~/components/ButtonCustom';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import {useRecoilState} from "recoil"
+import {useRecoilState, useSetRecoilState} from "recoil"
 import {useRecoilValue, SetRecoilState} from "recoil"
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { saveConnectionDetails, getConnectionDetails, clearConnectionDetails } from '~/utils/asyncStorage';
 
-import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom} from "~/state/atoms"
+import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom, sharedSecretAtom, detailedInfoAtom} from "~/state/atoms"
+
+
+import { detailedInfoProps } from '~/state/atoms';
 
 
 nacl.setPRNG((x, n) => {
@@ -62,7 +67,7 @@ interface HorizontalTabsProps {
 
 interface TokenData {
   basicInfo: TokenBasicInfo[];
-  detailedInfo: any[]; // You can define a more specific type for detailedInfo if needed
+  detailedInfo: detailedInfoProps[]; // You can define a more specific type for detailedInfo if needed
 }
 
 const { width } = Dimensions.get('window');
@@ -74,7 +79,19 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
   const navigation = useNavigation();
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
 
-  console.log("Detailed info in [id].tsx: ", detailedInfo)
+  console.log("Detailed Info From Params : ", detailedInfo)
+
+  if(detailedInfo){
+    const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
+     
+    setChainId(parsedDetailedInfo.chainId)
+    
+    console.log("ChainId set to : ", chainId)
+  }
+
+      
+
+
   const [tokenInfo, setTokenInfo] = useState<TokenBasicInfo | null>(null);
 
 
@@ -85,8 +102,9 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
 
   useEffect(() => {
     try {
+      console.log("Detailed Info after detailed info changed : ", detailedInfo)
       const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
-      console.log('Parsed detailedInfo:', parsedDetailedInfo);
+      // console.log('Parsed detailedInfo:', parsedDetailedInfo);
 
       setChainId(parsedDetailedInfo.chainId)
 
@@ -306,12 +324,20 @@ const MoneyEx = () => {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [deeplink, setDeepLink] = useState('');
   const [dappKeyPair] = useState(nacl.box.keyPair());
-  const [sharedSecret, setSharedSecret] = useState();
+
+  // const [sharedSecret, setSharedSecret] = useRecoilState(sharedSecretAtom);
+  const [sharedSecret, setSharedSecret] = useState<Uint8Array>();
+
   const [session, setSession] = useState();
   const [phantomWalletPublicKey, setPhantomWalletPublicKey] = useRecoilState(phantomPublicKey);
-  const [connectionStatus, setConnectionStatus] = useRecoilState(phantomStatus);
+  // const [connectionStatus, setConnectionStatus] = useRecoilState(phantomStatus);
+
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+
   const outputMintAddress = useRecoilValue(outputMintAtom);
   const inputMintAddress = useRecoilValue(inputMintAtom);
+
+  const setDetailedInfo = useSetRecoilState(detailedInfoAtom);
 
   console.log("OutputMintAddress : ", outputMintAddress);
   console.log("InputMintAddress : ",inputMintAddress);
@@ -320,7 +346,36 @@ const MoneyEx = () => {
     console.log('Received deeplink:', url);
     const parsedUrl = new URL(url);
     setDeepLink(url);
-  }, []);
+
+    console.log("Parsed url after returning from phantom :", parsedUrl)
+
+     // Check if this is a return from Phantom
+     if (parsedUrl.pathname.includes('onConnect')) {
+      console.log('Returning from Phantom connection');
+      
+      // You might need to fetch or construct detailedInfo here
+      // For now, let's set a placeholder
+      // setDetailedInfo({
+      //   chainId: 'solana', 
+      //   baseAddress: '', 
+      // });
+    }
+
+
+  }, [setDetailedInfo]);
+
+
+  const attemptReconnection = async () => {
+    const savedConnection = await getConnectionDetails();
+    console.log("Saved connection : ", savedConnection)
+    if (savedConnection) {
+      console.log("Shared secret fromm saved connection : ", savedConnection.sharedSecret)
+      setSession(savedConnection.session);
+      setPhantomWalletPublicKey(new PublicKey(savedConnection.phantomWalletPublicKey));
+      setConnectionStatus('connected');
+    }
+  };
+
 
   useEffect(() => {
     const initializeDeeplinks = async () => {
@@ -331,6 +386,10 @@ const MoneyEx = () => {
       }
     };
     initializeDeeplinks();
+
+    //attempt reconnection
+    console.log("Attempting reconnection")
+    attemptReconnection(); 
     
     const listener = Linking.addEventListener('url', handleDeepLink);
     return () => {
@@ -341,7 +400,7 @@ const MoneyEx = () => {
   useEffect(() => {
     if (!deeplink) return;
 
-    // console.log('Processing deeplink:', deeplink);
+    console.log('Processing deeplink:', deeplink);
     const url = new URL(deeplink);
     const params = url.searchParams;
 
@@ -377,8 +436,16 @@ const MoneyEx = () => {
         );
         const connectData = decryptPayload(data, nonce, sharedSecretDapp);
         // console.log('Connect data:', connectData);
+
+        console.log("Setting shared secret - ConnectData : ",connectData)
+        console.log("SharedSecret : ", sharedSecret)
+
         setSharedSecret(sharedSecretDapp);
+
         setSession(connectData.session);
+
+        
+
         if (connectData.public_key) {
           console.log("Public key obtained")
           setPhantomWalletPublicKey(new PublicKey(connectData.public_key));
@@ -387,6 +454,19 @@ const MoneyEx = () => {
 
         setConnectionStatus('connected');
         console.log(`Connected to ${connectData.public_key?.toString()}`);
+        const connectionData = {
+          sharedSecret,
+          session,
+          phantomWalletPublicKey: phantomWalletPublicKey.toString(),
+        };
+
+        console.log("Connection data to be saved : ", connectionData)
+        const saveConnection = async ()=>{
+          await saveConnectionDetails(connectionData);
+        }
+
+        saveConnection();
+
 
         navigation.navigate('crypto');
       } catch (error) {
@@ -398,6 +478,12 @@ const MoneyEx = () => {
       console.log('Handling onDisconnect');
       setPhantomWalletPublicKey(null);
       setConnectionStatus('disconnected');
+      async function disconnect(){
+        await clearConnectionDetails();
+      }
+
+      disconnect();
+
       console.log('Disconnected');
     }
 
@@ -408,7 +494,7 @@ const MoneyEx = () => {
         params.get("nonce")!,
         sharedSecret
       );
-      // console.log("signAndSendTrasaction: ", signAndSendTransactionData);
+      console.log("signAndSendTrasaction: ", signAndSendTransactionData);
     }
   }, [deeplink, dappKeyPair.secretKey]);
 
@@ -457,7 +543,7 @@ const MoneyEx = () => {
     }
   };
 
-  const signAndSendTransaction = async (transaction: Transaction) => {
+  const signAndSendTransaction = async (transaction : Transaction) => {
     if (!phantomWalletPublicKey) return;
 
     transaction.feePayer = phantomWalletPublicKey;

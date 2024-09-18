@@ -1,17 +1,28 @@
+import { PublicKey } from "@solana/web3.js"
 import {atom} from "recoil"
 import { MessageProps } from "~/app/thing"
+import { UserProfile } from "~/components/Auth"
+
+export interface detailedInfoProps{
+    chainId : string,
+    baseAddress : string,
+    name : string,
+    symbol : string,
+    priceUsd : string,
+    priceNative : string,
+    imageUrl : string
+}
 
 
 export const userAtom = atom({
     key : "userAtom",
-    default : ""
+    default : {} as UserProfile
 })
 
 export const messagesAtom = atom({
     key : "messages",
     default : [] as MessageProps[]
 })
-
 
 export const phantomStatus = atom({
     key : "phantomStatus",
@@ -20,7 +31,7 @@ export const phantomStatus = atom({
 
 export const phantomPublicKey = atom({
     key:"phantomId",
-    default : ""
+    default : {} as PublicKey
 })
 
 export const outputMintAtom = atom({
@@ -38,3 +49,15 @@ export const inputMintAtom = atom({
     key  : "inputMint",
     default : "So11111111111111111111111111111111111111112"
 })
+
+export const sharedSecretAtom = atom({
+    key : "sharedSecret",
+    default : {} as Uint8Array
+})
+
+
+export const detailedInfoAtom = atom({
+    key : "detailedInfoAtom",
+    default : {} as detailedInfoProps
+})
+
