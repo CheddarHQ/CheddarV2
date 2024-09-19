@@ -75,3 +75,28 @@ transactionRouter.get("/transaction/:id", zValidator("param", z.object({id: z.st
         return c.json({ success: false, error: (error as Error).message }, 500);
     }
 });
+
+// holdings of a user
+transactionRouter.get("/holdings/:user_id", zValidator("param", z.object({ user_id: z.string() })), async (c) => {
+    try {
+        const { user_id } = c.req.valid('param');
+        
+        // Query to get the user's transactions and calculate holdings per coin
+        const query = `
+        SELECT coin_ticker, coin_address,
+               SUM(CASE WHEN type = 'buy' THEN amount ELSE -amount END) AS total_amount
+        FROM transactions
+        WHERE user_id = ?
+        GROUP BY coin_ticker, coin_address
+        `;
+
+        const { results } = await c.env.DB.prepare(query).bind(user_id).all();
+
+        // Filter out holdings with zero or negative balance
+        const filteredResults = results.filter((row: any) => row.total_amount > 0);
+
+        return c.json({ success: true, holdings: filteredResults }, 200);
+    } catch (error) {
+        return c.json({ success: false, error: (error as Error).message }, 500);
+    }
+});
