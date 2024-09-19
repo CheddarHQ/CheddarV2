@@ -1,13 +1,12 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import {z} from "zod";
-import { env } from "hono/adapter";
+import { z } from "zod";
 
 export const transactionRouter = new Hono();
 
 export interface Env {
     DB: D1Database;
-  }
+}
 
 const transactionSchema = z.object({
     user_id: z.string(),
@@ -22,73 +21,57 @@ const transactionSchema = z.object({
 
 // Adding transaction to the database
 transactionRouter.post("/add", zValidator("json", transactionSchema), async (c) => {
-    try{
-        const body = c.req.json();
-        if (!body || typeof body !== 'object') {
-            throw new Error('Invalid request body');
-        }
-        const { user_id, coin_address, coin_ticker, type, amount, price, total_value, status } = body as any;
+    try {
+        const body = await c.req.json();
+        const { user_id, coin_address, coin_ticker, type, amount, price, total_value, status } = body;
 
         const query = `
         INSERT INTO transactions (
-        user_id,
-        coin_address,
-        coin_ticker,
-        type,
-        amount,
-        price,
-        total_value,
-        status
+        user_id, coin_address, coin_ticker, type, amount, price, total_value, status
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
         `;
 
-        const { result } = await env.DB.prepare(query)
-        .bind(user_id, coin_address, coin_ticker, type, amount, price, total_value, status)
-        .run();
-        return new Response(JSON.stringify({ success: true, id: result.lastInsertRowId }), {
-            status: 200,
-        });
+        const result = await c.env.DB.prepare(query)
+            .bind(user_id, coin_address, coin_ticker, type, amount, price, total_value, status)
+            .run();
+
+        return c.json({ success: true, id: result.lastInsertRowId }, 200);
     } catch (error) {
-        return new Response(JSON.stringify({ success: false, error: (error as Error).message }), {
-            status: 500,
-        });
+        return c.json({ success: false, error: (error as Error).message }, 500);
     }
 });
 
 // Getting all transactions of a user 
-transactionRouter.get("/all/:user_id", zValidator("query", z.object({user_id: z.string()})), async (c) => {
-    const user_id  = c.req.query();
+transactionRouter.get("/all/:user_id", zValidator("param", z.object({user_id: z.string()})), async (c) => {
     try {
+        const user_id = c.req.param('user_id');
         const query = `
         SELECT * FROM transactions WHERE user_id = ?;
         `;
 
-        const { result } = await env.DB.prepare(query).bind(user_id).all();
-        return new Response(JSON.stringify({ success: true, data: result }), {
-            status: 200,
-        });
+        const { results } = await c.env.DB.prepare(query).bind(user_id).all();
+        return c.json({ success: true, data: results }, 200);
     } catch (error) {
-        return new Response(JSON.stringify({ success: false, error: (error as Error).message }), {
-            status: 500,
-        });
+        return c.json({ success: false, error: (error as Error).message }, 500);
     }
 });
 
 // Getting a transaction by id
-transactionRouter.get("/get/:id", zValidator("query", z.object({id: z.string()})), async (c) => {
-    const id = c.req.query();
+transactionRouter.get("/transaction/:id", zValidator("param", z.object({id: z.string()})), async (c) => {
     try {
+        const id = c.req.param('id');
         const query = `
         SELECT * FROM transactions WHERE id = ?;
         `;
 
-        const { result } = await env.DB.prepare(query).bind(id).get();
-        return new Response(JSON.stringify({ success: true, data: result }), {
-            status: 200,
-        });
+        const { results } = await c.env.DB.prepare(query).bind(id).all();
+        
+        if (results.length === 0) {
+            return c.json({ success: false, error: "Transaction not found" }, 404);
+        }
+
+        return c.json({ success: true, data: results[0] }, 200);
     } catch (error) {
-        return new Response(JSON.stringify({ success: false, error: (error as Error).message }), {
-            status: 500,
-        });
+        return c.json({ success: false, error: (error as Error).message }, 500);
     }
 });
