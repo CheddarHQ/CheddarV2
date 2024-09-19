@@ -26,10 +26,12 @@ import {useRecoilValue, SetRecoilState} from "recoil"
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveConnectionDetails, getConnectionDetails, clearConnectionDetails } from '~/utils/asyncStorage';
 
-import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom, sharedSecretAtom, detailedInfoAtom} from "~/state/atoms"
+import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom, sharedSecretAtom, detailedInfoAtom, phantomSessionoAtom} from "~/state/atoms"
 
 
 import { detailedInfoProps } from '~/state/atoms';
+import { phantomSelector } from '~/state/selectors';
+import CryptoCard from '~/components/CryptoCard';
 
 
 nacl.setPRNG((x, n) => {
@@ -52,7 +54,7 @@ const buildUrl = (path: string, params: URLSearchParams) =>
 
 const NETWORK = clusterApiUrl("mainnet-beta");
 
-interface TokenBasicInfo {
+export interface TokenBasicInfo {
   name: string;
   baseAddress: string;
   priceUsd: string;
@@ -74,8 +76,8 @@ const { width } = Dimensions.get('window');
 
 const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
   const [chainId , setChainId] = useRecoilState(chainIdAtom)
-  const [outputMint, setOutputMint] = useRecoilState(outputMintAtom)
-  const [inputMint, setInputMint ] = useRecoilState(inputMintAtom)
+  const setOutputMint = useSetRecoilState(outputMintAtom)
+  const setInputMint  = useSetRecoilState(inputMintAtom)
   const navigation = useNavigation();
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
 
@@ -88,9 +90,6 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
     
     console.log("ChainId set to : ", chainId)
   }
-
-      
-
 
   const [tokenInfo, setTokenInfo] = useState<TokenBasicInfo | null>(null);
 
@@ -175,47 +174,7 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
       };
     });
 
-  interface CryptoCardProps {
-    item: TokenBasicInfo;
-    onPress: () => void;
-    input: string;
-  }
 
-  const CryptoCard = ({ item, onPress, input }: CryptoCardProps) => (
-    <Pressable onPress={onPress}>
-      <XStack
-        alignSelf="center"
-        justifyContent="center"
-        width="100%"
-        maxHeight={100}
-        maxWidth={360}
-        paddingBottom={'$5'}>
-        <Card borderRadius={'$12'} scale={0.8} alignSelf="center">
-          <CardHeader>
-            <XStack alignItems="center">
-              <Avatar circular size="$3">
-                <Avatar.Image accessibilityLabel={item.name} src={item.imageUrl} />
-                <Avatar.Fallback backgroundColor="$blue10" />
-              </Avatar>
-              <YStack space={8} flex={1} paddingLeft={'$5'}>
-                <Text color={'white'} alignSelf="center" fontSize={18} fontWeight="bold">
-                  {item.name}
-                </Text>
-                <Text style={{ fontSize: 14, color: '#fff' }}>${item.priceUsd}</Text>
-              </YStack>
-              <Text
-                style={{
-                  fontSize: 20,
-                  color: item.priceChange >= 0 ? '#00FF00' : '#FF0000',
-                }}>
-                {(parseFloat(input) / parseFloat(item.priceUsd)).toFixed(6)} {item.symbol}
-              </Text>
-            </XStack>
-          </CardHeader>
-        </Card>
-      </XStack>
-    </Pressable>
-  );
 
   const renderNumpad = (inputType: 'buy' | 'sell') => (
     <YStack width="100%" alignItems="center" marginTop={20}>
@@ -325,19 +284,24 @@ const MoneyEx = () => {
   const [deeplink, setDeepLink] = useState('');
   const [dappKeyPair] = useState(nacl.box.keyPair());
 
+
   // const [sharedSecret, setSharedSecret] = useRecoilState(sharedSecretAtom);
-  const [sharedSecret, setSharedSecret] = useState<Uint8Array>();
+  const setSharedSecret = useSetRecoilState<Uint8Array>(sharedSecretAtom);
 
-  const [session, setSession] = useState();
-  const [phantomWalletPublicKey, setPhantomWalletPublicKey] = useRecoilState(phantomPublicKey);
-  // const [connectionStatus, setConnectionStatus] = useRecoilState(phantomStatus);
+  const {sharedSecret, session, phantomWalletPublicKey} = useRecoilValue(phantomSelector);
+  console.log("Loggin secret using selector : ", sharedSecret)
 
-  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+
+  const setPhantomWalletPublicKey = useSetRecoilState(phantomPublicKey);
+  const [connectionStatus, setConnectionStatus] = useRecoilState(phantomStatus);
+
+  // const [connectionStatus, setConnectionStatus] = useState('disconnected');
 
   const outputMintAddress = useRecoilValue(outputMintAtom);
   const inputMintAddress = useRecoilValue(inputMintAtom);
 
   const setDetailedInfo = useSetRecoilState(detailedInfoAtom);
+  const setSession = useSetRecoilState(phantomSessionoAtom);
 
   console.log("OutputMintAddress : ", outputMintAddress);
   console.log("InputMintAddress : ",inputMintAddress);
@@ -366,13 +330,21 @@ const MoneyEx = () => {
 
 
   const attemptReconnection = async () => {
-    const savedConnection = await getConnectionDetails();
-    console.log("Saved connection : ", savedConnection)
-    if (savedConnection) {
-      console.log("Shared secret fromm saved connection : ", savedConnection.sharedSecret)
-      setSession(savedConnection.session);
-      setPhantomWalletPublicKey(new PublicKey(savedConnection.phantomWalletPublicKey));
-      setConnectionStatus('connected');
+    try{
+      console.log("AttemptReconnection ran")
+      const savedConnection = await getConnectionDetails();
+      console.log("Saved connection : ", savedConnection)
+      if (savedConnection) {
+        console.log("Shared secret fromm saved connection : ", savedConnection.sharedSecret)
+        setSession(savedConnection.session);
+        setPhantomWalletPublicKey(new PublicKey(savedConnection.phantomWalletPublicKey));
+        setSharedSecret(savedConnection.sharedSecret) 
+        setConnectionStatus('connected');
+      }
+    }
+    catch(error){
+      setConnectionStatus('disconnected')
+      console.log("Couldn't reconnect to phantom")
     }
   };
 
@@ -388,8 +360,8 @@ const MoneyEx = () => {
     initializeDeeplinks();
 
     //attempt reconnection
-    console.log("Attempting reconnection")
-    attemptReconnection(); 
+    // console.log("Attempting reconnection")
+    // attemptReconnection(); 
     
     const listener = Linking.addEventListener('url', handleDeepLink);
     return () => {
@@ -398,11 +370,13 @@ const MoneyEx = () => {
   }, [handleDeepLink]);
 
   useEffect(() => {
+    console.log("Line 373")
     if (!deeplink) return;
-
-    console.log('Processing deeplink:', deeplink);
     const url = new URL(deeplink);
     const params = url.searchParams;
+    console.log("Params on line 377 :", params)
+    console.log("URL on line 377 :", url)
+    console.log("Line 377")
 
     if (params.get('errorCode')) {
       const error = Object.fromEntries([...params]);
@@ -435,12 +409,13 @@ const MoneyEx = () => {
           dappKeyPair.secretKey
         );
         const connectData = decryptPayload(data, nonce, sharedSecretDapp);
-        // console.log('Connect data:', connectData);
 
-        console.log("Setting shared secret - ConnectData : ",connectData)
-        console.log("SharedSecret : ", sharedSecret)
-
+        console.log("Connect Data : ", connectData)
+      
+        
         setSharedSecret(sharedSecretDapp);
+
+        
 
         setSession(connectData.session);
 
@@ -449,15 +424,14 @@ const MoneyEx = () => {
         if (connectData.public_key) {
           console.log("Public key obtained")
           setPhantomWalletPublicKey(new PublicKey(connectData.public_key));
-          console.log("phatomWalleyKeyUpdated : ", phantomWalletPublicKey)
         }
 
         setConnectionStatus('connected');
         console.log(`Connected to ${connectData.public_key?.toString()}`);
         const connectionData = {
-          sharedSecret,
-          session,
-          phantomWalletPublicKey: phantomWalletPublicKey.toString(),
+          sharedSecret : sharedSecretDapp,
+          session : connectData.session,
+          phantomWalletPublicKey: connectData.public_key,
         };
 
         console.log("Connection data to be saved : ", connectionData)
@@ -593,6 +567,9 @@ const MoneyEx = () => {
   // ADD STATE MANAGEMENT FOR TRANSACTIONS
 const performSwap = async () => {
   try {
+    console.log("InputMint :", inputMintAddress)
+    console.log("OutoutMint : ", outputMintAddress)
+    
     if(phantomWalletPublicKey){
       const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
           method: 'POST',
@@ -613,12 +590,20 @@ const performSwap = async () => {
     });
     const data = await response.json();
 
+  
+
     if (response.ok && data.unsignedTransaction) {
 
       const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
-      var transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+      let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
 
+     console.log("Transaction : ", transaction)
+
+//this is where the code is breaking right now
       const signedTransaction = await signAndSendTransaction(transaction);
+      
+
+      console.log("Signed Transaction : ", signedTransaction);
 
       if (signedTransaction) {
         const latestBlockHash = await connection.getLatestBlockhash();
@@ -628,6 +613,9 @@ const performSwap = async () => {
           skipPreflight: true,
           maxRetries: 2
         });
+
+      
+
         await connection.confirmTransaction({
           blockhash: latestBlockHash.blockhash,
           lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,

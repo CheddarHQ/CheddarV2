@@ -3,6 +3,7 @@ import {atom} from "recoil"
 import { MessageProps } from "~/app/thing"
 import { UserProfile } from "~/components/Auth"
 
+
 export interface detailedInfoProps{
     chainId : string,
     baseAddress : string,
@@ -31,7 +32,7 @@ export const phantomStatus = atom({
 
 export const phantomPublicKey = atom({
     key:"phantomId",
-    default : {} as PublicKey
+    default : {} as PublicKey | null
 })
 
 export const outputMintAtom = atom({
@@ -61,3 +62,8 @@ export const detailedInfoAtom = atom({
     default : {} as detailedInfoProps
 })
 
+
+export const phantomSessionoAtom = atom({
+    key : "phantomSession",
+    default : "" as undefined | string
+})

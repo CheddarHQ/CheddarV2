@@ -10,11 +10,8 @@ const saveConnectionDetails = async (connectionData) => {
 
 const getConnectionDetails = async () => {
   try {
-    console.log("Getting connection details")
-    
     const connectionData = await AsyncStorage.getItem('phantomConnection');
     
-    console.log("Connection Data : ", connectionData);
     return connectionData ? JSON.parse(connectionData) : null;
   } catch (error) {
     console.error('Error retrieving connection details:', error);
