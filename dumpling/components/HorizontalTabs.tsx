@@ -1,19 +1,50 @@
+import { Buffer } from 'buffer';
+global.Buffer = Buffer;
+import { Dimensions, Pressable } from 'react-native';
+import Feather from '@expo/vector-icons/Feather';
+import { Text, SizableText, Tabs, XStack, YStack, Button, Card, CardHeader, Avatar } from 'tamagui';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import {  useGlobalSearchParams } from 'expo-router';
+import { useWindowDimensions } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+
+import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
+
+import {useRecoilState, useSetRecoilState} from "recoil"
+import {useRecoilValue, SetRecoilState} from "recoil"
+
+import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom, sharedSecretAtom, detailedInfoAtom, phantomSessionAtom} from "~/state/atoms"
+import { TokenBasicInfo } from '~/app/crypto/[id]';
+
+import { detailedInfoProps } from '~/state/atoms';
+import { phantomSelector } from '~/state/selectors';
+
+interface HorizontalTabsProps {
+  connectionStatus: string;
+}
+
 
 const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
-    const [chainId , setChainId] = useRecoilState(chainIdAtom)
+    const  setChainId = useSetRecoilState(chainIdAtom)
     const [outputMint, setOutputMint] = useRecoilState(outputMintAtom)
     const [inputMint, setInputMint ] = useRecoilState(inputMintAtom)
     const navigation = useNavigation();
+
+
     const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
+
+
+    const memoizedDetailedInfo = useMemo(() => detailedInfo, []);
+
+    const {sharedSecret, session, phantomWalletPublicKey, chainId} = useRecoilValue(phantomSelector);
+
   
-    console.log("Detailed Info From Params : ", detailedInfo)
-  
-    if(detailedInfo){
-      const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
+    if(memoizedDetailedInfo){
+      const parsedDetailedInfo = JSON.parse(memoizedDetailedInfo || 'null');
        
       setChainId(parsedDetailedInfo.chainId)
       
-      console.log("ChainId set to : ", chainId)
+     
     }
   
         
@@ -29,8 +60,8 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
   
     useEffect(() => {
       try {
-        console.log("Detailed Info after detailed info changed : ", detailedInfo)
-        const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
+        
+        const parsedDetailedInfo = JSON.parse(memoizedDetailedInfo || 'null');
         // console.log('Parsed detailedInfo:', parsedDetailedInfo);
   
         setChainId(parsedDetailedInfo.chainId)
@@ -49,7 +80,7 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
         console.error('Error parsing detailedInfo:', error);
         setTokenInfo(null);
       }
-    }, [detailedInfo]);
+    }, []);
   
     const [buyInput, setBuyInput] = useState('');
     const [sellInput, setSellInput] = useState('');
@@ -245,3 +276,6 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
       </Tabs>
     );
   };
+
+
+  export default HorizontalTabs;

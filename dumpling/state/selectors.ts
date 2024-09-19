@@ -1,14 +1,16 @@
 import { selector } from "recoil"
-import { phantomPublicKey, phantomSessionoAtom, sharedSecretAtom } from "./atoms"
+import { phantomPublicKey, phantomSessionAtom, sharedSecretAtom, chainIdAtom, detailedInfoAtom } from "./atoms"
 
 
 export const phantomSelector = selector({
     key : "sharedSecretAndSessionSelector",
     get: ({get})=>{
         const sharedSecret = get(sharedSecretAtom)
-        const session = get(phantomSessionoAtom)
+        const session = get(phantomSessionAtom)
         const phantomWalletPublicKey = get(phantomPublicKey)
-        return {sharedSecret, session, phantomWalletPublicKey}
+        const chainId = get(chainIdAtom)
+        const detailedInfoRecoil = get(detailedInfoAtom)
+        return {sharedSecret, session, phantomWalletPublicKey, chainId, detailedInfoRecoil}
     }
 })
 

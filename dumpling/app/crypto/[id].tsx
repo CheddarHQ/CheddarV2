@@ -26,12 +26,13 @@ import {useRecoilValue, SetRecoilState} from "recoil"
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveConnectionDetails, getConnectionDetails, clearConnectionDetails } from '~/utils/asyncStorage';
 
-import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom, sharedSecretAtom, detailedInfoAtom, phantomSessionoAtom} from "~/state/atoms"
+import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom, sharedSecretAtom, detailedInfoAtom, phantomSessionAtom} from "~/state/atoms"
 
+import HorizontalTabs from '~/components/HorizontalTabs';
 
 import { detailedInfoProps } from '~/state/atoms';
 import { phantomSelector } from '~/state/selectors';
-import CryptoCard from '~/components/CryptoCard';
+
 
 
 nacl.setPRNG((x, n) => {
@@ -63,9 +64,6 @@ export interface TokenBasicInfo {
   priceChange: number;
   symbol: string;
 }
-interface HorizontalTabsProps {
-  connectionStatus: string;
-}
 
 interface TokenData {
   basicInfo: TokenBasicInfo[];
@@ -74,209 +72,7 @@ interface TokenData {
 
 const { width } = Dimensions.get('window');
 
-const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
-  const [chainId , setChainId] = useRecoilState(chainIdAtom)
-  const setOutputMint = useSetRecoilState(outputMintAtom)
-  const setInputMint  = useSetRecoilState(inputMintAtom)
-  const navigation = useNavigation();
-  const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
 
-  console.log("Detailed Info From Params : ", detailedInfo)
-
-  if(detailedInfo){
-    const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
-     
-    setChainId(parsedDetailedInfo.chainId)
-    
-    console.log("ChainId set to : ", chainId)
-  }
-
-  const [tokenInfo, setTokenInfo] = useState<TokenBasicInfo | null>(null);
-
-
-
-  const closeModal = () => {
-    navigation.goBack();
-  };
-
-  useEffect(() => {
-    try {
-      console.log("Detailed Info after detailed info changed : ", detailedInfo)
-      const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
-      // console.log('Parsed detailedInfo:', parsedDetailedInfo);
-
-      setChainId(parsedDetailedInfo.chainId)
-
-      if(chainId === "ethereum"){
-        setInputMint("0x1234567890abcdef1234567890abcdef12345678")
-      }
-      
-
-      setOutputMint(parsedDetailedInfo.baseAddress)
-      
-      
-      setTokenInfo(parsedDetailedInfo);
-     
-    } catch (error) {
-      console.error('Error parsing detailedInfo:', error);
-      setTokenInfo(null);
-    }
-  }, [detailedInfo]);
-
-  const [buyInput, setBuyInput] = useState('');
-  const [sellInput, setSellInput] = useState('');
-  const [activeTab, setActiveTab] = useState('tab1');
-
-  const buyInputLength = useSharedValue(buyInput.length);
-  const sellInputLength = useSharedValue(sellInput.length);
-
-  const handleBuyPress = (num: string) => {
-    setBuyInput((prev) => {
-      const newValue = prev + num;
-      buyInputLength.value = newValue.length;
-      return newValue;
-    });
-  };
-
-  const handleSellPress = (num: string) => {
-    setSellInput((prev) => {
-      const newValue = prev + num;
-      sellInputLength.value = newValue.length;
-      return newValue;
-    });
-  };
-
-  const handleBackspace = (inputType: 'buy' | 'sell') => {
-    if (inputType === 'buy') {
-      setBuyInput((prev) => {
-        const newValue = prev.slice(0, -1);
-        buyInputLength.value = newValue.length;
-        return newValue;
-      });
-    } else {
-      setSellInput((prev) => {
-        const newValue = prev.slice(0, -1);
-        sellInputLength.value = newValue.length;
-        return newValue;
-      });
-    }
-  };
-
-  const animatedStyle = (inputLength: Animated.SharedValue<number>) =>
-    useAnimatedStyle(() => {
-      const fontSize = inputLength.value > 8 ? withTiming(40) : withTiming(60);
-      return {
-        fontSize,
-        color: '#FFFFFF',
-        fontWeight: 'bold',
-        position: 'absolute',
-        top: 20,
-      };
-    });
-
-
-
-  const renderNumpad = (inputType: 'buy' | 'sell') => (
-    <YStack width="100%" alignItems="center" marginTop={20}>
-      {[
-        ['1', '2', '3'],
-        ['4', '5', '6'],
-        ['7', '8', '9'],
-        ['.', '0', '←'],
-      ].map((row, i) => (
-        <XStack
-          key={i}
-          space
-          justifyContent="space-between"
-          width="100%"
-          maxWidth={360}
-          marginBottom={10}>
-          {row.map((num) => (
-            <Button
-              key={num}
-              size="$5"
-              backgroundColor="#000000"
-              borderRadius={10}
-              onPress={() => {
-                if (num === '←') handleBackspace(inputType);
-                else if (inputType === 'buy') handleBuyPress(num);
-                else handleSellPress(num);
-              }}>
-              <Text color="#FFFFFF" fontSize={24}>
-                {num}
-              </Text>
-            </Button>
-          ))}
-        </XStack>
-      ))}
-    </YStack>
-  );
-
-  const { height, width } = useWindowDimensions();
-
-  return (
-    <Tabs
-      defaultValue="tab1"
-      orientation="horizontal"
-      flexDirection="column"
-      width={width - 40}
-      height={height - 100}
-      borderRadius="$4"
-      overflow="hidden">
-      <Tabs.List aria-label="Manage your account" paddingBottom={'$10'}>
-        <Tabs.Tab flex={1} value="tab1">
-          <SizableText fontFamily="$body">BUY</SizableText>
-        </Tabs.Tab>
-        <Tabs.Tab flex={1} value="tab2">
-          <SizableText fontFamily="$body">SELL</SizableText>
-        </Tabs.Tab>
-      </Tabs.List>
-      <Tabs.Content value="tab1" flex={1}>
-        <YStack flex={1} alignItems="center" justifyContent="center" gap={'$10'}>
-          <XStack
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-            maxWidth={360}
-            paddingBottom={'$7'}>
-            <Animated.Text style={animatedStyle(buyInputLength)}>+{buyInput || '0'}</Animated.Text>
-          </XStack>
-          {tokenInfo ? (
-            <CryptoCard item={tokenInfo} input={buyInput} onPress={closeModal} />
-          ) : (
-            <Text>No token information available</Text>
-          )}
-          {renderNumpad('buy')}
-        </YStack>
-      </Tabs.Content>
-
-      <Tabs.Content value="tab2" flex={1}>
-        <YStack flex={1} alignItems="center" justifyContent="center" gap={'$10'}>
-          <XStack
-            justifyContent="center"
-            alignItems="center"
-            width="100%"
-            maxWidth={360}
-            paddingBottom={'$7'}>
-            <Animated.Text style={animatedStyle(sellInputLength)}>
-              -{sellInput || '0'}
-            </Animated.Text>
-          </XStack>
-          {tokenInfo && (
-            <CryptoCard
-              item={tokenInfo}
-              input={sellInput}
-              onPress={() => {
-                console.log(`Clicked on ${tokenInfo.name}`);
-              }}
-            />
-          )}
-          {renderNumpad('sell')}
-        </YStack>
-      </Tabs.Content>
-    </Tabs>
-  );
-};
 
 const MoneyEx = () => {
   const navigation = useNavigation();
@@ -285,23 +81,29 @@ const MoneyEx = () => {
   const [dappKeyPair] = useState(nacl.box.keyPair());
 
 
-  // const [sharedSecret, setSharedSecret] = useRecoilState(sharedSecretAtom);
+
   const setSharedSecret = useSetRecoilState<Uint8Array>(sharedSecretAtom);
 
-  const {sharedSecret, session, phantomWalletPublicKey} = useRecoilValue(phantomSelector);
-  console.log("Loggin secret using selector : ", sharedSecret)
-
-
+  const {sharedSecret, session, phantomWalletPublicKey, chainId} = useRecoilValue(phantomSelector);
   const setPhantomWalletPublicKey = useSetRecoilState(phantomPublicKey);
-  const [connectionStatus, setConnectionStatus] = useRecoilState(phantomStatus);
 
-  // const [connectionStatus, setConnectionStatus] = useState('disconnected');
+
+  console.log("Loggin secret using selector : ", sharedSecret)
+  console.log("Loggin session using selector : ", session)
+  console.log("Loggin phantomWalletPublicKey using selector : ", phantomWalletPublicKey)
+  console.log("Loggin chainId using selector : ", chainId)
+
+
+
+  // const [connectionStatus, setConnectionStatus] = useRecoilState(phantomStatus);
+
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
+  const setSession = useSetRecoilState(phantomSessionAtom);
 
   const outputMintAddress = useRecoilValue(outputMintAtom);
   const inputMintAddress = useRecoilValue(inputMintAtom);
 
   const setDetailedInfo = useSetRecoilState(detailedInfoAtom);
-  const setSession = useSetRecoilState(phantomSessionoAtom);
 
   console.log("OutputMintAddress : ", outputMintAddress);
   console.log("InputMintAddress : ",inputMintAddress);
@@ -331,15 +133,34 @@ const MoneyEx = () => {
 
   const attemptReconnection = async () => {
     try{
+
       console.log("AttemptReconnection ran")
       const savedConnection = await getConnectionDetails();
+
       console.log("Saved connection : ", savedConnection)
-      if (savedConnection) {
+
+     
+
+      if (session) {
         console.log("Shared secret fromm saved connection : ", savedConnection.sharedSecret)
-        setSession(savedConnection.session);
-        setPhantomWalletPublicKey(new PublicKey(savedConnection.phantomWalletPublicKey));
-        setSharedSecret(savedConnection.sharedSecret) 
-        setConnectionStatus('connected');
+
+        // setSession(savedConnection.session);
+        // setPhantomWalletPublicKey(new PublicKey(savedConnection.phantomWalletPublicKey));
+        // setSharedSecret(savedConnection.sharedSecret) 
+
+        // setSession(session);
+        // setPhantomWalletPublicKey(new PublicKey(phantomWalletPublicKey));
+        // setSharedSecret(sharedSecret) 
+
+
+
+
+        console.log("Reconnection logs")
+        console.log("public Key : ", phantomWalletPublicKey)
+        console.log("shared secret : ", sharedSecret)
+        console.log("session Id :", session);
+
+        // setConnectionStatus('connected');
       }
     }
     catch(error){
@@ -348,6 +169,16 @@ const MoneyEx = () => {
     }
   };
 
+
+  useEffect(()=>{
+     // attempt reconnection
+     console.log("Attempting reconnection")
+     attemptReconnection(); 
+
+    //  if(connectionStatus!=='connected'){
+    //   connect();
+    //  }
+  },[])
 
   useEffect(() => {
     const initializeDeeplinks = async () => {
@@ -358,10 +189,6 @@ const MoneyEx = () => {
       }
     };
     initializeDeeplinks();
-
-    //attempt reconnection
-    // console.log("Attempting reconnection")
-    // attemptReconnection(); 
     
     const listener = Linking.addEventListener('url', handleDeepLink);
     return () => {
@@ -387,6 +214,8 @@ const MoneyEx = () => {
         text1: 'Error',
         text2: message,
       });
+
+      navigation.navigate('crypto');
       return;
     }
 
@@ -396,6 +225,7 @@ const MoneyEx = () => {
     if (/onConnect/.test(url.pathname)) {
       console.log('Handling onConnect');
       try {
+        //phantomPublicKey ----> encrypted key
         const phantomPublicKey = params.get('phantom_encryption_public_key');
         const data = params.get('data');
         const nonce = params.get('nonce');
@@ -410,6 +240,10 @@ const MoneyEx = () => {
         );
         const connectData = decryptPayload(data, nonce, sharedSecretDapp);
 
+        console.log("connect data public key : ", connectData.public_key);
+        console.log("PhantompublicKey : ", phantomPublicKey)
+
+
         console.log("Connect Data : ", connectData)
       
         
@@ -423,7 +257,7 @@ const MoneyEx = () => {
 
         if (connectData.public_key) {
           console.log("Public key obtained")
-          setPhantomWalletPublicKey(new PublicKey(connectData.public_key));
+          setPhantomWalletPublicKey((connectData.public_key));
         }
 
         setConnectionStatus('connected');
@@ -445,30 +279,47 @@ const MoneyEx = () => {
         navigation.navigate('crypto');
       } catch (error) {
         console.error('Error processing onConnect:', error);
+        navigation.navigate('crypto');
       }
     }
 
     if (/onDisconnect/.test(url.pathname)) {
-      console.log('Handling onDisconnect');
-      setPhantomWalletPublicKey(null);
-      setConnectionStatus('disconnected');
-      async function disconnect(){
-        await clearConnectionDetails();
+      try{
+
+        console.log('Handling onDisconnect');
+        setPhantomWalletPublicKey(null);
+        setConnectionStatus('disconnected');
+        async function disconnect(){
+          await clearConnectionDetails();
+        }
+        
+        disconnect();
+        
+        console.log('Disconnected');
+        navigation.navigate('crypto');
       }
-
-      disconnect();
-
-      console.log('Disconnected');
+      catch(error){
+        console.error("onDisconnect Error : ",error)
+        navigation.navigate('crypto');
+      }
     }
 
     if(/onSignAndSendTransaction/.test(url.pathname)) {
-      console.log('Handling onSignAndSendTransaction');
-      const signAndSendTransactionData = decryptPayload(
-        params.get("data")!,
-        params.get("nonce")!,
-        sharedSecret
-      );
-      console.log("signAndSendTrasaction: ", signAndSendTransactionData);
+      try{
+        
+        console.log('Handling onSignAndSendTransaction');
+        const signAndSendTransactionData = decryptPayload(
+          params.get("data")!,
+          params.get("nonce")!,
+          sharedSecret
+        );
+        console.log("signAndSendTrasaction: ", signAndSendTransactionData);
+        navigation.navigate('crypto');
+      }
+      catch(error){
+        console.error("onSignAndSendTransaction Error : ",error)
+        navigation.navigate('crypto');
+      }
     }
   }, [deeplink, dappKeyPair.secretKey]);
 
@@ -528,7 +379,9 @@ const MoneyEx = () => {
   
     const payload = {
       session,
-      transaction: bs58.encode(serializedTransaction),
+      transaction: bs58.encode(transaction.serialize({
+        requireAllSignatures: false,
+      })),
     };
 
     const [nonce, encryptedPayload] = encryptPayload(payload, sharedSecret);
@@ -541,27 +394,7 @@ const MoneyEx = () => {
     });
   
     const url = buildUrl("signAndSendTransaction", params);
-    Linking.openURL(url);
-  };
-
-  const handleOnSignAndSendTransaction = async (params) => {
-    const data = params.get('data');
-    const nonce = params.get('nonce');
-  
-    const decryptedData = decryptPayload(data, nonce, sharedSecret);
-    // console.log('Transaction signature:', decryptedData.signature);
-    
-    const connection = new Connection('https://api.mainnet-beta.solana.com');
-    console.log(connection);
-  
-    const txid = await connection.sendRawTransaction(
-        decryptedData.signedTransaction,
-        { skipPreflight: false, preflightCommitment: 'confirmed' }
-    );
-    // console.log('Transaction sent:', txid);
-  
-    const confirmation = await connection.confirmTransaction(txid);
-    console.log('Transaction confirmed:', confirmation);
+    await Linking.openURL(url);
   };
 
   // ADD STATE MANAGEMENT FOR TRANSACTIONS
@@ -569,6 +402,9 @@ const performSwap = async () => {
   try {
     console.log("InputMint :", inputMintAddress)
     console.log("OutoutMint : ", outputMintAddress)
+
+
+    console.log("Phantom Wallet Public Key during performSwap: ", phantomWalletPublicKey)
     
     if(phantomWalletPublicKey){
       const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
@@ -590,7 +426,8 @@ const performSwap = async () => {
     });
     const data = await response.json();
 
-  
+    console.log("Line 421 response : ",response)
+    console.log("Line 422 data : ", data)
 
     if (response.ok && data.unsignedTransaction) {
 
@@ -626,12 +463,17 @@ const performSwap = async () => {
       }
     } else {
       console.error('Response error signedTransaction:', data);
+      navigation.navigate('crypto');
+    
     }
   } else {
     console.error('Phantom wallet public key is not available.');
+    navigation.navigate('crypto');
+  
   }
 } catch (error) {
   console.error('Error performing swap:', error);
+  navigation.navigate('crypto');
 }
 };
 

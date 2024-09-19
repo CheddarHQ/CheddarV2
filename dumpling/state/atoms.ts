@@ -59,11 +59,11 @@ export const sharedSecretAtom = atom({
 
 export const detailedInfoAtom = atom({
     key : "detailedInfoAtom",
-    default : {} as detailedInfoProps
+    default : {} as string 
 })
 
 
-export const phantomSessionoAtom = atom({
+export const phantomSessionAtom = atom({
     key : "phantomSession",
     default : "" as undefined | string
 })
