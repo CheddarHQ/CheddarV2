@@ -1,5 +1,5 @@
 -- USERS
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY, -- TWITTER ID
   username TEXT NOT NULL,
   bio TEXT,
@@ -10,7 +10,7 @@ CREATE TABLE users (
 );
 
 -- COIN HOLDINGS
-CREATE TABLE user_holdings (
+CREATE TABLE IF NOT EXISTS user_holdings (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL,
   coin_address TEXT NOT NULL,
@@ -21,7 +21,7 @@ CREATE TABLE user_holdings (
 );
 
 -- TRANSACTIONS
-CREATE TABLE transactions (
+CREATE TABLE IF NOT EXISTS transactions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL,
   coin_address TEXT NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE transactions (
 );
 
 -- MESSAGES
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   room_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
@@ -48,7 +48,7 @@ CREATE TABLE messages (
 );
 
 -- LEADERBOARD
-CREATE TABLE leaderboard (
+CREATE TABLE IF NOT EXISTS leaderboard (
   user_id TEXT PRIMARY KEY,
   points INTEGER DEFAULT 0,
   last_updated DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -56,7 +56,7 @@ CREATE TABLE leaderboard (
 );
 
 -- BLINKS
-CREATE TABLE blinks (
+CREATE TABLE IF NOT EXISTS blinks (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('action', 'post', 'other')),
@@ -74,7 +74,7 @@ CREATE TABLE blinks (
 );
 
 -- CHAT_ROOMS
-CREATE TABLE chat_rooms (
+CREATE TABLE IF NOT EXISTS chat_rooms (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
   description TEXT,
@@ -84,7 +84,7 @@ CREATE TABLE chat_rooms (
 );
 
 -- ROOM_PARTICIPANTS
-CREATE TABLE room_participants (
+CREATE TABLE IF NOT EXISTS room_participants (
   room_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
   joined_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -95,7 +95,7 @@ CREATE TABLE room_participants (
 
 -- TODO
 -- NOTIFICATIONS
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id TEXT NOT NULL,
   message TEXT NOT NULL,
@@ -105,41 +105,32 @@ CREATE TABLE notifications (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
--- USERS
-CREATE INDEX idx_username ON users (username);
-CREATE INDEX idx_twitter_handle ON users (twitter_handle);
+-- INDEXES
+CREATE INDEX IF NOT EXISTS idx_username ON users (username);
 
--- COIN HOLDINGS
-CREATE INDEX idx_user_id_user_holdings ON user_holdings (user_id);
-CREATE INDEX idx_coin_address_user_holdings ON user_holdings (coin_address);
+CREATE INDEX IF NOT EXISTS idx_user_id_user_holdings ON user_holdings (user_id);
+CREATE INDEX IF NOT EXISTS idx_coin_address_user_holdings ON user_holdings (coin_address);
 
--- TRANSACTIONS
-CREATE INDEX idx_user_id_transactions ON transactions (user_id);
-CREATE INDEX idx_coin_address_transactions ON transactions (coin_address);
-CREATE INDEX idx_timestamp_transactions ON transactions (timestamp);
+CREATE INDEX IF NOT EXISTS idx_user_id_transactions ON transactions (user_id);
+CREATE INDEX IF NOT EXISTS idx_coin_address_transactions ON transactions (coin_address);
+CREATE INDEX IF NOT EXISTS idx_timestamp_transactions ON transactions (timestamp);
 
--- MESSAGES
-CREATE INDEX idx_room_id_messages ON messages (room_id);
-CREATE INDEX idx_user_id_messages ON messages (user_id);
-CREATE INDEX idx_created_at_messages ON messages (created_at);
+CREATE INDEX IF NOT EXISTS idx_room_id_messages ON messages (room_id);
+CREATE INDEX IF NOT EXISTS idx_user_id_messages ON messages (user_id);
+CREATE INDEX IF NOT EXISTS idx_created_at_messages ON messages (created_at);
 
--- LEADERBOARD
-CREATE INDEX idx_points_leaderboard ON leaderboard (points);
-CREATE INDEX idx_last_updated_leaderboard ON leaderboard (last_updated);
+CREATE INDEX IF NOT EXISTS idx_points_leaderboard ON leaderboard (points);
+CREATE INDEX IF NOT EXISTS idx_last_updated_leaderboard ON leaderboard (last_updated);
 
--- BLINKS
-CREATE INDEX idx_user_id_blinks ON blinks (user_id);
-CREATE INDEX idx_type_blinks ON blinks (type);
-CREATE INDEX idx_created_at_blinks ON blinks (created_at);
-CREATE INDEX idx_updated_at_blinks ON blinks (updated_at);
+CREATE INDEX IF NOT EXISTS idx_user_id_blinks ON blinks (user_id);
+CREATE INDEX IF NOT EXISTS idx_type_blinks ON blinks (type);
+CREATE INDEX IF NOT EXISTS idx_created_at_blinks ON blinks (created_at);
+CREATE INDEX IF NOT EXISTS idx_updated_at_blinks ON blinks (updated_at);
 
--- CHAT_ROOMS
-CREATE INDEX idx_admin_id_chat_rooms ON chat_rooms (admin_id);
+CREATE INDEX IF NOT EXISTS idx_admin_id_chat_rooms ON chat_rooms (admin_id);
 
--- ROOM_PARTICIPANTS
-CREATE INDEX idx_room_id_room_participants ON room_participants (room_id);
-CREATE INDEX idx_user_id_room_participants ON room_participants (user_id);
+CREATE INDEX IF NOT EXISTS idx_room_id_room_participants ON room_participants (room_id);
+CREATE INDEX IF NOT EXISTS idx_user_id_room_participants ON room_participants (user_id);
 
--- NOTIFICATIONS
-CREATE INDEX idx_user_id_notifications ON notifications (user_id);
-CREATE INDEX idx_created_at_notifications ON notifications (created_at);
+CREATE INDEX IF NOT EXISTS idx_user_id_notifications ON notifications (user_id);
+CREATE INDEX IF NOT EXISTS idx_created_at_notifications ON notifications (created_at);

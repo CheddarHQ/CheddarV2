@@ -8,11 +8,9 @@ const app = new Hono()
 
 app.use("*", logger());
 
-const apiRoutes = app.basePath("/api")
-                     .route("transaction", transactionRouter)
-                     .route("user", userRouter)
-                     .route("chat", chatRouter);
-
+app.route("/api/user", userRouter);
+app.route("/api/transaction", transactionRouter);
+app.route("/api/chat", chatRouter);
 
 export default app;
 export type App = typeof app;
