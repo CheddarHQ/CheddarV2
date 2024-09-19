@@ -82,7 +82,7 @@ export default function Chatroom() {
     newWs.onmessage = (event) => {
       try {
         const messageData = JSON.parse(event.data);
-        console.log('Parsed message:', messageData);
+       
 
         if (messageData.type === 'heartbeat') {
           console.log('Heartbeat received');
@@ -158,8 +158,7 @@ export default function Chatroom() {
         data: inputText,
         user: username   
       };
-  
-      console.log('Sending message:', messageToSend);
+
   
       // Send the message
       ws.send(JSON.stringify(messageToSend));
