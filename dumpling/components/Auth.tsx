@@ -7,8 +7,8 @@ import { supabase } from '~/lib/supabase';
 import { Link } from 'expo-router';
 import { Image } from 'tamagui';
 import { Button } from './Button';
-import { useRecoilState } from "recoil";
-import { userAtom } from "~/state/atoms";
+import { useRecoilState } from 'recoil';
+import { userAtom } from '~/state/atoms';
 
 export interface UserProfile {
   username: string;
@@ -53,59 +53,53 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
     avatar_url: tokenPayload.user_metadata.avatar_url,
     id: tokenPayload.sub,
   };
-  console.log("Extracted user profile:", userProfile);
+  console.log('Extracted user profile:', userProfile);
 
-// Extract info from this 
-/*
+  // Extract info from this
+  /*
 Extracted user profile: {"avatar_url": "https://pbs.twimg.com/profile_images/1809189990599127040/mti8M7jE_normal.jpg", "email": "sarthakkapila27x@gmail.com", "id": "4c75869e-1204-41f1-a051-d40861e855e3", "name": "Sarthak Kapila", "username": "sarthakkapila0"}
 */
 
-console.log("Session Details : ", data.session)
+  console.log('Session Details : ', data.session);
 
   return { session: data.session, profile: userProfile };
 };
 
 const performOAuth = async () => {
-  console.log("Redirect URL:", redirectTo);
+  console.log('Redirect URL:', redirectTo);
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "twitter",
+    provider: 'twitter',
     options: {
       redirectTo,
       skipBrowserRedirect: true,
     },
   });
   if (error) throw error;
-  console.log("Auth URL:", data?.url);
+  console.log('Auth URL:', data?.url);
 
-  const res = await WebBrowser.openAuthSessionAsync(
-    data?.url ?? "",
-    redirectTo
-  );
- 
+  const res = await WebBrowser.openAuthSessionAsync(data?.url ?? '', redirectTo);
 
-  if (res.type === "success" && res.url) {
+  if (res.type === 'success' && res.url) {
     return res.url;
   }
   return null;
 };
 
 export default function Auth() {
-  const [userProfile, setUserProfile] = useRecoilState(userAtom)
-  
+  const [userProfile, setUserProfile] = useRecoilState(userAtom);
 
   const url = Linking.useURL();
-  
-  
-
 
   useEffect(() => {
     if (url) {
-      createSessionFromUrl(url).then(response => {
-        console.log('User Profile :', response);
-        if (response) {
-          setUserProfile(response.profile);
-        }
-      }).catch(error => console.error(error));
+      createSessionFromUrl(url)
+        .then((response) => {
+          console.log('User Profile :', response);
+          if (response) {
+            setUserProfile(response.profile);
+          }
+        })
+        .catch((error) => console.error(error));
     }
   }, [url]);
 
@@ -119,34 +113,26 @@ export default function Auth() {
         }
       }
     } catch (error) {
-      console.error("Error during sign in:", error);
+      console.error('Error during sign in:', error);
     }
   };
   return (
     <View>
-  {userProfile.name ? (
+      {userProfile.name ? (
         <View style={styles.container}>
-          <Image 
-            source={{ uri: userProfile.avatar_url }} 
-            style={styles.avatar}
-          />
-        <Text style={styles.title}>Welcome! {userProfile.name}</Text>
-          <Link 
+          <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
+          <Text style={styles.title}>Welcome! {userProfile.name}</Text>
+          <Link
             href={{
-              pathname: '/thing',
-              params: { username: userProfile.username }
-            }} 
-            asChild
-          >
+              pathname: '/(tabs)/Chat',
+              params: { username: userProfile.username },
+            }}
+            asChild>
             <Button title="Enter chat" color="#007AFF" />
           </Link>
         </View>
       ) : (
-        <Button 
-          onPress={handleSignIn} 
-          title="Sign in with Twitter" 
-          color="#007AFF"
-        />
+        <Button onPress={handleSignIn} title="Sign in with Twitter" color="#007AFF" />
       )}
     </View>
   );

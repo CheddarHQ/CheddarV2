@@ -40,32 +40,23 @@ export default function RootLayout() {
 
   return (
     <RecoilRoot>
-
-    <TamaguiProvider config={config}>
-      <StatusBar style="auto" />
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="analytics" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="thing" options={{ headerShown: false }} />
-          <Stack.Screen name="loginPage" options={{ headerShown: false }} />
-          <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen
-            name="cryptoGraph"
-            options={{ headerShown: false, presentation: 'modal' }}
+      <TamaguiProvider config={config}>
+        <StatusBar style="auto" />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
+            <Stack.Screen name="thing" options={{ headerShown: false }} />
+            <Stack.Screen name="loginPage" options={{ headerShown: false }} />
+            <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="cryptoGraph"
+              options={{ headerShown: false, presentation: 'modal' }}
             />
-          <Stack.Screen
-            name="modal"
-            options={{ title: 'Modal', headerShown: false, presentation: 'modal' }}
-            />
-          <Stack.Screen
-            name="moneyEx"
-            options={{ title: 'moneyEx', headerShown: false, presentation: 'modal' }}
-          />
-        </Stack>
-      </GestureHandlerRootView>
-    </TamaguiProvider>
+          </Stack>
+        </GestureHandlerRootView>
+      </TamaguiProvider>
     </RecoilRoot>
   );
 }
