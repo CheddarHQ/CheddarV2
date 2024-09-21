@@ -6,6 +6,7 @@ import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated'
 import BottomTabIcon from './BottomTabIcon';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { XStack } from 'tamagui';
+import { BlurView } from 'expo-blur';
 
 const CustomBottomTab = ({ state, descriptors, navigation }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
@@ -21,7 +22,9 @@ const CustomBottomTab = ({ state, descriptors, navigation }: BottomTabBarProps) 
   });
 
   return (
-    <View style={[styles.tabBarContainer, { width: TAB_BAR_WIDTH, bottom: insets.bottom }]}>
+    <BlurView
+      intensity={50}
+      style={[styles.tabBarContainer, { width: TAB_BAR_WIDTH, bottom: insets.bottom }]}>
       <Animated.View style={[styles.slidingTabContainer, { width: TAB_WIDTH }, translateAnimation]}>
         <View style={styles.slidingTab} />
       </Animated.View>
@@ -57,7 +60,12 @@ const CustomBottomTab = ({ state, descriptors, navigation }: BottomTabBarProps) 
             testID={options.tabBarTestID}
             onPress={onPress}
             onLongPress={onLongPress}
-            style={{ flex: 1 }}>
+            style={{
+              flex: 1,
+              justifyContent: 'center',
+              alignContent: 'center',
+              alignItems: 'center',
+            }}>
             <XStack justifyContent="center" alignContent="center" alignItems="center" gap="2">
               <BottomTabIcon route={route.name} isFocused={isFocused} />
               {isFocused && (
@@ -74,7 +82,7 @@ const CustomBottomTab = ({ state, descriptors, navigation }: BottomTabBarProps) 
           </Pressable>
         );
       })}
-    </View>
+    </BlurView>
   );
 };
 
@@ -87,16 +95,18 @@ const styles = StyleSheet.create({
     height: 52,
     position: 'absolute',
     alignSelf: 'center',
-    backgroundColor: '#141419',
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
     borderColor: 'rgba(255, 255, 255, 0.07)',
     borderWidth: 1,
-    borderRadius: 100,
+    borderRadius: 50,
     alignItems: 'center',
+    overflow: 'hidden',
   },
   slidingTabContainer: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
     justifyContent: 'center',
+    alignContent: 'center',
+    alignItems: 'center',
   },
   slidingTab: {
     width: 100,

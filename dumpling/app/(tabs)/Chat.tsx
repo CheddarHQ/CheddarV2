@@ -6,7 +6,7 @@ import ChatCard from '../../components/ChatCard';
 const homePage = () => {
   return (
     <YStack backgroundColor={'#000000'} minHeight={'screen'} flex={1}>
-      <ChatCard />
+      <ChatCard route="thing" />
     </YStack>
   );
 };

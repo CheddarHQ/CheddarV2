@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 import { atom } from 'recoil';
-import { MessageProps } from '~/app/(tabs)/thing';
+import { MessageProps } from '~/app/(tabs)/Chat';
 import { UserProfile } from '~/components/Auth';
 
 export interface detailedInfoProps {

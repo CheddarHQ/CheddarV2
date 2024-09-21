@@ -9,6 +9,7 @@ import { Image } from 'tamagui';
 import { Button } from './Button';
 import { useRecoilState } from 'recoil';
 import { userAtom } from '~/state/atoms';
+import { MyButton } from '~/app/cryptoGraph/[id]';
 
 export interface UserProfile {
   username: string;
@@ -122,6 +123,7 @@ export default function Auth() {
         <View style={styles.container}>
           <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
           <Text style={styles.title}>Welcome! {userProfile.name}</Text>
+
           <Link
             href={{
               pathname: '/(tabs)/Chat',
@@ -141,7 +143,7 @@ export default function Auth() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: '#0a0a0f',
     alignItems: 'center',
     justifyContent: 'center',
   },

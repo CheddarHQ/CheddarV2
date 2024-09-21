@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { Platform, ScrollView, Text, Pressable } from 'react-native';
+import { Platform, ScrollView, Text, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Input, Card, Avatar, YStack, XStack } from 'tamagui';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface TokenBasicInfo {
   name: string;
@@ -32,13 +33,13 @@ export default function Modal() {
   useEffect(() => {
     async function fetchMetadata(ids: string) {
       try {
-        setLoading(true); 
+        setLoading(true);
         console.log('Fetching data...');
         const response = await fetch(
           `https://sushi.cheddar-io.workers.dev/api/data/fetchmetadata?ids=${ids}`
         );
         const data: TokenData = await response.json();
-        
+
         setTokenData(data);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -87,6 +88,11 @@ export default function Modal() {
 
   return (
     <YStack flex={1} backgroundColor="#000000" padding={16}>
+      <LinearGradient
+        // Background Linear Gradient
+        colors={['rgba(0,0,0,0.8)', 'transparent']}
+        style={styles.background}
+      />
       <Input
         size="$4"
         borderWidth={1}
@@ -115,7 +121,7 @@ export default function Modal() {
                 );
                 if (detailedInfo) {
                   const detailedInfoString = JSON.stringify(detailedInfo);
-                  console.log("detailedInfoString", detailedInfoString);
+                  console.log('detailedInfoString', detailedInfoString);
                   router.push({
                     //@ts-ignore
                     pathname: `/crypto/${item.baseAddress}`,
@@ -153,3 +159,13 @@ export default function Modal() {
     </YStack>
   );
 }
+
+const styles = StyleSheet.create({
+  background: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    height: 300,
+  },
+});
