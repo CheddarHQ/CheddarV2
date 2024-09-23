@@ -159,6 +159,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 20,
+    fontFamily: 'Goldman'
   },
   profileContainer: {
     alignItems: 'center',

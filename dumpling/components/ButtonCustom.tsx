@@ -24,6 +24,7 @@ const styles = StyleSheet.create({
     elevation: 5, // Shadow for Android
   },
   buttonText: {
+    fontFamily: 'Goldman',
     fontSize: 18,
     fontWeight: 'bold',
     color: '#FFF',

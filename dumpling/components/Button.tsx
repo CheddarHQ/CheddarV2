@@ -11,7 +11,7 @@ type ButtonProps = {
 export const Button = forwardRef<TamaguiElement, ButtonProps>(({ title, ...tButtonProps }, ref) => {
   return (
     <TButton {...tButtonProps} ref={ref}>
-      <Text fontWeight={'bold'}>{title}</Text>
+      <Text fontFamily="Goldman" fontWeight={'bold'}>{title}</Text>
     </TButton>
   );
 });

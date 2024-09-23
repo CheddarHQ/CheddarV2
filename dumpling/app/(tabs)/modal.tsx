@@ -182,17 +182,15 @@ export default function Modal() {
                     </Avatar>
                     <YStack gap={4}>
                       <Text
-                        fontFamily={'Goldman'}
+                        fontFamily='Goldman'
                         color={'white'}
-                        fontFamily={'Goldman'}
                         fontWeight={700}
                         fontSize={14}>
                         {item.name}
                       </Text>
                       <Text
-                        fontFamily={'Goldman'}
+                        fontFamily='Goldman'
                         color={'#5D5D5D'}
-                        fontFamily={'Goldman'}
                         fontWeight={400}
                         fontSize={14}>
                         {item.symbol}
@@ -201,9 +199,8 @@ export default function Modal() {
                   </XStack>
                   <YStack gap={4}>
                     <Text
-                      fontFamily={'Goldman'}
+                      fontFamily='Goldman'
                       color={'white'}
-                      fontFamily={'Goldman'}
                       fontWeight={700}
                       fontSize={14}
                       alignSelf="flex-end">
@@ -214,9 +211,8 @@ export default function Modal() {
                         color: item.priceChange >= 0 ? '#00FF00' : '#FF0000',
                       }} */}
                     <Text
-                      fontFamily={'Goldman'}
+                      fontFamily='Goldman'
                       color={item.priceChange >= 0 ? '#00FF00' : '#FF0000'}
-                      fontFamily={'Goldman'}
                       fontSize={14}
                       fontWeight={400}
                       alignSelf="flex-end">
