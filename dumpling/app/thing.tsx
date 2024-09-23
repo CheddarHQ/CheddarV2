@@ -11,13 +11,9 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import Animated, {
-  useAnimatedScrollHandler,
-  useSharedValue,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-
 
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -28,7 +24,6 @@ import { Link } from 'expo-router';
 import { userAtom, messagesAtom } from '~/state/atoms';
 import { useRecoilState, useRecoilValue } from 'recoil';
 
-
 export interface MessageProps {
   key: string;
   text: string;
@@ -37,8 +32,8 @@ export interface MessageProps {
   sent: boolean;
 }
 
-interface Route{
-  params:string
+interface Route {
+  params: string;
 }
 
 function generateUUID() {
@@ -50,10 +45,10 @@ function generateUUID() {
 }
 
 export default function Chatroom() {
-  const route:RouteProp<ParamListBase> = useRoute();
-  
+  const route: RouteProp<ParamListBase> = useRoute();
+
   // const { username}  = route.params
-  const userProfile = useRecoilValue(userAtom)
+  const userProfile = useRecoilValue(userAtom);
   const username = userProfile.username;
 
   const [isConnected, setIsConnected] = useState(false);
@@ -70,9 +65,7 @@ export default function Chatroom() {
   });
 
   useEffect(() => {
-    const newWs = new WebSocket(
-      'ws://baklava.cheddar-io.workers.dev/api/room/testroom/websocket'
-    );
+    const newWs = new WebSocket('ws://baklava.cheddar-io.workers.dev/api/room/testroom/websocket');
 
     newWs.onopen = () => {
       console.log('WebSocket connected');
@@ -82,17 +75,16 @@ export default function Chatroom() {
     newWs.onmessage = (event) => {
       try {
         const messageData = JSON.parse(event.data);
-       
 
         if (messageData.type === 'heartbeat') {
           console.log('Heartbeat received');
           return;
         }
 
-        if(messageData.sender == 'Server'){
+        if (messageData.sender == 'Server') {
           return;
         }
-        
+
         if (messageData.type === 'message' || messageData.data) {
           const newMessage: MessageProps = {
             key: generateUUID(),
@@ -101,8 +93,7 @@ export default function Chatroom() {
             user: messageData.sender || 'Server',
             sent: true,
           };
-        
-         
+
           setMessages((prevMessages) => [...prevMessages, newMessage]);
         } else {
           console.log('Unhandled message type:', messageData.type);
@@ -144,64 +135,59 @@ export default function Chatroom() {
         user: username,
         sent: false,
       };
-  
+
       // Immediately add the message to the UI
       setMessages((prevMessages) => [...prevMessages, newMessage]);
-  
+
       // Clear the input text
       setInputText('');
-      
-  
+
       // Prepare the message to send
       const messageToSend = {
         type: 'message',
         data: inputText,
-        user: username   
+        user: username,
       };
 
-  
       // Send the message
       ws.send(JSON.stringify(messageToSend));
-  
+
       // Mark the message as sent after a short delay
       setTimeout(() => {
         setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg.key === messageKey ? { ...msg, sent: true } : msg
-          )
+          prevMessages.map((msg) => (msg.key === messageKey ? { ...msg, sent: true } : msg))
         );
       }, 500);
     }
   }
   const GridBackground = () => {
-  return (
-    <View style={styles.gridContainer}>
-      {[...Array(20)].map((_, i) => (
-        <LinearGradient
-          key={`v${i}`}
-          colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']} // Colorful gradient
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={[styles.gridLine, styles.vertical, { left: `${(i + 1) * 5}%` }]}
-        />
-      ))}
-      {[...Array(20)].map((_, i) => (
-        <LinearGradient
-          key={`h${i}`}
-          colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']} // Colorful gradient
-          start={{ x: 0, y: 0 }}
-          end={{ x: 2, y: 1 }}
-          style={[styles.gridLine, styles.horizontal, { top: `${(i + 1) * 5}%` }]}
-        />
-      ))}
-    </View>  
+    return (
+      <View style={styles.gridContainer}>
+        {[...Array(20)].map((_, i) => (
+          <LinearGradient
+            key={`v${i}`}
+            colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']} // Colorful gradient
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={[styles.gridLine, styles.vertical, { left: `${(i + 1) * 5}%` }]}
+          />
+        ))}
+        {[...Array(20)].map((_, i) => (
+          <LinearGradient
+            key={`h${i}`}
+            colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']} // Colorful gradient
+            start={{ x: 0, y: 0 }}
+            end={{ x: 2, y: 1 }}
+            style={[styles.gridLine, styles.horizontal, { top: `${(i + 1) * 5}%` }]}
+          />
+        ))}
+      </View>
     );
-};  
-return (
+  };
+  return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{ flex: 1 }}
-    >
+      style={{ flex: 1 }}>
       <YStack flex={1} backgroundColor="#000000">
         {/* Background layers */}
         <View style={[StyleSheet.absoluteFill, { zIndex: 0 }]}>
@@ -212,7 +198,7 @@ return (
             <GridBackground />
           </View>
         </View>
-  
+
         {/* Main content */}
         <View style={{ flex: 1, zIndex: 1 }}>
           {/* Header */}
@@ -222,8 +208,7 @@ return (
             paddingHorizontal="$4"
             alignItems="center"
             justifyContent="space-between"
-            paddingBottom="$3"
-          >
+            paddingBottom="$3">
             <Link href={'/analytics'}>
               <MaterialIcons name="query-stats" size={24} color="white" padding={5} />
             </Link>
@@ -234,30 +219,28 @@ return (
               fontFamily={'Press2P'}
               paddingTop={'$2'}
               paddingLeft={'$3'}
-              alignSelf="center"
-            >
+              alignSelf="center">
               CHEDDAR
             </Text>
             <Link href={'/modal'} asChild>
               <AntDesign name="pluscircle" size={24} color="white" />
             </Link>
           </XStack>
-  
+
           {/* Connection status */}
           <XStack justifyContent="space-between" paddingHorizontal="$4" paddingBottom="$2">
             <Text color={isConnected ? '#96ff64' : 'red'}>
               {isConnected ? 'Connected' : 'Disconnected'}
             </Text>
           </XStack>
-  
+
           {/* Chat messages */}
           <View style={{ flex: 1 }}>
             <Animated.ScrollView
               ref={scrollRef}
               scrollEventThrottle={16}
               onScroll={scrollHandler}
-              style={{ flex: 1 }}
-            >
+              style={{ flex: 1 }}>
               <MaskedView
                 maskElement={
                   <View style={{ backgroundColor: 'transparent' }}>
@@ -271,8 +254,7 @@ return (
                             alignSelf: item.mine ? 'flex-end' : 'flex-start',
                             opacity: item.sent ? 1 : 0.5,
                           },
-                        ]}
-                      >
+                        ]}>
                         <Text style={{ color: item.mine ? 'white' : '#111927' }}>{item.text}</Text>
                         <Text
                           style={{
@@ -280,15 +262,13 @@ return (
                             color: item.mine ? 'rgba(255,255,255,0.7)' : 'rgba(17,25,39,0.7)',
                             alignSelf: 'flex-end',
                             marginTop: 4,
-                          }}
-                        >
+                          }}>
                           {item.user} {!item.sent && '(Sending...)'}
                         </Text>
                       </View>
                     ))}
                   </View>
-                }
-              >
+                }>
                 <View style={{ flex: 1 }}>
                   <AnimatedLinearGradient
                     style={[
@@ -297,7 +277,7 @@ return (
                         transform: [{ translateY: scrollY }],
                       },
                     ]}
-                    colors={['#A38CF9','#FD84AA','#ba351f',  '#09E0FF']}
+                    colors={['#A38CF9', '#FD84AA', '#ba351f', '#09E0FF']}
                   />
                   <FlatList
                     scrollEnabled={false}
@@ -312,9 +292,10 @@ return (
                             alignSelf: item.mine ? 'flex-end' : 'flex-start',
                             opacity: item.sent ? 1 : 0.5,
                           },
-                        ]}
-                      >
-                        <Text color={'#fff'} style={{ color: 'white' }}>{item.text}</Text>
+                        ]}>
+                        <Text color={'#fff'} style={{ color: 'white' }}>
+                          {item.text}
+                        </Text>
                         <Text
                           color="white"
                           opacity={0.5}
@@ -323,8 +304,7 @@ return (
                             color: 'rgba(255,100,255,0.7)',
                             alignSelf: 'flex-end',
                             marginTop: 4,
-                          }}
-                        >
+                          }}>
                           {item.user} {!item.sent && '(Sending...)'}
                         </Text>
                       </View>
@@ -334,7 +314,7 @@ return (
               </MaskedView>
             </Animated.ScrollView>
           </View>
-  
+
           {/* Input area */}
           <XStack padding="$5" backgroundColor="rgba(0,0,0,0.5)">
             <Input
@@ -362,8 +342,7 @@ return (
                   onPress={sendMessage}
                   animation="quick"
                   enterStyle={{ opacity: 0, scale: 0.8 }}
-                  exitStyle={{ opacity: 0, scale: 0.8 }}
-                >
+                  exitStyle={{ opacity: 0, scale: 0.8 }}>
                   <Feather name="send" size={24} color="white" />
                 </Button>
               )}
@@ -374,7 +353,6 @@ return (
     </KeyboardAvoidingView>
   );
 }
-
 
 const styles = StyleSheet.create({
   messageItem: {
@@ -430,13 +408,13 @@ const styles = StyleSheet.create({
     pointerEvents: 'none',
   },
   gridContainer: {
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  right: 0,
-  bottom: 0,
-  opacity: 0.35,
-},
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    opacity: 0.35,
+  },
   gridLine: {
     position: 'absolute',
     backgroundColor: 'transparent',

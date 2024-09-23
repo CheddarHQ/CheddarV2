@@ -29,6 +29,7 @@ const animations = createAnimations({
 
 const headingFont = createInterFont();
 const bodyFont = createInterFont();
+const goldmanFont = createInterFont();
 
 export const Container = styled(YStack, {
   flex: 1,
@@ -85,14 +86,14 @@ const config = createTamagui({
       text: '#FFFFFF',
     },
   },
-  defaultFont: 'body',
+  defaultFont: 'Goldman',
   animations,
   shouldAddPrefersColorThemes: true,
   themeClassNameOnRoot: true,
   shorthands,
   fonts: {
-    body: bodyFont,
-    heading: headingFont,
+    body: goldmanFont,
+    heading: goldmanFont,
   },
   themes,
   tokens,

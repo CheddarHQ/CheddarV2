@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.GREY_2,
   },
   text: {
+    fontFamily: 'Goldman',
     fontSize: 16,
     lineHeight: 19,
     fontWeight: '600',

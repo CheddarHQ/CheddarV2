@@ -8,10 +8,7 @@
     "deepLinking": {
       "enabled": true
     },
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -21,15 +18,28 @@
       }
     },
     "plugins": [
-      "expo-router",
-      "expo-font",
       [
-        "expo-dev-launcher",
+        "expo-font",
         {
-          "launchMode": "most-recent"
+          "fonts": ["./assets/font/Goldman-Regular.ttf"]
         }
       ]
     ],
+    // "plugins": [
+    //   "expo-router",
+
+    //   "expo-font",
+    //   {
+    //     "fonts": ["./assets/font/Goldman-Regular.ttf"]
+    //   },
+    //   [
+    //     "expo-dev-launcher",
+    //     {
+    //       "launchMode": "most-recent"
+    //     }
+    //   ]
+    // ],
+
     "experiments": {
       "typedRoutes": true,
       "tsconfigPaths": true
@@ -42,16 +52,12 @@
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "infoPlist": {
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": [
-              "dumpling"
-            ]
+            "CFBundleURLSchemes": ["dumpling"]
           }
         ]
       },

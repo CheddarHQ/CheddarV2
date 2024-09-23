@@ -8,7 +8,7 @@ import { Container } from '~/components/Container';
 import { ScreenContent } from '~/components/ScreenContent';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Image } from 'tamagui';
-
+//C:\Users\Asus\Downloads\hygiene\Cheddar\dumpling\assets\CheddarLogo.png
 export default function Home() {
   return (
     <YStack
@@ -18,18 +18,15 @@ export default function Home() {
       justifyContent="space-between"
       alignContent="center"
       alignItems="center">
-      <AntDesign name="right" size={30} color="black" />
-      <XStack>
-        <Text
-          alignSelf="center"
-          //@ts-ignore
-          fontSize="80"
-          fontWeight="bold"
-          textDecorationColor={'#ffffff'}
-          marginTop="$10"
-          color={'#FFDF00'}>
-          Cheddar
-        </Text>
+      <AntDesign name="right" size={30} color="#0a0b0f" />
+      <XStack paddingTop="$5">
+        <Image
+          source={{
+            uri: require('../assets/CheddarLogo.png'),
+            width: 380,
+            height: 380,
+          }}
+        />
       </XStack>
       <Link href={'/loginPage'}>
         <XStack
@@ -46,4 +43,3 @@ export default function Home() {
     </YStack>
   );
 }
-

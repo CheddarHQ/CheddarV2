@@ -1,19 +1,14 @@
-import {
-  useFonts,
-  Poppins_100Thin,
-  Poppins_400Regular,
-  Poppins_700Bold,
-} from '@expo-google-fonts/poppins';
-import * as SplashScreen from 'expo-splash-screen'; // Add this if SplashScreen is not recognized
+import { useFonts, Goldman_400Regular, Goldman_700Bold } from '@expo-google-fonts/goldman';
+import * as SplashScreen from 'expo-splash-screen';
 import { Stack, SplashScreen as ExpoRouterSplashScreen } from 'expo-router';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 //@ts-ignore
 import { TamaguiProvider } from 'tamagui';
 import { StatusBar } from 'expo-status-bar';
-import { PortalProvider } from '@tamagui/portal';
-import config from '../tamagui.config';
 import { RecoilRoot } from 'recoil';
+import { Text } from './components/Text'; // Import custom Text component globally
+import config from '../tamagui.config';
 
 ExpoRouterSplashScreen.preventAutoHideAsync();
 
@@ -22,50 +17,41 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
-    Poppins_100Thin,
-    Poppins_400Regular,
-    Poppins_700Bold,
+  const [fontsLoaded] = useFonts({
+    Goldman_400Regular,
+    Goldman_700Bold,
     Jersey10: require('../assets/Jersey10-Regular.ttf'),
     Press2P: require('../assets/PressStart2P-Regular.ttf'),
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [fontsLoaded]);
 
-  if (!loaded) return null;
+  if (!fontsLoaded) return null;
 
   return (
     <RecoilRoot>
-
-    <TamaguiProvider config={config}>
-      <StatusBar style="auto" />
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="analytics" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen name="thing" options={{ headerShown: false }} />
-          <Stack.Screen name="loginPage" options={{ headerShown: false }} />
-          <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
-          <Stack.Screen
-            name="cryptoGraph"
-            options={{ headerShown: false, presentation: 'modal' }}
+      <TamaguiProvider config={config}>
+        <StatusBar style="auto" />
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
+            <Stack.Screen name="thing" options={{ headerShown: false }} />
+            <Stack.Screen name="loginPage" options={{ headerShown: false }} />
+            <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="cryptoGraph"
+              options={{ headerShown: false, presentation: 'modal' }}
             />
-          <Stack.Screen
-            name="modal"
-            options={{ title: 'Modal', headerShown: false, presentation: 'modal' }}
-            />
-          <Stack.Screen
-            name="moneyEx"
-            options={{ title: 'moneyEx', headerShown: false, presentation: 'modal' }}
-          />
-        </Stack>
-      </GestureHandlerRootView>
-    </TamaguiProvider>
+          </Stack>
+        </GestureHandlerRootView>
+      </TamaguiProvider>
     </RecoilRoot>
   );
 }
+
