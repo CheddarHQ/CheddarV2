@@ -9,7 +9,7 @@ const Slider = () => {
   const [index, setIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
 
-  const handleOnScroll = (event) => {
+  const handleOnScroll = (event: any) => {
     Animated.event(
       [
         {

@@ -1,10 +1,5 @@
-import {
-  useFonts,
-  Poppins_100Thin,
-  Poppins_400Regular,
-  Poppins_700Bold,
-} from '@expo-google-fonts/poppins';
-import * as SplashScreen from 'expo-splash-screen'; // Add this if SplashScreen is not recognized
+import { useFonts, Goldman_400Regular, Goldman_700Bold } from '@expo-google-fonts/goldman';
+import * as SplashScreen from 'expo-splash-screen';
 import { Stack, SplashScreen as ExpoRouterSplashScreen } from 'expo-router';
 import React, { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -23,9 +18,8 @@ export const unstable_settings = {
 
 export default function RootLayout() {
   const [loaded] = useFonts({
-    Poppins_100Thin,
-    Poppins_400Regular,
-    Poppins_700Bold,
+    Goldman_400Regular,
+    Goldman_700Bold,
     Jersey10: require('../assets/Jersey10-Regular.ttf'),
     Press2P: require('../assets/PressStart2P-Regular.ttf'),
   });

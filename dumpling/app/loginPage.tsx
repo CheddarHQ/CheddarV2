@@ -14,7 +14,7 @@ const loginPage = () => {
       <Slider />
       <YStack marginBottom="$6" gap="$10">
         <Auth />
-        <Text color={'#808080'} marginHorizontal="$3">
+        <Text fontFamily={'Goldman'} color={'#808080'} marginHorizontal="$3">
           By logging in or signing up, you agree to our Terms of Use and have read and agreed our
           Privacy Policy
         </Text>

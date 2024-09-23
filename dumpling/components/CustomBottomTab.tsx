@@ -70,6 +70,7 @@ const CustomBottomTab = ({ state, descriptors, navigation }: BottomTabBarProps) 
               <BottomTabIcon route={route.name} isFocused={isFocused} />
               {isFocused && (
                 <Text
+                  fontFamily={'Goldman'}
                   style={{
                     fontWeight: 'bold',
                     color: 'black',

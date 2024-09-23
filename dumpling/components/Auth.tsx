@@ -122,7 +122,9 @@ export default function Auth() {
       {userProfile.name ? (
         <View style={styles.container}>
           <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
-          <Text style={styles.title}>Welcome! {userProfile.name}</Text>
+          <Text fontFamily={'Goldman'} style={styles.title}>
+            Welcome! {userProfile.name}
+          </Text>
 
           <Link
             href={{

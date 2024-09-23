@@ -103,8 +103,16 @@ export default function Modal() {
       />
 
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        {loading && <Text style={{ color: '#FFFFFF' }}>Loading...</Text>}
-        {error && <Text style={{ color: '#FF0000' }}>Error: {error}</Text>}
+        {loading && (
+          <Text fontFamily={'Goldman'} style={{ color: '#FFFFFF' }}>
+            Loading...
+          </Text>
+        )}
+        {error && (
+          <Text fontFamily={'Goldman'} style={{ color: '#FF0000' }}>
+            Error: {error}
+          </Text>
+        )}
         {tokenData?.basicInfo && tokenData.basicInfo.length > 0 ? (
           tokenData.basicInfo.map((item, index) => (
             <Pressable
@@ -131,12 +139,17 @@ export default function Modal() {
                     <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                   </Avatar>
                   <YStack space={8} flex={1}>
-                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#FFFFFF' }}>
+                    <Text
+                      fontFamily={'Goldman'}
+                      style={{ fontSize: 18, fontWeight: 'bold', color: '#FFFFFF' }}>
                       {item.name}
                     </Text>
-                    <Text style={{ fontSize: 14, color: '#888888' }}>${item.priceUsd}</Text>
+                    <Text fontFamily={'Goldman'} style={{ fontSize: 14, color: '#888888' }}>
+                      ${item.priceUsd}
+                    </Text>
                   </YStack>
                   <Text
+                    fontFamily={'Goldman'}
                     style={{ fontSize: 14, color: item.priceChange >= 0 ? '#00FF00' : '#FF0000' }}>
                     {item.priceChange.toFixed(2)}%
                   </Text>
@@ -145,7 +158,9 @@ export default function Modal() {
             </Pressable>
           ))
         ) : (
-          <Text style={{ color: '#FFFFFF' }}>No data available</Text>
+          <Text fontFamily={'Goldman'} style={{ color: '#FFFFFF' }}>
+            No data available
+          </Text>
         )}
       </ScrollView>
       <StatusBar style={Platform.OS === 'ios' ? 'light' : 'auto'} />

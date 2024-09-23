@@ -11,7 +11,9 @@ const dummy = () => {
       alignItems="center"
       backgroundColor={'black'}>
       <XStack>
-        <Text color={'white'}>Dummy page</Text>
+        <Text fontFamily={'Goldman'} color={'white'}>
+          Dummy page
+        </Text>
       </XStack>
     </YStack>
   );

@@ -10,7 +10,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import MyCard from '~/components/MyCard';
 import { formatValue } from '~/components/FormatValue';
 import CopyIcon from '../../assets/svg/Vector.svg';
-import MyLoader from '~/components/LgSkeleton';
+import { MyLoader } from '~/components/LgSkeleton';
 import { Instagram } from 'react-content-loader';
 interface PriceHistoryPoint {
   date: Date;
@@ -192,7 +192,7 @@ const MyChart: React.FC = () => {
                         color={'white'}
                         fontWeight={'bold'}
                         fontSize={32}
-                        fontFamily={'poppins'}>
+                        fontFamily={'Goldman'}>
                         {tokenInfo.symbol}
                       </Text>
                       <XStack marginBottom="$2">
@@ -357,7 +357,7 @@ export const MyButton = (title: { title: string }) => {
       width={180}
       height={50}>
       <XStack alignContent="center" alignItems="center">
-        <Text color={'#0B0A0F'} fontFamily={'Poppins'} fontWeight={900} fontSize={24}>
+        <Text color={'#0B0A0F'} fontFamily={'Goldman'} fontWeight={900} fontSize={24}>
           {title.title}
         </Text>
       </XStack>

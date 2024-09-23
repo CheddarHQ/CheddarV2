@@ -32,7 +32,9 @@ const SlideItem = ({ item }: { item: any }) => {
       />
 
       <View style={styles.content}>
-        <Text style={styles.description}>{item.description}</Text>
+        <Text fontFamily={'Goldman'} style={styles.description}>
+          {item.description}
+        </Text>
       </View>
     </View>
   );
@@ -60,6 +62,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginVertical: 12,
     color: '#ffffff',
+    fontFamily: 'Goldman',
   },
   price: {
     fontSize: 32,
