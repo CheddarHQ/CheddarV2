@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRecoilState } from 'recoil';
+import { slippageAtom } from '~/state/atoms';
 
 const Settings = () => {
   const [secureSpeed, setSecureSpeed] = useState('Normal');
-  const [slippage, setSlippage] = useState('5%');
+  const [slippage, setSlippage] = useRecoilState(slippageAtom);
 
   return (
     <View style={styles.container}>
@@ -32,19 +34,28 @@ const Settings = () => {
       </View>
       
       <View style={styles.slippageContainer}>
-        {['0.1%', '1%', '5%'].map((value) => (
-          <TouchableOpacity 
+        {['0.3%', '0.5%', '1%'].map((value) => {
+          
+          let slip = 50;
+          if(value == '0.3%'){
+            slip = 30;
+          }
+          if(value == '1%'){
+            slip = 100
+          }
+
+          return <TouchableOpacity 
             key={value}
             style={[
               styles.slippageButton, 
-              slippage === value && styles.slippageButtonActive
+              slippage === slip && styles.slippageButtonActive
 
             ]}
-            onPress={() => setSlippage(value)}
+            onPress={() => setSlippage(slip)}
           >
-            <Text style={styles.slippageButtonText}>{value}</Text>
+            <Text style={slippage == slip ? styles.slippageButtonActiveText : styles.slippageButtonText}>{value}</Text>
           </TouchableOpacity>
-        ))}
+})}
       </View>
 
       <View style={styles.settingItem}>
@@ -134,10 +145,16 @@ const styles = StyleSheet.create({
   },
   slippageButtonActive: {
     backgroundColor: '#FFFF00',
+
+ 
   },
   slippageButtonText: {
     color: '#FFFFFF',
   },
+  slippageButtonActiveText: {
+    color : '#010409'
+  }
+
 });
 
 export default Settings;

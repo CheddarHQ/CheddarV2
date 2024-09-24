@@ -26,7 +26,7 @@ import {useRecoilValue, SetRecoilState} from "recoil"
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { saveConnectionDetails, getConnectionDetails, clearConnectionDetails } from '~/utils/asyncStorage';
 
-import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom, sharedSecretAtom, detailedInfoAtom, phantomSessionAtom} from "~/state/atoms"
+import {phantomStatus, phantomPublicKey, outputMintAtom, chainIdAtom, inputMintAtom, sharedSecretAtom, detailedInfoAtom, phantomSessionAtom, slippageAtom} from "~/state/atoms"
 
 import HorizontalTabs from '~/components/HorizontalTabs';
 
@@ -80,7 +80,7 @@ const MoneyEx = () => {
   const [deeplink, setDeepLink] = useState('');
   const [dappKeyPair] = useState(nacl.box.keyPair());
 
-
+  const slippage = useRecoilValue(slippageAtom)
 
   const setSharedSecret = useSetRecoilState<Uint8Array>(sharedSecretAtom);
 
@@ -92,6 +92,7 @@ const MoneyEx = () => {
   console.log("Loggin session using selector : ", session)
   console.log("Loggin phantomWalletPublicKey using selector : ", phantomWalletPublicKey)
   console.log("Loggin chainId using selector : ", chainId)
+  console.log("Slippage : ", slippage)
 
 
 
@@ -238,6 +239,7 @@ const MoneyEx = () => {
           bs58.decode(phantomPublicKey),
           dappKeyPair.secretKey
         );
+
         const connectData = decryptPayload(data, nonce, sharedSecretDapp);
 
         console.log("connect data public key : ", connectData.public_key);
@@ -269,6 +271,7 @@ const MoneyEx = () => {
         };
 
         console.log("Connection data to be saved : ", connectionData)
+
         const saveConnection = async ()=>{
           await saveConnectionDetails(connectionData);
         }
@@ -415,7 +418,7 @@ const performSwap = async () => {
               inputMint: inputMintAddress,
               outputMint: outputMintAddress,
               amount: 10000,
-              slippage: 50,
+              slippage: slippage,
               platformFees: 10,
           },
           // users public key
