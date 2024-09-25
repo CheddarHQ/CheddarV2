@@ -31,7 +31,7 @@ export default function Modal() {
   const [query, setQuery] = useState<string>('');
 
   const initialIds =
-    'D6NdKrKNQPmRZCCnG1GqXtF7MMoHB7qR6GU5TkG59Qz1,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,3ne4mWqdYuNiYrYZC9TrA3FcfuFdErghH97vNPbjicr1,AHTTzwf3GmVMJdxWM8v2MSxyjZj8rQR6hyAC3g9477Yj,5o9kGvozArYNWfbYTZD1WDRkPkkDr6LdpQbUUqM57nFJ,6DowxaYxUdjNJknq9Cjfc5dy4Mq8Vv4BHXXY4zn6LTQy,5eLRsN6qDQTQSBF8KdW4B8mVpeeAzHCCwaDptzMyszxH,9uWW4C36HiCTGr6pZW9VFhr9vdXktZ8NA8jVnzQU35pJ,E4ubbJDXU9y9FoAtSbfynJSbgiZzr4rgaGCCf6Mi4ki2';
+  'GfihScsf95v8G4TR73k2EcwXM2DrX63J7GX1i79GNbGs,FpjYwNjCStVE2Rvk9yVZsV46YwgNTFjp7ktJUDcZdyyk,HQQrpzTmt7KcGMf5E7RYgbDmz5izRxtHFCU9sZK6XANQ,HcPgh6B2yHNvT6JsEmkrHYT8pVHu9Xiaoxm4Mmn2ibWw,4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,6DowxaYxUdjNJknq9Cjfc5dy4Mq8Vv4BHXXY4zn6LTQy,5eLRsN6qDQTQSBF8KdW4B8mVpeeAzHCCwaDptzMyszxH,9uWW4C36HiCTGr6pZW9VFhr9vdXktZ8NA8jVnzQU35pJ,FvMZrD1qC66Zw8VPrW15xN1N5owUPqpQgNQ5oH18mR4E,H6fxtvWLFYSJ66mPJqoz7cg6tk32Pcgc9vXrywu4LEWk,6YkdU4KGwDEHFgS8ScS5dwfRXZAbL58FBAMTvsJvgDC5,AB1eu2L1Jr3nfEft85AuD2zGksUbam1Kr8MR3uM2sjwt,2qWwU2UxvGnKKMKFysoX81F4wDhGB8EThZrV9noLXVFL,Fv6LxMh9DZZ2Xc1yzkKKLeqEkPkdv1jmKjrJg2vE2HBg,6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp,2M8mTcrAMf7nrBbex2SNzzUfiBd8YXs7t3yS1dRvheyA';
   const router = useRouter();
 
   useEffect(() => {
@@ -54,6 +54,14 @@ export default function Modal() {
     }
 
     fetchMetadata(initialIds);
+
+
+    const intervalId = setInterval(()=>{
+      fetchMetadata(initialIds);
+    }, 300000 )
+
+
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -173,16 +181,24 @@ export default function Modal() {
                 style={{ backgroundColor: 'transparent' }}>
                 <XStack alignItems="center" alignContent="center" justifyContent="space-between">
                   <XStack gap={10}>
-                    <Avatar circular height={44}>
+                    <Avatar circular height={100}>
                       <Avatar.Image accessibilityLabel={`Token ${index + 1}`} src={item.imageUrl} />
                       <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                     </Avatar>
                     <YStack gap={4}>
-                      <Text fontFamily={'Goldman'} color={'white'} fontWeight={700} fontSize={14}>
-                        {item.name}
-                      </Text>
-                      <Text fontFamily={'Goldman'} color={'#5D5D5D'} fontWeight={400} fontSize={14}>
+                      <Text
+                        fontFamily='Goldman'
+                        color={'white'}
+                        fontWeight={700}
+                        fontSize={16}>
                         {item.symbol}
+                      </Text>
+                      <Text
+                        fontFamily='Goldman'
+                        color={'#5D5D5D'}
+                        fontWeight={400}
+                        fontSize={14}>
+                        {item.baseAddress.slice(0, 4)}...${item.baseAddress.slice(-4)}
                       </Text>
                     </YStack>
                   </XStack>

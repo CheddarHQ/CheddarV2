@@ -62,3 +62,9 @@ export const phantomSessionAtom = atom({
   key: 'phantomSession',
   default: '' as undefined | string,
 });
+
+
+export const slippageAtom = atom({
+  key : "slippageAtom",
+  default : 50
+})

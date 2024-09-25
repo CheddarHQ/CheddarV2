@@ -12,6 +12,8 @@ import { formatValue } from '~/components/FormatValue';
 import CopyIcon from '../../assets/svg/Vector.svg';
 import { MyLoader } from '~/components/LgSkeleton';
 import { Instagram } from 'react-content-loader';
+import { coinDirectory } from '~/utils/directory';
+
 interface PriceHistoryPoint {
   date: Date;
   value: number;
@@ -30,20 +32,31 @@ interface TokenInfo {
 type TimeRange = '30min' | '1hour' | '6hours' | '24hours';
 
 const formatCoinName = (name: string): string => {
+  if (name.toLowerCase().includes('popcat')) {
+    return 'popcat-sol';
+  }
   return name.toLowerCase().replace(/\s+/g, '-');
 };
+const fetchCoinId = (coinName: string): string | null => {
+  let coinEntry = coinDirectory.values.find(
+    (entry) => entry[1].toLowerCase() === coinName.toLowerCase()
+  );
 
-const fetchCoinId = async (coinName: string): Promise<string | null> => {
-  try {
-    const formattedName = formatCoinName(coinName);
-    const response = await fetch(`https://coinmarketcap.com/currencies/${formattedName}/`);
-    const html = await response.text();
-    const match = html.match(/\/static\/img\/coins\/\d+x\d+\/(\d+)\.png/);
-    return match ? match[1] : null;
-  } catch (error) {
-    console.error('Error fetching coin ID:', error);
-    return null;
+  if (!coinEntry) {
+    coinEntry = coinDirectory.values.find(
+      (entry) => entry[3].toLowerCase() === coinName.toLowerCase()
+    );
   }
+
+  if (!coinEntry) {
+    coinEntry = coinDirectory.values.find(
+      (entry) => 
+        entry[1].toLowerCase().includes(coinName.toLowerCase()) ||
+        entry[2].toLowerCase().includes(coinName.toLowerCase())
+    );
+  }
+  
+  return coinEntry ? coinEntry[0].toString() : null;
 };
 
 const fetchCoinData = async (coinId: string, range: string): Promise<PriceHistoryPoint[]> => {
