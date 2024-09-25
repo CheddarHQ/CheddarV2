@@ -186,16 +186,16 @@ export default function Modal() {
                 style={{ backgroundColor: 'transparent' }}>
                 <XStack alignItems="center" alignContent="center" justifyContent="space-between">
                   <XStack gap={10}>
-                    <Avatar circular height={44}>
+                    <Avatar circular height={60}>
                       <Avatar.Image accessibilityLabel={`Token ${index + 1}`} src={item.imageUrl} />
                       <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                     </Avatar>
                     <YStack gap={4}>
-                      <Text fontFamily="Goldman" color={'white'} fontWeight={700} fontSize={14}>
-                        {item.name}
+                      <Text fontFamily="Goldman" color={'white'} fontWeight={700} fontSize={16}>
+                        {item.symbol}
                       </Text>
                       <Text fontFamily="Goldman" color={'#5D5D5D'} fontWeight={400} fontSize={14}>
-                        {item.symbol}
+                      {item.baseAddress.slice(0, 4)}...${item.baseAddress.slice(-4)}
                       </Text>
                     </YStack>
                   </XStack>
