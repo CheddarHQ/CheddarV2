@@ -54,6 +54,16 @@ export default function Modal() {
     }
 
     fetchMetadata(initialIds);
+
+
+
+    const intervalId = setInterval(()=>{
+      fetchMetadata(initialIds);
+    }, 300000 )
+
+
+    return () => clearInterval(intervalId);
+
   }, []);
 
   useEffect(() => {
