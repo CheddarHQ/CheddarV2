@@ -12,19 +12,19 @@ const Settings = () => {
     <View style={styles.container}>
       <Text style={styles.title}>SETTINGS</Text>
       
-      <View style={styles.settingItem}>
+      {/* <View style={styles.settingItem}>
         <View style={styles.settingIcon}>
           <Ionicons name="reload-circle-outline" size={24} color="white" />
         </View>
         <Text style={styles.settingText}>Secure Speed</Text>
-      </View>
+      </View> */}
       
-      <TouchableOpacity 
+      {/* <TouchableOpacity 
         style={[styles.speedButton, { backgroundColor: '#FFFF00' }]}
         onPress={() => setSecureSpeed('Normal')}
       >
         <Text style={styles.buttonText}>Normal</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
 
       <View style={styles.settingItem}>
         <View style={styles.settingIcon}>
@@ -58,12 +58,12 @@ const Settings = () => {
 })}
       </View>
 
-      <View style={styles.settingItem}>
+      {/* <View style={styles.settingItem}>
         <View style={styles.settingIcon}>
           <Ionicons name="notifications-outline" size={24} color="white" />
         </View>
         <Text style={styles.settingText}>Subscribed to...</Text>
-      </View>
+      </View> */}
 
       <View style={styles.settingItem}>
         <View style={styles.settingIcon}>
@@ -79,12 +79,12 @@ const Settings = () => {
         <Text style={styles.settingText}>I need help</Text>
       </View>
 
-      <View style={styles.settingItem}>
+      {/* <View style={styles.settingItem}>
         <View style={styles.settingIcon}>
           <Ionicons name="log-out-outline" size={24} color="white" />
         </View>
         <Text style={styles.settingText}>Logout</Text>
-      </View>
+      </View> */}
     </View>
   );
 };
