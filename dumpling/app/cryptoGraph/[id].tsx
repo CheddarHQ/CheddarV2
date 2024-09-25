@@ -31,20 +31,23 @@ interface TokenInfo {
 
 type TimeRange = '30min' | '1hour' | '6hours' | '24hours';
 
-const findCoinEntry = (coinName: string): any[] | null => {
-  // Try to find an exact match by name
+const formatCoinName = (name: string): string => {
+  if (name.toLowerCase().includes('popcat')) {
+    return 'popcat-sol';
+  }
+  return name.toLowerCase().replace(/\s+/g, '-');
+};
+const fetchCoinId = (coinName: string): string | null => {
   let coinEntry = coinDirectory.values.find(
     (entry) => entry[1].toLowerCase() === coinName.toLowerCase()
   );
 
-  // If not found, try to match by slug
   if (!coinEntry) {
     coinEntry = coinDirectory.values.find(
       (entry) => entry[3].toLowerCase() === coinName.toLowerCase()
     );
   }
 
-  // If still not found, try to match partially by name or symbol
   if (!coinEntry) {
     coinEntry = coinDirectory.values.find(
       (entry) => 
@@ -53,27 +56,11 @@ const findCoinEntry = (coinName: string): any[] | null => {
     );
   }
   
-  return coinEntry;
-};
-
-const getCoinId = (coinName: string): string | null => {
-  const coinEntry = findCoinEntry(coinName);
   return coinEntry ? coinEntry[0].toString() : null;
 };
 
-const getCoinSlug = (coinName: string): string | null => {
-  const coinEntry = findCoinEntry(coinName);
-  return coinEntry ? coinEntry[3] : null;
-};
-
-const fetchCoinData = async (coinName: string, range: string): Promise<PriceHistoryPoint[]> => {
+const fetchCoinData = async (coinId: string, range: string): Promise<PriceHistoryPoint[]> => {
   try {
-    const coinId = getCoinId(coinName);
-    if (!coinId) {
-      console.error('Coin not found:', coinName);
-      return [];
-    }
-
     const response = await fetch(
       `https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=${coinId}&range=${range}`
     );
