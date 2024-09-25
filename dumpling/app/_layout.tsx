@@ -6,9 +6,9 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 //@ts-ignore
 import { TamaguiProvider } from 'tamagui';
 import { StatusBar } from 'expo-status-bar';
-import { PortalProvider } from '@tamagui/portal';
-import config from '../tamagui.config';
 import { RecoilRoot } from 'recoil';
+import { Text } from './components/Text'; // Import custom Text component globally
+import config from '../tamagui.config';
 
 ExpoRouterSplashScreen.preventAutoHideAsync();
 
@@ -17,7 +17,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     Goldman_400Regular,
     Goldman_700Bold,
     Jersey10: require('../assets/Jersey10-Regular.ttf'),
@@ -25,12 +25,12 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (loaded) {
+    if (fontsLoaded) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [fontsLoaded]);
 
-  if (!loaded) return null;
+  if (!fontsLoaded) return null;
 
   return (
     <RecoilRoot>
@@ -54,3 +54,4 @@ export default function RootLayout() {
     </RecoilRoot>
   );
 }
+

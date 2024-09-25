@@ -550,11 +550,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
+    fontFamily: 'Goldman', 
   },
   usdText: {
     fontSize: 16,
     color: '#888',
     textAlign: 'center',
+    fontFamily: 'Goldman',
   },
   tokenIcon: {
     width: 24,
@@ -566,6 +568,7 @@ const styles = StyleSheet.create({
   tokenText: {
     color: 'white',
     fontSize: 16,
+    fontFamily: 'Goldman', 
   },
   numButton: {
     width: width * 0.2,
@@ -577,6 +580,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: 'white',
     fontWeight: 'bold',
+    fontFamily: 'Goldman',
   },
   tabButton: {
     flex: 1,
@@ -592,9 +596,11 @@ const styles = StyleSheet.create({
     color: '#888',
     fontSize: 16,
     fontWeight: 'bold',
+    fontFamily: 'Goldman',
   },
   activeTabText: {
     color: 'black',
+    fontFamily: 'Goldman',
   },
   connectButton: {
     backgroundColor: '#00FF00',
@@ -606,11 +612,13 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 18,
     fontWeight: 'bold',
+    fontFamily: 'Goldman',
   },
   secureText: {
     color: '#888',
     fontSize: 14,
     textAlign: 'center',
+    fontFamily: 'Goldman',
   },
 });
 

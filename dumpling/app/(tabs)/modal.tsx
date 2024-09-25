@@ -182,17 +182,32 @@ export default function Modal() {
                       <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                     </Avatar>
                     <YStack gap={4}>
+<<<<<<< HEAD
                       <Text fontFamily={'Goldman'} color={'white'} fontWeight={700} fontSize={14}>
                         {item.name}
                       </Text>
                       <Text fontFamily={'Goldman'} color={'#5D5D5D'} fontWeight={400} fontSize={14}>
+=======
+                      <Text
+                        fontFamily='Goldman'
+                        color={'white'}
+                        fontWeight={700}
+                        fontSize={14}>
+                        {item.name}
+                      </Text>
+                      <Text
+                        fontFamily='Goldman'
+                        color={'#5D5D5D'}
+                        fontWeight={400}
+                        fontSize={14}>
+>>>>>>> 276da8a1fff77e9cfb6555063f3a200a224d5440
                         {item.symbol}
                       </Text>
                     </YStack>
                   </XStack>
                   <YStack gap={4}>
                     <Text
-                      fontFamily={'Goldman'}
+                      fontFamily='Goldman'
                       color={'white'}
                       fontWeight={700}
                       fontSize={14}
@@ -204,7 +219,7 @@ export default function Modal() {
                         color: item.priceChange >= 0 ? '#00FF00' : '#FF0000',
                       }} */}
                     <Text
-                      fontFamily={'Goldman'}
+                      fontFamily='Goldman'
                       color={item.priceChange >= 0 ? '#00FF00' : '#FF0000'}
                       fontSize={14}
                       fontWeight={400}
