@@ -489,9 +489,9 @@ const MoneyEx = () => {
         <Button2
           title={connectionStatus === 'connected' ? 'Disconnect' : 'Connect Phantom'}
           onPress={connectionStatus === 'connected' ? disconnect : connect}
-          disabled={['connecting', 'disconnecting'].includes(connectionStatus)}
+          diasabled={['connecting', 'disconnecting'].includes(connectionStatus)}
         />
-        {/* {connectionStatus === 'connected' && <Web3Button onPress={performSwap} />} */}
+        {/* {connectionStatus === 'conne  cted' && <Web3Button onPress={performSwap} />} */}
       </XStack>
       {phantomWalletPublicKey && (
         <View style={styles.wallet}>
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
-    fontFamily: 'Goldman', 
+    fontFamily: 'Goldman',
   },
   usdText: {
     fontSize: 16,
@@ -568,7 +568,7 @@ const styles = StyleSheet.create({
   tokenText: {
     color: 'white',
     fontSize: 16,
-    fontFamily: 'Goldman', 
+    fontFamily: 'Goldman',
   },
   numButton: {
     width: width * 0.2,

@@ -85,6 +85,7 @@ const MyChart: React.FC = () => {
           if (fetchedCoinId) {
             setCoinId(fetchedCoinId);
             const chartData = await fetchCoinData(fetchedCoinId, '1D');
+            console.log(chartData);
             setPriceHistory(chartData);
             setGraphLoading(false);
           }
@@ -157,7 +158,7 @@ const MyChart: React.FC = () => {
   }, [filteredPriceHistory]);
 
   const formatPriceTitle = useCallback((point: PriceHistoryPoint) => {
-    return `$${point.value.toFixed(2)}`;
+    return `$${point.value.toFixed(10)}`;
   }, []);
 
   const formatTimeTitle = useCallback((point: PriceHistoryPoint) => {

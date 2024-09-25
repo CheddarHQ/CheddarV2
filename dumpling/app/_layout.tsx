@@ -44,6 +44,7 @@ export default function RootLayout() {
             <Stack.Screen name="loginPage" options={{ headerShown: false }} />
             <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="userPage" options={{ headerShown: false }} />
             <Stack.Screen
               name="cryptoGraph"
               options={{ headerShown: false, presentation: 'modal' }}
@@ -54,4 +55,3 @@ export default function RootLayout() {
     </RecoilRoot>
   );
 }
-
