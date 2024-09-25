@@ -4,7 +4,7 @@ import { makeRedirectUri } from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { supabase } from '~/lib/supabase';
-import { Link } from 'expo-router';
+import { Link, useNavigation } from 'expo-router';
 import { Image } from 'tamagui';
 import { Button } from './Button';
 import { useRecoilState } from 'recoil';
@@ -87,6 +87,7 @@ const performOAuth = async () => {
 };
 
 export default function Auth() {
+  const navigation = useNavigation();
   const [userProfile, setUserProfile] = useRecoilState(userAtom);
 
   const url = Linking.useURL();
@@ -112,6 +113,8 @@ export default function Auth() {
         if (sessionData && sessionData.profile) {
           setUserProfile(sessionData.profile);
         }
+        //@ts-ignore
+        navigation.navigate(('(tabs)', { screen: 'Chat' }));
       }
     } catch (error) {
       console.error('Error during sign in:', error);
@@ -122,9 +125,7 @@ export default function Auth() {
       {userProfile.name ? (
         <View style={styles.container}>
           <Image source={{ uri: userProfile.avatar_url }} style={styles.avatar} />
-          <Text fontFamily={'Goldman'} style={styles.title}>
-            Welcome! {userProfile.name}
-          </Text>
+          <Text style={styles.title}>Welcome! {userProfile.name}</Text>
 
           <Link
             href={{

@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 60,
     elevation: 3,
-    backgroundColor: COLORS.PURPLE,
+    backgroundColor: 'transparent',
   },
   disabled: {
     backgroundColor: COLORS.GREY_2,
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     lineHeight: 19,
-    fontWeight: '600',
-    color: COLORS.WHITE,
+    fontWeight: '400',
+    color: COLORS.RED,
   },
 });

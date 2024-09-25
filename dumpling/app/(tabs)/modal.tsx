@@ -106,9 +106,10 @@ export default function Modal() {
             left={10}
             width={293}
             height={42}
+            paddingHorizontal={37}
             borderWidth={1}
             paddingVertical={9}
-            placeholder="       Search item here"
+            placeholder="Search item here"
             borderRadius={20}
             color="#FFFFFF"
             backgroundColor="#18191B"
@@ -181,20 +182,10 @@ export default function Modal() {
                       <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                     </Avatar>
                     <YStack gap={4}>
-                      <Text
-                        fontFamily={'Goldman'}
-                        color={'white'}
-                        fontFamily={'Goldman'}
-                        fontWeight={700}
-                        fontSize={14}>
+                      <Text fontFamily={'Goldman'} color={'white'} fontWeight={700} fontSize={14}>
                         {item.name}
                       </Text>
-                      <Text
-                        fontFamily={'Goldman'}
-                        color={'#5D5D5D'}
-                        fontFamily={'Goldman'}
-                        fontWeight={400}
-                        fontSize={14}>
+                      <Text fontFamily={'Goldman'} color={'#5D5D5D'} fontWeight={400} fontSize={14}>
                         {item.symbol}
                       </Text>
                     </YStack>
@@ -203,7 +194,6 @@ export default function Modal() {
                     <Text
                       fontFamily={'Goldman'}
                       color={'white'}
-                      fontFamily={'Goldman'}
                       fontWeight={700}
                       fontSize={14}
                       alignSelf="flex-end">
@@ -216,7 +206,6 @@ export default function Modal() {
                     <Text
                       fontFamily={'Goldman'}
                       color={item.priceChange >= 0 ? '#00FF00' : '#FF0000'}
-                      fontFamily={'Goldman'}
                       fontSize={14}
                       fontWeight={400}
                       alignSelf="flex-end">
