@@ -98,6 +98,7 @@ const MyChart: React.FC = () => {
           if (fetchedCoinId) {
             setCoinId(fetchedCoinId);
             const chartData = await fetchCoinData(fetchedCoinId, '1D');
+            console.log(chartData);
             setPriceHistory(chartData);
             setGraphLoading(false);
           }

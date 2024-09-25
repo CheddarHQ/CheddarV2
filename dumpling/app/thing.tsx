@@ -3,6 +3,7 @@ import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { ParamListBase, RouteProp, useRoute } from '@react-navigation/native';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -18,7 +19,7 @@ import MaskedView from '@react-native-masked-view/masked-view';
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
-import { YStack, XStack, Text, Input, Button, AnimatePresence } from 'tamagui';
+import { YStack, XStack, Text, Input, Button, AnimatePresence, Avatar } from 'tamagui';
 import { Link } from 'expo-router';
 // import GridComponent from '~/components/Grid';
 import { userAtom, messagesAtom } from '~/state/atoms';
@@ -50,6 +51,8 @@ export default function Chatroom() {
   // const { username}  = route.params
   const userProfile = useRecoilValue(userAtom);
   const username = userProfile.username;
+  const AvatarUrl = userProfile.avatar_url;
+  // this is showing undefined
 
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useRecoilState<MessageProps[]>(messagesAtom);
@@ -209,18 +212,27 @@ export default function Chatroom() {
             alignItems="center"
             justifyContent="space-between"
             paddingBottom="$3">
-            <Link href={'/analytics'}>
-              <MaterialIcons name="query-stats" size={24} color="white" padding={5} />
+            <Link href={'/(tabs)/Chat'}>
+              <XStack
+                backgroundColor={'#FFC300'}
+                height={35}
+                width={35}
+                alignContent="center"
+                alignItems="center"
+                justifyContent="center"
+                borderRadius={100}>
+                <AntDesign name="arrowleft" size={24} color="black" />
+              </XStack>
             </Link>
             <Text
               color="white"
-              fontSize="$8"
+              fontSize={30}
               fontWeight="bold"
-              fontFamily={'Press2P'}
+              fontFamily={'Poppins'}
               paddingTop={'$2'}
               paddingLeft={'$3'}
               alignSelf="center">
-              CHEDDAR
+              Global Chat
             </Text>
             <Link href={'/modal'} asChild>
               <AntDesign name="pluscircle" size={24} color="white" />
@@ -245,27 +257,44 @@ export default function Chatroom() {
                 maskElement={
                   <View style={{ backgroundColor: 'transparent' }}>
                     {messages.map((item) => (
-                      <View
+                      <XStack
                         key={item.key}
-                        style={[
-                          styles.messageItem,
-                          {
-                            backgroundColor: item.user === username ? 'white' : '#E4E7EB',
-                            alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                            opacity: item.sent ? 1 : 0.5,
-                          },
-                        ]}>
-                        <Text style={{ color: item.mine ? 'white' : '#111927' }}>{item.text}</Text>
-                        <Text
-                          style={{
-                            fontSize: 12,
-                            color: item.mine ? 'rgba(255,255,255,0.7)' : 'rgba(17,25,39,0.7)',
-                            alignSelf: 'flex-end',
-                            marginTop: 4,
-                          }}>
-                          {item.user} {!item.sent && '(Sending...)'}
-                        </Text>
-                      </View>
+                        alignItems="center"
+                        justifyContent={item.mine ? 'flex-end' : 'flex-start'}
+                        marginBottom="$2"
+                        paddingHorizontal="$3">
+                        {item.mine ? (
+                          <></>
+                        ) : (
+                          <Avatar circular size="$3" marginRight="$1">
+                            <Avatar.Image src={AvatarUrl} />
+                            <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
+                          </Avatar>
+                        )}
+
+                        <View
+                          style={[
+                            styles.messageItem,
+                            {
+                              backgroundColor: item.user === username ? 'white' : '#E4E7EB',
+                              alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                              opacity: item.sent ? 1 : 0.5,
+                            },
+                          ]}>
+                          <Text style={{ color: item.mine ? 'white' : '#111927' }}>
+                            {item.text}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: 12,
+                              color: item.mine ? 'rgba(255,255,255,0.7)' : 'rgba(17,25,39,0.7)',
+                              alignSelf: 'flex-end',
+                              marginTop: 4,
+                            }}>
+                            {item.user} {!item.sent && '(Sending...)'}
+                          </Text>
+                        </View>
+                      </XStack>
                     ))}
                   </View>
                 }>
@@ -284,30 +313,48 @@ export default function Chatroom() {
                     data={messages}
                     keyExtractor={(item) => item.key}
                     renderItem={({ item }) => (
-                      <View
-                        style={[
-                          styles.messageItem,
-                          {
-                            backgroundColor: item.mine ? 'transparent' : '#141414',
-                            alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                            opacity: item.sent ? 1 : 0.5,
-                          },
-                        ]}>
-                        <Text color={'#fff'} style={{ color: 'white' }}>
-                          {item.text}
-                        </Text>
-                        <Text
-                          color="white"
-                          opacity={0.5}
-                          style={{
-                            fontSize: 12,
-                            color: 'rgba(255,100,255,0.7)',
-                            alignSelf: 'flex-end',
-                            marginTop: 4,
-                          }}>
-                          {item.user} {!item.sent && '(Sending...)'}
-                        </Text>
-                      </View>
+                      <XStack
+                        key={item.key}
+                        alignItems="center"
+                        justifyContent={item.mine ? 'flex-end' : 'flex-start'}
+                        marginBottom="$2"
+                        paddingHorizontal="$3">
+                        {item.mine ? (
+                          <></>
+                        ) : (
+                          <Avatar circular size="$3" marginRight="$1">
+                            <Avatar.Image src={AvatarUrl} />
+                            <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
+                          </Avatar>
+                        )}
+                        <View
+                          style={[
+                            styles.messageItem,
+                            {
+                              backgroundColor: item.mine ? 'transparent' : '#141414',
+                              alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                              opacity: item.sent ? 1 : 0.5,
+                            },
+                          ]}>
+                          <YStack>
+                            <Text color={'#fff'} style={{ color: 'white' }}>
+                              {item.text}
+                            </Text>
+
+                            <Text
+                              color="white"
+                              opacity={0.5}
+                              style={{
+                                fontSize: 12,
+                                color: 'rgba(255,100,255,0.7)',
+                                alignSelf: 'flex-end',
+                                marginTop: 4,
+                              }}>
+                              {item.user} {!item.sent && '(Sending...)'}
+                            </Text>
+                          </YStack>
+                        </View>
+                      </XStack>
                     )}
                   />
                 </View>
@@ -321,14 +368,14 @@ export default function Chatroom() {
               flex={1}
               value={inputText}
               onChangeText={setInputText}
-              placeholder="Type a message..."
-              borderRadius="$8"
+              placeholder="Gm!... what we buyin today?"
+              borderRadius={15}
               height="$4"
               paddingHorizontal="$3"
               paddingRight={inputText ? '$8' : '$3'}
               onSubmitEditing={sendMessage}
-              backgroundColor="#ffffff"
-              color="#ffffff"
+              backgroundColor="#1D1E21"
+              color="#FFFFFF"
               fontWeight={500}
             />
             <AnimatePresence>
@@ -336,14 +383,15 @@ export default function Chatroom() {
                 <Button
                   position="absolute"
                   right="$6"
-                  bottom="$6"
-                  size="$3"
-                  circular
+                  bottom={32}
+                  size="$2"
+                  borderRadius={10}
+                  backgroundColor={'#FFCC00'}
                   onPress={sendMessage}
                   animation="quick"
                   enterStyle={{ opacity: 0, scale: 0.8 }}
                   exitStyle={{ opacity: 0, scale: 0.8 }}>
-                  <Feather name="send" size={24} color="white" />
+                  <Ionicons name="send" size={20} color="black" />
                 </Button>
               )}
             </AnimatePresence>

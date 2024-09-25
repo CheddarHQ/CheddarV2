@@ -153,11 +153,7 @@ export default function Modal() {
             <ThisLoader />
           </YStack>
         )}
-        {error && (
-          <Text fontFamily={'Goldman'} style={{ color: '#FF0000' }}>
-            Error: {error}
-          </Text>
-        )}
+        {error && <Text style={{ color: '#FF0000' }}>Error: {error}</Text>}
         {tokenData?.basicInfo && tokenData.basicInfo.length > 0 ? (
           tokenData.basicInfo.map((item, index) => (
             <Pressable
@@ -208,7 +204,7 @@ export default function Modal() {
                   </XStack>
                   <YStack gap={4}>
                     <Text
-                      fontFamily='Goldman'
+                      fontFamily="Goldman"
                       color={'white'}
                       fontWeight={700}
                       fontSize={14}
@@ -220,7 +216,7 @@ export default function Modal() {
                         color: item.priceChange >= 0 ? '#00FF00' : '#FF0000',
                       }} */}
                     <Text
-                      fontFamily='Goldman'
+                      fontFamily="Goldman"
                       color={item.priceChange >= 0 ? '#00FF00' : '#FF0000'}
                       fontSize={14}
                       fontWeight={400}

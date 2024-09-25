@@ -76,6 +76,8 @@
     "recoil": "^0.7.7",
     "tamagui": "1.74.8",
     "tweetnacl": "^1.0.3",
+    "victory": "^37.1.1",
+    "victory-native": "^41.4.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

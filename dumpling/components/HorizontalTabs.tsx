@@ -29,6 +29,8 @@ import { TokenBasicInfo } from '~/app/crypto/[id]';
 import { detailedInfoProps } from '~/state/atoms';
 import { phantomSelector } from '~/state/selectors';
 import { Goldman_400Regular } from '@expo-google-fonts/goldman';
+import AnimatedInput from './AnimateMoney';
+import AnimatedText from './AnimateMoney';
 
 interface HorizontalTabsProps {
   connectionStatus: string;
@@ -199,7 +201,7 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
         ['1', '2', '3'],
         ['4', '5', '6'],
         ['7', '8', '9'],
-        [' . ', ' 0', '←'],
+        ['.', '0', '←'],
       ].map((row, i) => (
         <XStack key={i} justifyContent="space-around" width="100%" maxWidth={360} marginBottom={10}>
           {row.map((num) => (
@@ -268,7 +270,7 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
       </Tabs.List>
       <Tabs.Content value="tab1" flex={1}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap={'$10'}>
-          <XStack justifyContent="center" alignItems="center" top={60}>
+          <XStack justifyContent="center" alignItems="center" top={50}>
             {tokenInfo && (
               <Avatar circular size={100}>
                 <Avatar.Image accessibilityLabel={tokenInfo.name} src={tokenInfo.imageUrl} />
@@ -276,10 +278,19 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
               </Avatar>
             )}
           </XStack>
-          <XStack justifyContent="center" alignItems="center" width="100%" maxWidth={360}>
-            <Animated.Text style={animatedStyle(buyInputLength)}>
+          <XStack
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+            maxWidth={360}
+            marginBottom={'$-18'}>
+            {/* <Animated.Text style={animatedStyle(buyInputLength)}>
               +{buyInput || '0'} SOL
-            </Animated.Text>
+            </Animated.Text> */}
+            <AnimatedText
+              style={{ fontSize: 30, color: 'white', fontFamily: 'Goldman' }} // Adjust styles as needed
+              displayValue={`+${buyInput || '0'}`}
+            />
           </XStack>
           {tokenInfo ? (
             <XStack marginBottom={'$-4'}>
@@ -294,7 +305,7 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
 
       <Tabs.Content value="tab2" flex={1}>
         <YStack flex={1} alignItems="center" justifyContent="center" gap={'$10'}>
-          <XStack justifyContent="center" alignItems="center" top={60}>
+          <XStack justifyContent="center" alignItems="center" top={50}>
             {tokenInfo && (
               <Avatar circular size={100}>
                 <Avatar.Image accessibilityLabel={tokenInfo.name} src={tokenInfo.imageUrl} />
@@ -302,10 +313,19 @@ const HorizontalTabs = ({ connectionStatus }: HorizontalTabsProps) => {
               </Avatar>
             )}
           </XStack>
-          <XStack justifyContent="center" alignItems="center" width="100%" maxWidth={360}>
-            <Animated.Text style={animatedStyle(sellInputLength)}>
+          <XStack
+            justifyContent="center"
+            alignItems="center"
+            width="100%"
+            maxWidth={360}
+            marginBottom={'$-18'}>
+            {/* <Animated.Text style={animatedStyle(sellInputLength)}>
               -{sellInput || '0'} SOL
-            </Animated.Text>
+            </Animated.Text> */}
+            <AnimatedText
+              style={{ fontSize: 32, color: 'white', fontFamily: 'Goldman' }} // Adjust styles as needed
+              displayValue={`-${sellInput || '0'}`}
+            />
           </XStack>
           {tokenInfo && (
             //   <XStack marginBottom={'$-4'}>
