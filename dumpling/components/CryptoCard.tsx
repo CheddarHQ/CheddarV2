@@ -36,7 +36,7 @@ interface CryptoCardProps {
                   fontSize: 20,
                   color: item.priceChange >= 0 ? '#00FF00' : '#FF0000',
                 }}>
-                {(parseFloat(input) / parseFloat(item.priceUsd)).toFixed(6)} {item.symbol}
+                {(parseFloat(input) / parseFloat(item.priceUsd)).toFixed(2)} {item.symbol}
               </Text>
             </XStack>
           </CardHeader>

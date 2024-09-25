@@ -157,7 +157,7 @@ const MyChart: React.FC = () => {
   }, [filteredPriceHistory]);
 
   const formatPriceTitle = useCallback((point: PriceHistoryPoint) => {
-    return `$${point.value.toFixed(2)}`;
+    return `$${point.value.toFixed(10)}`;
   }, []);
 
   const formatTimeTitle = useCallback((point: PriceHistoryPoint) => {
