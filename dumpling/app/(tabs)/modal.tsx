@@ -114,9 +114,10 @@ export default function Modal() {
             left={10}
             width={293}
             height={42}
+            paddingHorizontal={37}
             borderWidth={1}
             paddingVertical={9}
-            placeholder="       Search item here"
+            placeholder="Search item here"
             borderRadius={20}
             color="#FFFFFF"
             backgroundColor="#18191B"
@@ -189,6 +190,12 @@ export default function Modal() {
                       <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                     </Avatar>
                     <YStack gap={4}>
+<<<<<<< HEAD
+                      <Text fontFamily={'Goldman'} color={'white'} fontWeight={700} fontSize={14}>
+                        {item.name}
+                      </Text>
+                      <Text fontFamily={'Goldman'} color={'#5D5D5D'} fontWeight={400} fontSize={14}>
+=======
                       <Text
                         fontFamily='Goldman'
                         color={'white'}
@@ -201,6 +208,7 @@ export default function Modal() {
                         color={'#5D5D5D'}
                         fontWeight={400}
                         fontSize={14}>
+>>>>>>> 276da8a1fff77e9cfb6555063f3a200a224d5440
                         {item.symbol}
                       </Text>
                     </YStack>

@@ -32,9 +32,7 @@ const SlideItem = ({ item }: { item: any }) => {
       />
 
       <View style={styles.content}>
-        <Text fontFamily={'Goldman'} style={styles.description}>
-          {item.description}
-        </Text>
+        <Text style={styles.description}>{item.description}</Text>
       </View>
     </View>
   );
