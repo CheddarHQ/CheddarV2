@@ -12,6 +12,8 @@ import { formatValue } from '~/components/FormatValue';
 import CopyIcon from '../../assets/svg/Vector.svg';
 import { MyLoader } from '~/components/LgSkeleton';
 import { Instagram } from 'react-content-loader';
+import { coinDirectory } from '~/utils/directory';
+
 interface PriceHistoryPoint {
   date: Date;
   value: number;
@@ -29,25 +31,49 @@ interface TokenInfo {
 
 type TimeRange = '30min' | '1hour' | '6hours' | '24hours';
 
-const formatCoinName = (name: string): string => {
-  return name.toLowerCase().replace(/\s+/g, '-');
-};
+const findCoinEntry = (coinName: string): any[] | null => {
+  // Try to find an exact match by name
+  let coinEntry = coinDirectory.values.find(
+    (entry) => entry[1].toLowerCase() === coinName.toLowerCase()
+  );
 
-const fetchCoinId = async (coinName: string): Promise<string | null> => {
-  try {
-    const formattedName = formatCoinName(coinName);
-    const response = await fetch(`https://coinmarketcap.com/currencies/${formattedName}/`);
-    const html = await response.text();
-    const match = html.match(/\/static\/img\/coins\/\d+x\d+\/(\d+)\.png/);
-    return match ? match[1] : null;
-  } catch (error) {
-    console.error('Error fetching coin ID:', error);
-    return null;
+  // If not found, try to match by slug
+  if (!coinEntry) {
+    coinEntry = coinDirectory.values.find(
+      (entry) => entry[3].toLowerCase() === coinName.toLowerCase()
+    );
   }
+
+  // If still not found, try to match partially by name or symbol
+  if (!coinEntry) {
+    coinEntry = coinDirectory.values.find(
+      (entry) => 
+        entry[1].toLowerCase().includes(coinName.toLowerCase()) ||
+        entry[2].toLowerCase().includes(coinName.toLowerCase())
+    );
+  }
+  
+  return coinEntry;
 };
 
-const fetchCoinData = async (coinId: string, range: string): Promise<PriceHistoryPoint[]> => {
+const getCoinId = (coinName: string): string | null => {
+  const coinEntry = findCoinEntry(coinName);
+  return coinEntry ? coinEntry[0].toString() : null;
+};
+
+const getCoinSlug = (coinName: string): string | null => {
+  const coinEntry = findCoinEntry(coinName);
+  return coinEntry ? coinEntry[3] : null;
+};
+
+const fetchCoinData = async (coinName: string, range: string): Promise<PriceHistoryPoint[]> => {
   try {
+    const coinId = getCoinId(coinName);
+    if (!coinId) {
+      console.error('Coin not found:', coinName);
+      return [];
+    }
+
     const response = await fetch(
       `https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=${coinId}&range=${range}`
     );
