@@ -2,20 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Platform, ScrollView, Pressable, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
-<<<<<<< HEAD
-import { Input, Card, Avatar, YStack, XStack, Text, ZStack } from 'tamagui';
-=======
 import { Text, Input, Card, Avatar, YStack, XStack, ZStack } from 'tamagui';
->>>>>>> 276da8a1fff77e9cfb6555063f3a200a224d5440
 import { LinearGradient } from 'expo-linear-gradient';
 import { ThisLoader } from '~/components/LgSkeleton';
 import FilterIcon from '../../assets/svg/slider.svg';
 import MagIcon from '../../assets/svg/search.svg';
-<<<<<<< HEAD
-=======
 import { transcode } from 'buffer';
 
->>>>>>> 276da8a1fff77e9cfb6555063f3a200a224d5440
 interface TokenBasicInfo {
   name: string;
   baseAddress: string;
@@ -113,16 +106,9 @@ export default function Modal() {
             left={10}
             width={293}
             height={42}
-<<<<<<< HEAD
-            paddingHorizontal={37}
-            borderWidth={1}
-            paddingVertical={9}
-            placeholder="Search item here"
-=======
             borderWidth={1}
             paddingVertical={9}
             placeholder="       Search item here"
->>>>>>> 276da8a1fff77e9cfb6555063f3a200a224d5440
             borderRadius={20}
             color="#FFFFFF"
             backgroundColor="#18191B"
@@ -195,36 +181,17 @@ export default function Modal() {
                       <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                     </Avatar>
                     <YStack gap={4}>
-<<<<<<< HEAD
-                      <Text fontFamily={'Goldman'} color={'white'} fontWeight={700} fontSize={14}>
+                      <Text fontFamily="Goldman" color={'white'} fontWeight={700} fontSize={14}>
                         {item.name}
                       </Text>
-                      <Text fontFamily={'Goldman'} color={'#5D5D5D'} fontWeight={400} fontSize={14}>
-=======
-                      <Text
-                        fontFamily='Goldman'
-                        color={'white'}
-                        fontWeight={700}
-                        fontSize={14}>
-                        {item.name}
-                      </Text>
-                      <Text
-                        fontFamily='Goldman'
-                        color={'#5D5D5D'}
-                        fontWeight={400}
-                        fontSize={14}>
->>>>>>> 276da8a1fff77e9cfb6555063f3a200a224d5440
+                      <Text fontFamily="Goldman" color={'#5D5D5D'} fontWeight={400} fontSize={14}>
                         {item.symbol}
                       </Text>
                     </YStack>
                   </XStack>
                   <YStack gap={4}>
                     <Text
-<<<<<<< HEAD
-                      fontFamily={'Goldman'}
-=======
-                      fontFamily='Goldman'
->>>>>>> 276da8a1fff77e9cfb6555063f3a200a224d5440
+                      fontFamily="Goldman"
                       color={'white'}
                       fontWeight={700}
                       fontSize={14}
@@ -236,11 +203,7 @@ export default function Modal() {
                         color: item.priceChange >= 0 ? '#00FF00' : '#FF0000',
                       }} */}
                     <Text
-<<<<<<< HEAD
-                      fontFamily={'Goldman'}
-=======
-                      fontFamily='Goldman'
->>>>>>> 276da8a1fff77e9cfb6555063f3a200a224d5440
+                      fontFamily="Goldman"
                       color={item.priceChange >= 0 ? '#00FF00' : '#FF0000'}
                       fontSize={14}
                       fontWeight={400}
