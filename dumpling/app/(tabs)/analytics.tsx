@@ -31,7 +31,7 @@ export default function Modal() {
   const [query, setQuery] = useState<string>('');
 
   const initialIds =
-    'GfihScsf95v8G4TR73k2EcwXM2DrX63J7GX1i79GNbGs,FpjYwNjCStVE2Rvk9yVZsV46YwgNTFjp7ktJUDcZdyyk,HQQrpzTmt7KcGMf5E7RYgbDmz5izRxtHFCU9sZK6XANQ,HcPgh6B2yHNvT6JsEmkrHYT8pVHu9Xiaoxm4Mmn2ibWw,4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,6DowxaYxUdjNJknq9Cjfc5dy4Mq8Vv4BHXXY4zn6LTQy,5eLRsN6qDQTQSBF8KdW4B8mVpeeAzHCCwaDptzMyszxH,9uWW4C36HiCTGr6pZW9VFhr9vdXktZ8NA8jVnzQU35pJ,FvMZrD1qC66Zw8VPrW15xN1N5owUPqpQgNQ5oH18mR4E,H6fxtvWLFYSJ66mPJqoz7cg6tk32Pcgc9vXrywu4LEWk,AB1eu2L1Jr3nfEft85AuD2zGksUbam1Kr8MR3uM2sjwt,2qWwU2UxvGnKKMKFysoX81F4wDhGB8EThZrV9noLXVFL,Fv6LxMh9DZZ2Xc1yzkKKLeqEkPkdv1jmKjrJg2vE2HBg,6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp,2M8mTcrAMf7nrBbex2SNzzUfiBd8YXs7t3yS1dRvheyA';
+  'GfihScsf95v8G4TR73k2EcwXM2DrX63J7GX1i79GNbGs,FpjYwNjCStVE2Rvk9yVZsV46YwgNTFjp7ktJUDcZdyyk,HQQrpzTmt7KcGMf5E7RYgbDmz5izRxtHFCU9sZK6XANQ,HcPgh6B2yHNvT6JsEmkrHYT8pVHu9Xiaoxm4Mmn2ibWw,4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,6DowxaYxUdjNJknq9Cjfc5dy4Mq8Vv4BHXXY4zn6LTQy,5eLRsN6qDQTQSBF8KdW4B8mVpeeAzHCCwaDptzMyszxH,9uWW4C36HiCTGr6pZW9VFhr9vdXktZ8NA8jVnzQU35pJ,FvMZrD1qC66Zw8VPrW15xN1N5owUPqpQgNQ5oH18mR4E,H6fxtvWLFYSJ66mPJqoz7cg6tk32Pcgc9vXrywu4LEWk,AB1eu2L1Jr3nfEft85AuD2zGksUbam1Kr8MR3uM2sjwt,2qWwU2UxvGnKKMKFysoX81F4wDhGB8EThZrV9noLXVFL,Fv6LxMh9DZZ2Xc1yzkKKLeqEkPkdv1jmKjrJg2vE2HBg,6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp,2M8mTcrAMf7nrBbex2SNzzUfiBd8YXs7t3yS1dRvheyA';
   const router = useRouter();
 
   useEffect(() => {
@@ -55,11 +55,15 @@ export default function Modal() {
 
     fetchMetadata(initialIds);
 
-    const intervalId = setInterval(() => {
+
+
+    const intervalId = setInterval(()=>{
       fetchMetadata(initialIds);
-    }, 300000);
+    }, 300000 )
+
 
     return () => clearInterval(intervalId);
+
   }, []);
 
   useEffect(() => {
@@ -99,8 +103,8 @@ export default function Modal() {
   return (
     <YStack flex={1} backgroundColor="#111314" padding={16}>
       <LinearGradient
-        // Background Linear Gradient
-        colors={['transparent', 'rgba(63,43,150,0.6)']} // Transparent to violet
+
+        colors={['transparent', 'rgba(255,252,127,0.4)']} // Transparent to violet
         style={styles.background}
       />
       {/* width: 293px;height: 42px;top: 24px;left: 26px;padding: 9px 129px 9px 12px;gap:
@@ -109,7 +113,7 @@ export default function Modal() {
         <ZStack>
           <Input
             left={10}
-            width={350}
+            width={293}
             height={42}
             paddingHorizontal={37}
             borderWidth={1}
@@ -129,7 +133,7 @@ export default function Modal() {
         <XStack
           height={42}
           width={42}
-          left={500}
+          left={300}
           padding={9}
           marginLeft={8}
           alignContent="center"
@@ -138,7 +142,9 @@ export default function Modal() {
           borderWidth={1}
           borderRadius={50}
           backgroundColor={'#18191B'}
-          borderColor="rgba(255, 255, 255, 0.1)"></XStack>
+          borderColor="rgba(255, 255, 255, 0.1)">
+          <FilterIcon />
+        </XStack>
       </XStack>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {loading && (
@@ -189,7 +195,7 @@ export default function Modal() {
                         {item.symbol}
                       </Text>
                       <Text fontFamily="Goldman" color={'#5D5D5D'} fontWeight={400} fontSize={14}>
-                        {item.baseAddress.slice(0, 4)}...${item.baseAddress.slice(-4)}
+                      {item.baseAddress.slice(0, 4)}...${item.baseAddress.slice(-4)}
                       </Text>
                     </YStack>
                   </XStack>
