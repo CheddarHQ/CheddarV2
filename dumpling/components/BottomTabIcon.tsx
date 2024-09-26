@@ -1,8 +1,8 @@
 import React from 'react';
 import { View } from 'react-native';
 import HomeIcon from '../assets/svg/wallet.svg';
-import SettingIcon from '../assets/svg/swap.svg';
-import ProfileIcon from '../assets/svg/nft.svg';
+import SettingIcon from '../assets/svg/style6.svg';
+import ProfileIcon from '../assets/svg/chart.svg';
 import SearchIcon from '../assets/svg/discover.svg';
 
 interface Props {

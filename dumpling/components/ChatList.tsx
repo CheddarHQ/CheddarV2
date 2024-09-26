@@ -81,7 +81,7 @@ const ChatListWithHeader = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
+    backgroundColor: '#0a0a0f',
   },
   header: {
     height: 60,
