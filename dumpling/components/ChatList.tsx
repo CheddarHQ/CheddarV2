@@ -15,7 +15,8 @@ const ChatItem = ({ item }) => (
     <Image source={{ uri: item.avatar }} style={styles.avatar} />
     <Link href={{pathname:'/thing', params:{
       id: item.id,
-      chatName : item.name
+      chatName : item.name,
+      chatAvatar : item.avatar
     }}} style={{ flex: 1 }}>
       <View style={styles.chatInfo}>
         <View style={styles.chatHeader}>

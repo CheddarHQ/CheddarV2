@@ -4,6 +4,7 @@ import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { ParamListBase, RouteProp, useRoute } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Image } from 'tamagui';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -53,8 +54,9 @@ export default function Chatroom() {
   const username = userProfile.username;
   const AvatarUrl = userProfile.avatar_url;
   // this is showing undefined
-  const {chatName} = route.params;
-  console.log("chatName : ", chatName)
+  const {chatName, chatAvatar} = route.params;
+  
+  
 
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useRecoilState<MessageProps[]>(messagesAtom);
@@ -226,6 +228,7 @@ export default function Chatroom() {
                 <AntDesign name="arrowleft" size={24} color="black" />
               </XStack>
             </Link>
+            <Image source={{ uri: chatAvatar }} />
             <Text
               color="white"
               fontSize={30}
