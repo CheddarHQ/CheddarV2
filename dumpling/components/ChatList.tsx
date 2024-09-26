@@ -5,11 +5,19 @@ import telegramData from '~/data/telegramData';
 import { Avatar, YStack } from 'tamagui';
 import { BlurView } from 'expo-blur';
 import { Link } from 'expo-router';
+import { userAtom } from '~/state/atoms';
+import { useRecoilValue } from 'recoil';
+
+
 
 const ChatItem = ({ item }) => (
   <View style={styles.chatItem}>
     <Image source={{ uri: item.avatar }} style={styles.avatar} />
-    <Link href={'/thing'} style={{ flex: 1 }}>
+    <Link href={{pathname:'/thing', params:{
+      id: item.id,
+      chatName : item.name,
+      chatAvatar : item.avatar
+    }}} style={{ flex: 1 }}>
       <View style={styles.chatInfo}>
         <View style={styles.chatHeader}>
           <Text style={styles.name}>{item.name}</Text>
@@ -23,22 +31,28 @@ const ChatItem = ({ item }) => (
   </View>
 );
 
-const Header = () => (
-  <BlurView intensity={50} tint="dark" style={styles.header}>
+const Header = () =>{
+
+  const user = useRecoilValue(userAtom)
+
+  const imageUrl = user.avatar_url
+  
+  return  <BlurView intensity={50} tint="dark" style={styles.header}>
     <Text style={styles.headerTitle}>Chats</Text>
     <TouchableOpacity onPress={() => alert('Settings button pressed')}>
       <Link href={'/userPage'}>
         <Avatar circular size="$4">
           <Avatar.Image
             accessibilityLabel="Cam"
-            src="https://images.unsplash.com/photo-1548142813-c348350df52b?&w=150&h=150&dpr=2&q=80"
+            src={imageUrl}
           />
           <Avatar.Fallback backgroundColor="$blue10" />
         </Avatar>
       </Link>
     </TouchableOpacity>
   </BlurView>
-);
+}
+
 
 const ChatListWithHeader = () => {
   return (
@@ -46,10 +60,18 @@ const ChatListWithHeader = () => {
       <Header />
       <FlatList
         data={telegramData}
-        renderItem={({ item }) => <ChatItem item={item} />}
+        renderItem={({ item }) =>{
+        
+        console.log("chatlist : ")
+        console.log(item)
+        
+         return <ChatItem item={item} />}}
         keyExtractor={(item) => item.key}
+
+        
       />
-    </SafeAreaView>
+        
+      </SafeAreaView>
   );
 };
 
