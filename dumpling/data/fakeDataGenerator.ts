@@ -4,7 +4,7 @@ const cryptocurrencies = ['Global Chat', 'Bitcoin Chat', 'Solana Chat'];
 const avatars = [
   'https://res.cloudinary.com/dm1hjrsc2/image/upload/v1726903012/pixel-8-bit-uppercase-letter-c-as-font-vector-47463240_1_c2aucj.png',
   'https://cryptologos.cc/logos/bitcoin-btc-logo.png', // Bitcoin
-  'https://cryptologos.cc/logos/solana-sol-logo.png', // Solana
+  'https://upload.wikimedia.org/wikipedia/en/b/b9/Solana_logo.png', // Solana
 ];
 
 // Hardcoded messages

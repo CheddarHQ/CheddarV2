@@ -114,7 +114,6 @@ export default function Auth() {
           setUserProfile(sessionData.profile);
         }
         //@ts-ignore
-        navigation.navigate(('(tabs)', { screen: 'Chat' }));
       }
     } catch (error) {
       console.error('Error during sign in:', error);
@@ -158,7 +157,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 20,
-    fontFamily: 'Goldman'
+    fontFamily: 'Goldman',
   },
   profileContainer: {
     alignItems: 'center',

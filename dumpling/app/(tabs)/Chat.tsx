@@ -11,7 +11,7 @@ const homePage = () => {
     navigation.navigate('thing');
   }
   return (
-    <YStack backgroundColor={'#000000'} minHeight={'screen'} flex={1}>
+    <YStack backgroundColor={'#0a0a0f'} minHeight={'screen'} flex={1}>
       <SimplifiedChatList onPressHandler={onPressHandler} />
     </YStack>
   );
