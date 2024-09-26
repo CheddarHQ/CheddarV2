@@ -215,7 +215,8 @@ const MyChart: React.FC = () => {
                     </XStack>
                   </XStack>
                   <XStack marginBottom="$-4">
-                    <Text color={'white'} opacity={0.5} fontWeight={600} alignSelf="center">
+                    <Text color={'white'} opacity={0.5} fontWeight={600} alignSelf="center" 
+                    fontFamily={'Goldman'}>
                       {tokenInfo.name}
                     </Text>
                   </XStack>
@@ -225,21 +226,25 @@ const MyChart: React.FC = () => {
           </Card>
           {displayPoint && (
             <YStack alignItems="flex-start" marginLeft="$4" marginBottom="$2">
-              <Text color={'#fff'} fontSize={32} fontWeight={'bold'}>
+              <Text color={'#fff'} fontSize={32} fontWeight={'bold'} fontFamily={'Goldman'}>
                 {formatPriceTitle(displayPoint)}
               </Text>
               {percentageChange >= 0 ? (
                 <XStack gap={4}>
                   <FontAwesome name="caret-up" size={20} color="#4caf50" />
-                  <Text color={'#4caf50'}>{percentageChange.toFixed(2)}%</Text>
+                  <Text color={'#4caf50'} fontFamily={'Goldman'}>
+                  {percentageChange.toFixed(2)}%
+                  </Text>
                 </XStack>
               ) : (
                 <XStack gap={4}>
                   <FontAwesome name="caret-down" size={20} color="#f44336" />
-                  <Text color={'#f44336'}>{percentageChange.toFixed(2)}%</Text>
+                  <Text color={'#f44336'} fontFamily={'Goldman'}>
+                  {percentageChange.toFixed(2)}%
+                  </Text>
                 </XStack>
               )}
-              <Text style={styles.infoText} color={'#fff'}>
+              <Text style={styles.infoText} color={'#fff'} fontFamily={'Goldman'}>
                 {formatTimeTitle(displayPoint)}
               </Text>
             </YStack>
@@ -264,28 +269,28 @@ const MyChart: React.FC = () => {
           <TouchableOpacity
             style={[styles.button, timeRange === '30min' && styles.activeButton]}
             onPress={() => setTimeRange('30min')}>
-            <Text style={styles.buttonText} color={'#fff'}>
+            <Text style={styles.buttonText} color={'#fff'} fontFamily={'Goldman'}>
               30m
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, timeRange === '1hour' && styles.activeButton]}
             onPress={() => setTimeRange('1hour')}>
-            <Text style={styles.buttonText} color={'#fff'}>
+            <Text style={styles.buttonText} color={'#fff'} fontFamily={'Goldman'}>
               1hr
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, timeRange === '6hours' && styles.activeButton]}
             onPress={() => setTimeRange('6hours')}>
-            <Text style={styles.buttonText} color={'#fff'}>
+            <Text style={styles.buttonText} color={'#fff'} fontFamily={'Goldman'}>
               6hr
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, timeRange === '24hours' && styles.activeButton]}
             onPress={() => setTimeRange('24hours')}>
-            <Text style={styles.buttonText} color={'#fff'}>
+            <Text style={styles.buttonText} color={'#fff'} fontFamily={'Goldman'}>
               1D
             </Text>
           </TouchableOpacity>
@@ -315,7 +320,7 @@ const MyChart: React.FC = () => {
           </XStack>
         )}
         <XStack alignContent="center" justifyContent="center">
-          <Text color={'white'} opacity={0.5} fontWeight={600} fontSize={14}>
+          <Text color={'white'} opacity={0.5} fontWeight={600} fontSize={14} fontFamily={'Goldman'}>
             The pool is dry... make it rain ETH!
           </Text>
         </XStack>

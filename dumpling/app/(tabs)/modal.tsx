@@ -153,7 +153,8 @@ export default function Modal() {
             <ThisLoader />
           </YStack>
         )}
-        {error && <Text style={{ color: '#FF0000' }}>Error: {error}</Text>}
+        {error && <Text style={{ color: '#FF0000', fontFamily:'Goldman' }} 
+        >Error: {error}</Text>}
         {tokenData?.basicInfo && tokenData.basicInfo.length > 0 ? (
           tokenData.basicInfo.map((item, index) => (
             <Pressable
