@@ -53,6 +53,8 @@ export default function Chatroom() {
   const username = userProfile.username;
   const AvatarUrl = userProfile.avatar_url;
   // this is showing undefined
+  const {chatName} = route.params;
+  console.log("chatName : ", chatName)
 
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useRecoilState<MessageProps[]>(messagesAtom);
@@ -68,7 +70,7 @@ export default function Chatroom() {
   });
 
   useEffect(() => {
-    const newWs = new WebSocket('ws://baklava.cheddar-io.workers.dev/api/room/testroom/websocket');
+    const newWs = new WebSocket(`ws://baklava.cheddar-io.workers.dev/api/room/${chatName}/websocket`);
 
     newWs.onopen = () => {
       console.log('WebSocket connected');
@@ -232,7 +234,7 @@ export default function Chatroom() {
               paddingTop={'$2'}
               paddingLeft={'$3'}
               alignSelf="center">
-              Global Chat
+              {chatName}
             </Text>
             <Link href={'/modal'} asChild>
               <AntDesign name="pluscircle" size={24} color="white" />
