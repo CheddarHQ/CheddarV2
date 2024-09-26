@@ -8,20 +8,22 @@ import { Link } from 'expo-router';
 import { userAtom } from '~/state/atoms';
 import { useRecoilValue } from 'recoil';
 
-
-
 const ChatItem = ({ item }) => (
   <View style={styles.chatItem}>
     <Image source={{ uri: item.avatar }} style={styles.avatar} />
-    <Link href={{pathname:'/thing', params:{
-      id: item.id,
-      chatName : item.name,
-      chatAvatar : item.avatar
-    }}} style={{ flex: 1 }}>
+    <Link
+      href={{
+        pathname: '/thing',
+        params: {
+          id: item.id,
+          chatName: item.name,
+          chatAvatar: item.avatar,
+        },
+      }}
+      style={{ flex: 1 }}>
       <View style={styles.chatInfo}>
         <View style={styles.chatHeader}>
           <Text style={styles.name}>{item.name}</Text>
-          <Text style={styles.date}>{new Date(item.date).toDateString()}</Text>
         </View>
         <Text style={styles.message} numberOfLines={2}>
           {item.message}
@@ -31,28 +33,32 @@ const ChatItem = ({ item }) => (
   </View>
 );
 
-const Header = () =>{
+const Header = () => {
+  const user = useRecoilValue(userAtom);
 
-  const user = useRecoilValue(userAtom)
+  const imageUrl = user.avatar_url;
+  const fallbackImageUrl =
+    'https://europe1.discourse-cdn.com/figma/original/3X/6/1/6173a1aae8372541cfe858bbadccf198e2935f89.gif';
 
-  const imageUrl = user.avatar_url
-  
-  return  <BlurView intensity={50} tint="dark" style={styles.header}>
-    <Text style={styles.headerTitle}>Chats</Text>
-    <TouchableOpacity onPress={() => alert('Settings button pressed')}>
-      <Link href={'/userPage'}>
-        <Avatar circular size="$4">
-          <Avatar.Image
-            accessibilityLabel="Cam"
-            src={imageUrl}
-          />
-          <Avatar.Fallback backgroundColor="$blue10" />
-        </Avatar>
-      </Link>
-    </TouchableOpacity>
-  </BlurView>
-}
-
+  return (
+    <BlurView intensity={50} tint="dark" style={styles.header}>
+      <Text style={styles.headerTitle}>Chats</Text>
+      <TouchableOpacity onPress={() => alert('Settings button pressed')}>
+        <Link href={'/userPage'}>
+          <Avatar circular size="$4">
+            <Avatar.Image accessibilityLabel="Profile Picture" src={imageUrl} />
+            <Avatar.Fallback backgroundColor="black">
+              <Image
+                source={{ uri: fallbackImageUrl }}
+                style={{ width: '100%', height: '100%', borderRadius: 20 }} // Adjust styles as needed
+              />
+            </Avatar.Fallback>
+          </Avatar>
+        </Link>
+      </TouchableOpacity>
+    </BlurView>
+  );
+};
 
 const ChatListWithHeader = () => {
   return (
@@ -60,18 +66,15 @@ const ChatListWithHeader = () => {
       <Header />
       <FlatList
         data={telegramData}
-        renderItem={({ item }) =>{
-        
-        console.log("chatlist : ")
-        console.log(item)
-        
-         return <ChatItem item={item} />}}
-        keyExtractor={(item) => item.key}
+        renderItem={({ item }) => {
+          console.log('chatlist : ');
+          console.log(item);
 
-        
+          return <ChatItem item={item} />;
+        }}
+        keyExtractor={(item) => item.key}
       />
-        
-      </SafeAreaView>
+    </SafeAreaView>
   );
 };
 
@@ -118,13 +121,15 @@ const styles = StyleSheet.create({
   name: {
     fontWeight: 'bold',
     color: 'white',
+    fontFamily: 'Goldman',
+    fontSize: 18,
   },
   date: {
     fontSize: 12,
     color: '#888',
   },
   message: {
-    color: '#555',
+    color: '#037EE5',
   },
 });
 

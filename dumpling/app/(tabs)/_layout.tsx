@@ -51,12 +51,6 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="dummy"
-        options={{
-          title: 'NotCool',
-        }}
-      />
-      <Tabs.Screen
         name="analytics"
         options={{
           title: 'Analytics',
