@@ -4,7 +4,7 @@ import Feather from '@expo/vector-icons/Feather';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { ParamListBase, RouteProp, useRoute } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { Image } from 'tamagui';
+import { Image } from 'react-native';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -27,16 +27,15 @@ import { userAtom, messagesAtom } from '~/state/atoms';
 import { useRecoilState, useRecoilValue } from 'recoil';
 
 export interface MessageProps {
-  key: string;
-  text: string;
-  mine: boolean;
-  user: string;
-  sent: boolean;
+  key: string,
+  text: string,
+  mine: boolean,
+  user: string,
+  avatar: string,
+  sent: boolean,
 }
 
-interface Route {
-  params: string;
-}
+
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -54,7 +53,7 @@ export default function Chatroom() {
   const username = userProfile.username;
   const AvatarUrl = userProfile.avatar_url;
   // this is showing undefined
-  const {chatName, chatAvatar} = route.params;
+  const {chatName, chatAvatar}  = route.params;
   
   
 
@@ -73,6 +72,9 @@ export default function Chatroom() {
 
   useEffect(() => {
     const newWs = new WebSocket(`ws://baklava.cheddar-io.workers.dev/api/room/${chatName}/websocket`);
+
+
+    // const newWs = new WebSocket(`ws://localhost:8787/api/room/p/websocket`)
 
     newWs.onopen = () => {
       console.log('WebSocket connected');
@@ -98,6 +100,7 @@ export default function Chatroom() {
             text: messageData.data || messageData.message || JSON.stringify(messageData),
             mine: messageData.sender === username,
             user: messageData.sender || 'Server',
+            avatar : messageData.avatar,
             sent: true,
           };
 
@@ -135,11 +138,12 @@ export default function Chatroom() {
   function sendMessage() {
     if (inputText.trim() && ws) {
       const messageKey = generateUUID();
-      const newMessage: Message = {
+      const newMessage: MessageProps = {
         key: messageKey,
         text: inputText,
         mine: true,
         user: username,
+        avatar : AvatarUrl,
         sent: false,
       };
 
@@ -154,6 +158,7 @@ export default function Chatroom() {
         type: 'message',
         data: inputText,
         user: username,
+        avatar : AvatarUrl,
       };
 
       // Send the message
@@ -228,7 +233,8 @@ export default function Chatroom() {
                 <AntDesign name="arrowleft" size={24} color="black" />
               </XStack>
             </Link>
-            <Image source={{ uri: chatAvatar }} />
+            {console.log("chatAvatar : ", chatAvatar)}
+            <Image source={{ uri: chatAvatar }}  style={styles.avatar}/>
             <Text
               color="white"
               fontSize={30}
@@ -261,7 +267,12 @@ export default function Chatroom() {
               <MaskedView
                 maskElement={
                   <View style={{ backgroundColor: 'transparent' }}>
-                    {messages.map((item) => (
+                    {messages.map((item) => {
+
+                      const userAvatar = item.avatar;
+                      console.log("userAvatar : ", userAvatar)
+
+                      return (
                       <XStack
                         key={item.key}
                         alignItems="center"
@@ -272,7 +283,8 @@ export default function Chatroom() {
                           <></>
                         ) : (
                           <Avatar circular size="$3" marginRight="$1">
-                            <Avatar.Image src={AvatarUrl} />
+                           {/* this has to be changed for each incoming message from different users */}
+                            <Avatar.Image src={userAvatar} />
                             <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                           </Avatar>
                         )}
@@ -300,7 +312,7 @@ export default function Chatroom() {
                           </Text>
                         </View>
                       </XStack>
-                    ))}
+                    )})}
                   </View>
                 }>
                 <View style={{ flex: 1 }}>
@@ -317,7 +329,12 @@ export default function Chatroom() {
                     scrollEnabled={false}
                     data={messages}
                     keyExtractor={(item) => item.key}
-                    renderItem={({ item }) => (
+                    renderItem={({ item }) => {
+
+
+                      const userAvatar = item.avatar;
+
+                      return (
                       <XStack
                         key={item.key}
                         alignItems="center"
@@ -328,7 +345,7 @@ export default function Chatroom() {
                           <></>
                         ) : (
                           <Avatar circular size="$3" marginRight="$1">
-                            <Avatar.Image src={AvatarUrl} />
+                            <Avatar.Image src={userAvatar} />
                             <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                           </Avatar>
                         )}
@@ -360,7 +377,7 @@ export default function Chatroom() {
                           </YStack>
                         </View>
                       </XStack>
-                    )}
+                    )}}
                   />
                 </View>
               </MaskedView>
@@ -417,6 +434,12 @@ const styles = StyleSheet.create({
     maxWidth: width * 0.65,
     minWidth: 100,
     alignSelf: 'flex-start',
+  },
+  avatar: {
+    width: 20,
+    height: 20,
+    borderRadius: 25,
+    marginLeft: 15,
   },
   topBackgroundLayer: {
     position: 'absolute',

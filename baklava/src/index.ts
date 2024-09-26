@@ -168,6 +168,7 @@ export class durableSocketServer extends DurableObject {
       try {
         const message = JSON.parse(event.data as string);
         const user = message.user;
+        const avatarUrl = message.avatar;
         console.log(`Received message from client ${user}:`, message.data);
 
         const client = this.clients.get(clientId);
@@ -185,7 +186,7 @@ export class durableSocketServer extends DurableObject {
         }
 
         // Store the new message
-        const newMessage = { type: "message", sender: user, data: message.data, timestamp: new Date().toISOString(), clientId : clientId };
+        const newMessage = { type: "message", sender: user, avatar :avatarUrl, data: message.data, timestamp: new Date().toISOString(), clientId : clientId };
 
         const MAX_MESSAGES = 20; 
         if (oldMessages.length >= MAX_MESSAGES) {
