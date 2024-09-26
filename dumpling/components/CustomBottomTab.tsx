@@ -66,19 +66,13 @@ const CustomBottomTab = ({ state, descriptors, navigation }: BottomTabBarProps) 
               alignContent: 'center',
               alignItems: 'center',
             }}>
-            <XStack justifyContent="center" alignContent="center" alignItems="center" gap="2">
+            <XStack
+              justifyContent="center"
+              alignContent="center"
+              alignItems="center"
+              gap="2"
+              opacity={isFocused ? 1 : 0.5}>
               <BottomTabIcon route={route.name} isFocused={isFocused} />
-              {isFocused && (
-                <Text
-                  style={{
-                    fontWeight: 'bold',
-                    color: 'black',
-                    fontSize: 14,
-                    fontFamily: 'Goldman',
-                  }}>
-                  {route.name}
-                </Text>
-              )}
             </XStack>
           </Pressable>
         );

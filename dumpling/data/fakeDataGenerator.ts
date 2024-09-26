@@ -1,4 +1,14 @@
-const cryptocurrencies = ['Global Chat', 'Bitcoin', 'Solana'];
+const cryptocurrencies = ['Global Chat', 'Bitcoin Chat', 'Solana Chat'];
+
+// Hardcoded image URLs
+const avatars = [
+  'https://res.cloudinary.com/dm1hjrsc2/image/upload/v1726903012/pixel-8-bit-uppercase-letter-c-as-font-vector-47463240_1_c2aucj.png',
+  'https://cryptologos.cc/logos/bitcoin-btc-logo.png', // Bitcoin
+  'https://cryptologos.cc/logos/solana-sol-logo.png', // Solana
+];
+
+// Hardcoded messages
+const messages = ['@globalchat', '@BTCchat', '@SOLchat'];
 
 function generateRandomString(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -15,51 +25,6 @@ function generateRandomDate() {
   return new Date(pastYear.getTime() + Math.random() * (now.getTime() - pastYear.getTime()));
 }
 
-function generateRandomSentence(minWords, maxWords) {
-  const words = [
-    'the',
-    'be',
-    'to',
-    'of',
-    'and',
-    'a',
-    'in',
-    'that',
-    'have',
-    'I',
-    'it',
-    'for',
-    'not',
-    'on',
-    'with',
-    'he',
-    'as',
-    'you',
-    'do',
-    'at',
-    'buy',
-    'sell',
-    'trade',
-    'invest',
-    'market',
-    'crypto',
-    'blockchain',
-    'token',
-    'wallet',
-    'exchange',
-  ];
-  const sentenceLength = Math.floor(Math.random() * (maxWords - minWords + 1)) + minWords;
-  let sentence = '';
-  for (let i = 0; i < sentenceLength; i++) {
-    sentence += words[Math.floor(Math.random() * words.length)] + ' ';
-  }
-  return sentence.trim() + '.';
-}
-
-function generateRandomColor() {
-  return `#${Math.floor(Math.random() * 16777215).toString(16)}`;
-}
-
 function generateCryptoChatData(dataLength = 3) {
   const hasStories = Array.from({ length: Math.min(12, dataLength) }, () =>
     Math.floor(Math.random() * dataLength)
@@ -69,12 +34,11 @@ function generateCryptoChatData(dataLength = 3) {
     const cryptoName = cryptocurrencies[index % cryptocurrencies.length];
     return {
       key: generateRandomString(8),
-      name: `${cryptoName} Group`,
-      avatar: `https://cryptologos.cc/logos/${cryptoName.toLowerCase().replace(' ', '-')}-${cryptoName.toLowerCase().replace(' ', '-')}-logo.png`,
+      name: `${cryptoName}`,
+      avatar: avatars[index % avatars.length], // Use the hardcoded avatars
       date: generateRandomDate(),
-      message: generateRandomSentence(7, 15),
+      message: messages[index % messages.length], // Use the hardcoded messages
       hasStories: hasStories.includes(index),
-      bg: generateRandomColor(),
     };
   });
 }
@@ -84,8 +48,7 @@ const myStory = {
   name: 'My Crypto Portfolio',
   avatar: 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
   date: generateRandomDate(),
-  message: generateRandomSentence(7, 15),
-  bg: generateRandomColor(),
+  message: messages[0], // Use the first hardcoded message
   hasStories: false,
 };
 
