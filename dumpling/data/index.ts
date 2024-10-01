@@ -7,12 +7,12 @@ export default [
   {
     id: 2,
     img: require('../assets/wobbleTwo.png'),
-    description: 'From blink to moonshot - h',
+    description: 'Join the convo – share tips and ride the crypto tide!',
   },
   {
     id: 3,
     img: require('../assets/wobbleThree.png'),
-    description: 'Talk $SOL, flip coins, and moon together',
+    description: 'Chat and swap – your next big opportunity is just a blink away!',
   },
   {
     id: 4,
