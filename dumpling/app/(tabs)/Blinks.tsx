@@ -1,6 +1,6 @@
 import { View } from 'react-native';
 import React from 'react';
-import { XStack, YStack, Text } from 'tamagui';
+import { ScrollView, YStack, XStack, Text } from 'tamagui';
 import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { NavigationProp } from '@react-navigation/native';
 import { PhantomBlinkIntegration } from '~/components/Blinksdemo';
@@ -54,16 +54,30 @@ const Blinks: React.FC = () => {
     navigation: {} as NavigationProp<any>, // Replace with actual navigation prop
   };
 
-  const blinkUrl = "https://dial.to/?action=solana-action:https://join.catoff.xyz/api/actions/create-poll"; // Replace with actual URL
-
+  const blinkUrl =
+    'https://dial.to/?action=solana-action:https://join.catoff.xyz/api/actions/create-poll'; // Replace with actual URL
+  const actionsRegistry = [
+    'https://dial.to/helius/stake',
+    'https://degenmarkets.com/pools/9rJ8Wr3thMyX2g52iYwo3d8Rx54BqFYnjNrb84Cv6arb',
+    'https://matchups.fun/fight',
+    'https://memeroyale.xyz/tokens/HokhDNyQdXG3agBVXCKeQmPJ3e7D5jrWP2xUjxDB4nw3',
+    'https://checkmate.sendarcade.fun',
+  ];
   return (
-    <YStack justifyContent="center" flex={1} alignItems="center" backgroundColor={'black'}>
+    <YStack justifyContent="center" flex={1} alignItems="center" backgroundColor="black">
       <XStack>
-        <Text alignSelf="center" color={'white'}>
+        <Text alignSelf="center" color="white">
           Blinks
         </Text>
       </XStack>
-      <PhantomBlinkIntegration url={blinkUrl} adapterProps={adapterProps} />
+
+      <ScrollView
+        contentContainerStyle={{ alignItems: 'center' }}
+        showsVerticalScrollIndicator={false}>
+        <PhantomBlinkIntegration urls={actionsRegistry} adapterProps={adapterProps} />
+        {/* Uncomment the line below if needed */}
+        {/* <PhantomBlinkIntegration url={blinkUrl} adapterProps={adapterProps} /> */}
+      </ScrollView>
     </YStack>
   );
 };

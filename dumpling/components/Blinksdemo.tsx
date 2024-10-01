@@ -30,7 +30,7 @@ function getPhantomWalletAdapter({
   encryptPayload,
   onConnectRedirectLink,
   session,
-  navigation
+  navigation,
 }: PhantomAdapterProps): ActionAdapter {
   const [deeplink, setDeepLink] = useState<string | null>(null);
 
@@ -70,7 +70,7 @@ function getPhantomWalletAdapter({
 
               setSharedSecret(sharedSecretDapp);
               setSession(connectData.session);
-              
+
               if (connectData.public_key) {
                 const publicKey = new PublicKey(connectData.public_key);
                 setPhantomWalletPublicKey(publicKey);
@@ -92,7 +92,7 @@ function getPhantomWalletAdapter({
           app_url: 'https://phantom.app',
           redirect_link: onConnectRedirectLink,
         });
-        
+
         const url = `phantom://connection/v1/connect?${params.toString()}`;
         Linking.openURL(url).catch(reject);
       });
@@ -163,26 +163,35 @@ function getPhantomWalletAdapter({
 }
 
 export const PhantomBlinkIntegration: React.FC<{
-  url: string;
+  urls: string[]; // Accept an array of URLs
   adapterProps: PhantomAdapterProps;
-}> = ({ url, adapterProps }) => {
+}> = ({ urls, adapterProps }) => {
   const adapter = getPhantomWalletAdapter(adapterProps);
-  const { action } = useAction({ url, adapter });
 
-  if (!action) {
-    return null; // or your loading component
-  }
-
-  const actionUrl = new URL(url);
   return (
-    <Blink
-      theme={{
-        '--blink-button': '#1D9BF0',
-        '--blink-border-radius-rounded-button': 9999,
-      }}
-      action={action}
-      websiteUrl={actionUrl.href}
-      websiteText={actionUrl.hostname}
-    />
+    <>
+      {urls.map((url, index) => {
+        const { action } = useAction({ url, adapter });
+
+        if (!action) {
+          return null; // or a loading component
+        }
+
+        const actionUrl = new URL(url);
+        return (
+          <Blink
+            key={index} // Unique key based on index for each Blink component
+            theme={{
+              '--blink-button': '#1D9BF0',
+              '--blink-border-radius-rounded-button': 9999,
+              '--blink-bg-primary': '#000000',
+            }}
+            action={action}
+            websiteUrl={actionUrl.href}
+            websiteText={actionUrl.hostname}
+          />
+        );
+      })}
+    </>
   );
 };
