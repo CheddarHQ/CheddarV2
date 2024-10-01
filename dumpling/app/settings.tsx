@@ -67,7 +67,7 @@ const Settings = () => {
 
       <View style={styles.settingItem}>
         <View style={styles.settingIcon}>
-          <Ionicons name="flag-outline" size={24} color="white" />
+          <Ionicons name="flag-outline" size={24} color="white"/>
         </View>
         <Text style={styles.settingText}>Report Bugs & Errors</Text>
       </View>
@@ -99,6 +99,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 24,
     fontWeight: 'bold',
+    fontFamily: 'Goldman',
     marginBottom: 20,
   },
   settingItem: {
@@ -118,6 +119,7 @@ const styles = StyleSheet.create({
   settingText: {
     color: '#FFFFFF',
     fontSize: 18,
+    fontFamily: 'Goldman'
   },
   speedButton: {
     backgroundColor: '#FFFF00',
@@ -129,6 +131,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#000000',
     fontWeight: 'bold',
+    fontFamily: 'Goldman'
   },
   slippageContainer: {
     flexDirection: 'row',
@@ -145,16 +148,15 @@ const styles = StyleSheet.create({
   },
   slippageButtonActive: {
     backgroundColor: '#FFFF00',
-
- 
   },
   slippageButtonText: {
     color: '#FFFFFF',
+    fontFamily: 'Goldman'
   },
   slippageButtonActiveText: {
-    color : '#010409'
+    color : '#010409',
+    fontFamily: 'Goldman'
   }
-
 });
 
-export default Settings;
+export default Settings; 
