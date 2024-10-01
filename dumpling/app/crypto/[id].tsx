@@ -229,7 +229,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
   },
-  // ... rest of your styles
 });
 
 export default MoneyEx;
