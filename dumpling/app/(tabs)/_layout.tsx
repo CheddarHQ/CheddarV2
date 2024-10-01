@@ -56,6 +56,12 @@ export default function TabLayout() {
           title: 'Analytics',
         }}
       />
+      <Tabs.Screen
+        name="Blinks"
+        options={{
+          title: 'Blinks',
+        }}
+      />
     </Tabs>
   );
 }

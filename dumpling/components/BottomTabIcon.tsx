@@ -4,6 +4,7 @@ import HomeIcon from '../assets/svg/wallet.svg';
 import SettingIcon from '../assets/svg/style6.svg';
 import ProfileIcon from '../assets/svg/chart.svg';
 import SearchIcon from '../assets/svg/discover.svg';
+import BlinksIcon from '../assets/svg/BlinksIcon.svg';
 
 interface Props {
   route: string;
@@ -19,8 +20,8 @@ const BottomTabIcon = ({ route, isFocused }: Props) => {
     switch (route) {
       case 'Chat':
         return <HomeIcon />;
-      case 'dummy':
-        return <SearchIcon />;
+      case 'Blinks':
+        return <BlinksIcon />;
       case 'analytics':
         return <ProfileIcon />;
       case 'modal':
