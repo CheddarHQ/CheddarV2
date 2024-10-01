@@ -1,9 +1,11 @@
-import { View } from 'react-native';
-import React from 'react';
-import { ScrollView, YStack, XStack, Text } from 'tamagui';
+import React, { useState, useEffect } from 'react';
+import { ScrollView, YStack, XStack, ZStack } from 'tamagui';
 import { PublicKey, Transaction, VersionedTransaction } from '@solana/web3.js';
 import { NavigationProp } from '@react-navigation/native';
 import { PhantomBlinkIntegration } from '~/components/Blinksdemo';
+import { FlatList, View, TouchableOpacity, Text } from 'react-native';
+import { Dimensions, Modal } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 // Define types for your props and adapter
 interface PhantomAdapterProps {
@@ -24,7 +26,24 @@ interface PhantomAdapterProps {
 }
 
 const Blinks: React.FC = () => {
-  // You'll need to properly initialize these values from your app's state/context
+  const windowWidth = Dimensions.get('window').width;
+  const windowHeight = Dimensions.get('window').height;
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [orientation, setOrientation] = useState('portrait');
+
+  useEffect(() => {
+    const updateOrientation = () => {
+      const { width, height } = Dimensions.get('window');
+      setOrientation(width > height ? 'landscape' : 'portrait');
+    };
+
+    Dimensions.addEventListener('change', updateOrientation);
+    return () => {
+      // Remove listener on cleanup
+      // Note: In newer versions of React Native, this might not be necessary
+    };
+  }, []);
+
   const adapterProps: PhantomAdapterProps = {
     dappKeyPair: {
       publicKey: new Uint8Array(), // Initialize with actual values
@@ -54,32 +73,150 @@ const Blinks: React.FC = () => {
     navigation: {} as NavigationProp<any>, // Replace with actual navigation prop
   };
 
-  const blinkUrl =
-    'https://dial.to/?action=solana-action:https://join.catoff.xyz/api/actions/create-poll'; // Replace with actual URL
-  const actionsRegistry = [
-    'https://dial.to/helius/stake',
-    'https://degenmarkets.com/pools/9rJ8Wr3thMyX2g52iYwo3d8Rx54BqFYnjNrb84Cv6arb',
-    'https://matchups.fun/fight',
-    'https://memeroyale.xyz/tokens/HokhDNyQdXG3agBVXCKeQmPJ3e7D5jrWP2xUjxDB4nw3',
-    'https://checkmate.sendarcade.fun',
-  ];
-  return (
-    <YStack justifyContent="center" flex={1} alignItems="center" backgroundColor="black">
-      <XStack>
-        <Text alignSelf="center" color="white">
-          Blinks
-        </Text>
-      </XStack>
+  const handlePress = (index: number) => {
+    setExpandedIndex(index === expandedIndex ? null : index);
+  };
 
-      <ScrollView
-        contentContainerStyle={{ alignItems: 'center' }}
-        showsVerticalScrollIndicator={false}>
-        <PhantomBlinkIntegration urls={actionsRegistry} adapterProps={adapterProps} />
-        {/* Uncomment the line below if needed */}
-        {/* <PhantomBlinkIntegration url={blinkUrl} adapterProps={adapterProps} /> */}
-      </ScrollView>
-    </YStack>
+  const numColumns = orientation === 'portrait' ? 2 : 3;
+  const gap = 10;
+  const boxSize = (windowWidth - (numColumns + 1) * gap) / numColumns;
+  const collapsedSize = (windowWidth - (numColumns + 1) * gap) / numColumns;
+  const expandedHeight = windowHeight * 0.6;
+
+  const actionsRegistry = [
+    {
+      url: 'https://dial.to/helius/stake',
+      name: 'Helius Stake',
+      color: '#FF5733', // Example color
+    },
+    {
+      url: 'https://degenmarkets.com/pools/9rJ8Wr3thMyX2g52iYwo3d8Rx54BqFYnjNrb84Cv6arb',
+      name: 'Degen Markets',
+      color: '#33FF57', // Example color
+    },
+    {
+      url: 'https://matchups.fun/fight',
+      name: 'Matchups Fight',
+      color: '#3357FF', // Example color
+    },
+    {
+      url: 'https://memeroyale.xyz/tokens/HokhDNyQdXG3agBVXCKeQmPJ3e7D5jrWP2xUjxDB4nw3',
+      name: 'Meme Royale',
+      color: '#FF33A6', // Example color
+    },
+    {
+      url: 'https://checkmate.sendarcade.fun',
+      name: 'Checkmate',
+      color: '#33FFF0', // Example color
+    },
+  ];
+
+  return (
+    <View style={styles.container}>
+      <XStack></XStack>
+      <FlatList
+        data={actionsRegistry}
+        keyExtractor={(item, index) => index.toString()}
+        numColumns={numColumns}
+        columnWrapperStyle={styles.columnWrapper}
+        contentContainerStyle={styles.contentContainer}
+        renderItem={({ item, index }) => {
+          return (
+            <TouchableOpacity
+              onPress={() => handlePress(index)}
+              style={[
+                styles.box,
+                {
+                  width: boxSize,
+                  height: boxSize,
+                  marginRight: (index + 1) % numColumns === 0 ? 0 : gap,
+                  marginBottom: gap,
+                },
+              ]}>
+              <ZStack style={[styles.boxContent, { backgroundColor: item.color }]}>
+                <PhantomBlinkIntegration urls={[item.url]} adapterProps={adapterProps} />
+                <View style={styles.overlay}>
+                  <Text style={styles.overlayText}>{item.name}</Text>
+                </View>
+              </ZStack>
+            </TouchableOpacity>
+          );
+        }}
+      />
+      <Modal
+        visible={expandedIndex !== null}
+        animationType="slide"
+        onRequestClose={() => setExpandedIndex(null)}>
+        {expandedIndex !== null && (
+          <View style={styles.modalContent}>
+            <PhantomBlinkIntegration
+              urls={[actionsRegistry[expandedIndex].url]}
+              adapterProps={adapterProps}
+            />
+            <TouchableOpacity style={styles.closeButton} onPress={() => setExpandedIndex(null)}>
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </Modal>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  columnWrapper: {
+    justifyContent: 'flex-start',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  overlayText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  contentContainer: {
+    padding: 10,
+  },
+  box: {
+    borderRadius: 10,
+    overflow: 'hidden',
+  },
+  boxContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    opacity: 0.9,
+  },
+  boxText: {
+    color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  modalContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'black',
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    padding: 10,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+});
 
 export default Blinks;
