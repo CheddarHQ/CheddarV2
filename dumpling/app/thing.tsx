@@ -205,7 +205,7 @@ export default function Chatroom() {
         <View style={{ flex: 1, zIndex: 1 }}>
           {/* Header */}
           <XStack
-            backgroundColor="rgba(0,0,0,0.5)"
+            backgroundColor="rgba(0,0,0,1)"
             paddingTop="$8"
             paddingHorizontal="$4"
             alignItems="center"
@@ -213,7 +213,7 @@ export default function Chatroom() {
             paddingBottom="$3">
             <Link href={'/(tabs)/Chat'}>
               <XStack
-                backgroundColor={'#FFC300'}
+                backgroundColor={'black'}
                 height={35}
                 width={35}
                 alignContent="center"
@@ -281,9 +281,9 @@ export default function Chatroom() {
                             style={[
                               styles.messageItem,
                               {
-                                backgroundColor: item.mine ? 'transparent' : '#141414',
+                                backgroundColor: item.mine ? 'white' : '#141414',
                                 alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                                opacity: item.sent ? 1 : 0.5,
+                                opacity:1,
                               },
                             ]}>
                             <Text style={styles.messageText}>{item.text}</Text>
@@ -335,9 +335,9 @@ export default function Chatroom() {
                             style={[
                               styles.messageItem,
                               {
-                                backgroundColor: item.mine ? 'transparent' : '#141414',
+                                backgroundColor: 'white',
                                 alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                                opacity: item.sent ? 1 : 0.5,
+                                opacity: 1,
                               },
                             ]}>
                             <Text style={styles.messageText}>{item.text}</Text>
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
   },
   userInfo: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,1)',
     alignSelf: 'flex-end',
     marginTop: 4,
   },
@@ -425,20 +425,11 @@ const styles = StyleSheet.create({
   },
   blinkUserInfo: {
     fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,1)',
     alignSelf: 'flex-end',
     marginTop: 4,
     marginRight: 8,
     marginBottom: 4,
-  },
-  messageText: {
-    color: 'white',
-  },
-  userInfo: {
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
-    alignSelf: 'flex-end',
-    marginTop: 4,
   },
   avatar: {
     width: 20,
