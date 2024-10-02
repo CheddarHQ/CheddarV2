@@ -1,14 +1,16 @@
-const cryptocurrencies = ['Global Chat', 'Bitcoin Chat', 'Solana Chat'];
+const cryptocurrencies = ['Moo Deng', 'Iggy Azalea', 'Daddy Tate', 'Fwog', 'Global Chat'];
 
 // Hardcoded image URLs
 const avatars = [
-  'https://res.cloudinary.com/dm1hjrsc2/image/upload/v1726903012/pixel-8-bit-uppercase-letter-c-as-font-vector-47463240_1_c2aucj.png',
-  'https://cryptologos.cc/logos/bitcoin-btc-logo.png', // Bitcoin
-  'https://upload.wikimedia.org/wikipedia/en/b/b9/Solana_logo.png', // Solana
+  'https://s2.coinmarketcap.com/static/img/coins/64x64/33065.png',
+  'https://s2.coinmarketcap.com/static/img/coins/64x64/31510.png',
+  'https://s2.coinmarketcap.com/static/img/coins/64x64/31830.png',
+  'https://s2.coinmarketcap.com/static/img/coins/64x64/32507.png',
+  'https://res.cloudinary.com/dm1hjrsc2/image/upload/c_thumb,w_200,g_face/v1726903021/download_na1hci.png',
 ];
 
 // Hardcoded messages
-const messages = ['@globalchat', '@BTCchat', '@SOLchat'];
+const messages = ['@MOODENG', '@MOTHERIggy', '@BuyDADDY', '@FWOGChat', '@GlobalChat'];
 
 function generateRandomString(length) {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -25,7 +27,7 @@ function generateRandomDate() {
   return new Date(pastYear.getTime() + Math.random() * (now.getTime() - pastYear.getTime()));
 }
 
-function generateCryptoChatData(dataLength = 3) {
+function generateCryptoChatData(dataLength = 5) {
   const hasStories = Array.from({ length: Math.min(12, dataLength) }, () =>
     Math.floor(Math.random() * dataLength)
   );

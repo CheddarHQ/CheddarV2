@@ -113,7 +113,7 @@ export default function Modal() {
         <ZStack>
           <Input
             left={10}
-            width={293}
+            width={350}
             height={42}
             paddingHorizontal={37}
             borderWidth={1}
@@ -133,7 +133,7 @@ export default function Modal() {
         <XStack
           height={42}
           width={42}
-          left={300}
+          left={500}
           padding={9}
           marginLeft={8}
           alignContent="center"
@@ -142,9 +142,7 @@ export default function Modal() {
           borderWidth={1}
           borderRadius={50}
           backgroundColor={'#18191B'}
-          borderColor="rgba(255, 255, 255, 0.1)">
-          <FilterIcon />
-        </XStack>
+          borderColor="rgba(255, 255, 255, 0.1)"></XStack>
       </XStack>
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
         {loading && (
