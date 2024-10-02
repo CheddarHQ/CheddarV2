@@ -4,6 +4,7 @@ import { SplashScreen } from 'expo-router';
 import { Tabs } from 'expo-router';
 import CustomBottomTab from '~/components/CustomBottomTab';
 import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BlurView } from 'expo-blur';
 import {
   useFonts,
   Poppins_100Thin,
@@ -37,29 +38,36 @@ export default function TabLayout() {
   if (!loaded) return null;
 
   return (
-    <Tabs tabBar={CustomBottomTabs} screenOptions={{ headerShown: false }}>
+    <Tabs tabBar={CustomBottomTabs}>
       <Tabs.Screen
         name="Chat"
         options={{
           title: 'Chat',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
         name="modal"
         options={{
           title: 'CryptoSwap',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
         name="analytics"
         options={{
           title: 'Analytics',
+          headerShown: false,
         }}
       />
       <Tabs.Screen
         name="Blinks"
         options={{
           title: 'Blinks',
+          headerShown: true,
+          headerTransparent: true,
+          headerBackground: () => <BlurView intensity={100} style={{ flex: 1 }} />,
+          headerTitleStyle: { color: '#ffffff', fontFamily: 'Goldman' },
         }}
       />
     </Tabs>
