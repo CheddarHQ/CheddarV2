@@ -14,7 +14,7 @@ import { useNavigation } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { Picker } from '~/components/Picker';
 
-interface PhantomAdapterProps {
+export interface PhantomAdapterProps {
   dappKeyPair: {
     publicKey: Uint8Array;
     secretKey: Uint8Array;
@@ -490,3 +490,5 @@ const blinkCategories = [
     name: 'Lottery',
   },
 ];
+
+

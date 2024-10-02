@@ -16,6 +16,10 @@ import {
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
+import { adapterProps } from '~/utils/adapterProps';
+import { PhantomBlinkIntegration } from '~/components/Blinksdemo';
+
+
 
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -63,6 +67,15 @@ export default function Chatroom() {
   const scrollRef = useRef<Animated.ScrollView>(null);
   const scrollY = useSharedValue(0);
   const [ws, setWs] = useState<WebSocket | null>(null);
+
+
+
+  const blinkUrl = 'https://dial.to'
+
+
+function containsBlinkUrl(str : string) {
+  return str.includes(blinkUrl);
+}
 
   const scrollHandler = useAnimatedScrollHandler({
     onScroll: (event) => {
@@ -349,20 +362,19 @@ export default function Chatroom() {
                             <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                           </Avatar>
                         )}
-                        <View
-                          style={[
-                            styles.messageItem,
-                            {
-                              backgroundColor: item.mine ? 'transparent' : '#141414',
-                              alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                              opacity: item.sent ? 1 : 0.5,
-                            },
-                          ]}>
-                          <YStack>
-                            <Text color={'#fff'} style={{ color: 'white' }}>
-                              {item.text}
-                            </Text>
 
+                        {containsBlinkUrl(item.text) ?
+                          <View
+                          style={ 
+                            [
+                              styles.blinkItem,
+                             
+                            ]
+                          }>
+                          <YStack>
+                            
+                            <PhantomBlinkIntegration urls={[item.text]} adapterProps={adapterProps} />
+                            
                             <Text
                               color="white"
                               opacity={0.5}
@@ -376,6 +388,36 @@ export default function Chatroom() {
                             </Text>
                           </YStack>
                         </View>
+                        :
+                        <View
+                        style={ 
+                          [
+                            styles.messageItem,
+                            {
+                              backgroundColor: item.mine ? 'transparent' : '#141414',
+                              alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                              opacity: item.sent ? 1 : 0.5,
+                            },
+                          ]
+                        }>
+                        <YStack>
+                          
+                        <Text color={'#fff'} style={{ color: 'white' }}>
+                        {item.text}
+                      </Text> 
+                      <Text
+                            color="white"
+                            opacity={0.5}
+                            style={{
+                              fontSize: 12,
+                              color: 'rgba(255,100,255,0.7)',
+                              alignSelf: 'flex-end',
+                              marginTop: 4,
+                            }}>
+                            {item.user} {!item.sent && '(Sending...)'}
+                          </Text>
+                        </YStack>
+                      </View>}
                       </XStack>
                     )}}
                   />
@@ -434,6 +476,17 @@ const styles = StyleSheet.create({
     maxWidth: width * 0.65,
     minWidth: 100,
     alignSelf: 'flex-start',
+  },
+  blinkItem : {
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    margin: 12,
+    marginBottom: 1,
+    borderRadius: 12,
+    maxWidth: width * 0.8,
+    minWidth: 100,
+    alignSelf: 'flex-start',
+    height: 500,
   },
   avatar: {
     width: 20,
