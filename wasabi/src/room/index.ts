@@ -33,15 +33,20 @@ chatRouter.post("/message", zValidator("json", z.object({
 });
 
 // Get messages for a specific room
-chatRouter.get("/messages/:roomId", zValidator("param", z.object({ 
-    roomId: z.string() 
+chatRouter.get("/messages/:room_id", zValidator("param", z.object({ 
+    room_id: z.string() 
 })), zValidator("query", z.object({
     limit: z.string().optional().default("50"),
     offset: z.string().optional().default("0"),
 })), async (c) => {
     try {
-        const { roomId } = c.req.valid('param');
+        const { room_id } = c.req.valid('param');
         const { limit, offset } = c.req.valid('query');
+
+        // Ensure limit and offset are integers
+        const limitInt = parseInt(limit, 10);
+        const offsetInt = parseInt(offset, 10);
+
         const query = `
         SELECT m.*, u.username, u.profile_image_url
         FROM messages m
@@ -52,14 +57,16 @@ chatRouter.get("/messages/:roomId", zValidator("param", z.object({
         `;
 
         const { results } = await c.env.DB.prepare(query)
-            .bind(roomId, parseInt(limit), parseInt(offset))
+            .bind(room_id, limitInt, offsetInt)
             .all();
 
         return c.json({ success: true, messages: results }, 200);
     } catch (error) {
-        return c.json({ success: false, error: (error as Error).message }, 500);
+        console.error("Error fetching messages:", error);
+        return c.json({ success: false, error: error.message }, 500);
     }
 });
+
 
 // Create a chat room in DB
 chatRouter.post("/chat_room", zValidator("json", z.object({
@@ -68,16 +75,17 @@ chatRouter.post("/chat_room", zValidator("json", z.object({
     description: z.string().max(500).optional(),
     admin_id: z.string(),
     created_at: z.string().datetime(),
+    avatar : z.string().optional(),
 })), async (c) => {
     try {
-        const { id, name, description, admin_id, created_at } = c.req.valid('json');
+        const { id, name, description, admin_id, created_at, avatar } = c.req.valid('json');
         const query = `
-        INSERT INTO chat_rooms (id, name, description, admin_id, created_at)
-        VALUES (?, ?, ?, ?, ?);
+        INSERT INTO chat_rooms(id, name, description, admin_id, created_at, avatar)
+        VALUES (?, ?, ?, ?, ?,?);
         `;
         
         await c.env.DB.prepare(query)
-            .bind(id, name, description, admin_id, created_at)
+            .bind(id, name, description, admin_id, created_at, avatar)
             .run();
 
         return c.json({ success: true, id: id }, 201);

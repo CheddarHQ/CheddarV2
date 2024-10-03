@@ -13,6 +13,8 @@ import Entypo from '@expo/vector-icons/Entypo';
 import { useNavigation } from 'expo-router';
 import { AntDesign } from '@expo/vector-icons';
 import { Picker } from '~/components/Picker';
+import Toast from 'react-native-toast-message';
+import { blinkCategories, BlinkModal } from '~/components/BlinkModalComp';
 
 export interface PhantomAdapterProps {
   dappKeyPair: {
@@ -46,6 +48,8 @@ const Blinks: React.FC = () => {
     imageURL: '',
     description: '',
     label: '',
+    tokenSymbol: '',
+    supply: '',
   });
   const [formErrors, setFormErrors] = useState({
     title: '',
@@ -54,12 +58,40 @@ const Blinks: React.FC = () => {
     label: '',
   });
 
-  const validateForm = () => {
+  const validateForm = (category: number, formData: any) => {
     const errors: any = {};
-    if (!formData.title) errors.title = 'Title is required';
-    if (!formData.imageURL) errors.imageURL = 'Image URL is required';
-    if (!formData.description) errors.description = 'Description is required';
-    if (!formData.label) errors.label = 'Label is required';
+
+    switch (category) {
+      case 0: // Donation
+        if (!formData.title?.trim()) errors.title = 'Campaign title is required';
+        if (!formData.label?.trim()) errors.label = 'Target amount is required';
+        if (formData.label && isNaN(Number(formData.label)))
+          errors.label = 'Amount must be a number';
+        if (!formData.imageURL?.trim()) errors.imageURL = 'Target amount is required';
+        if (!formData.imageURL?.trim()) errors.description = 'Target amount is required';
+
+        break;
+
+      case 1: // Token Sale
+        if (!formData.title?.trim()) errors.title = 'Token name is required';
+        if (!formData.tokenSymbol?.im()) errors.tokenSymbol = 'Token symbol is required';
+        if (!formData.label?.trim()) errors.label = 'Price per token is required';
+        if (formData.label && isNaN(Number(formData.label)))
+          errors.label = 'Price must be a number';
+        if (!formData.supply?.trim()) errors.supply = 'Token supply is required';
+        if (formData.supply && isNaN(Number(formData.supply)))
+          errors.supply = 'Supply must be a number';
+        break;
+
+      case 2: // NFT Mint
+        if (!formData.title?.trim()) errors.title = 'Collection name is required';
+        if (!formData.label?.trim()) errors.label = 'Mint price is required';
+        if (formData.label && isNaN(Number(formData.label)))
+          errors.label = 'Price must be a number';
+        if (!formData.imageURL?.trim()) errors.imageURL = 'Collection image URL is required';
+        break;
+    }
+
     return errors;
   };
 
@@ -127,13 +159,28 @@ const Blinks: React.FC = () => {
 
   // Navigation through pages in modal
   const handleSubmit = () => {
-    const errors = validateForm();
+    const errors = validateForm(0, formData);
     setFormErrors(errors);
 
     if (Object.keys(errors).length === 0) {
       // Submit logic here
       console.log('Form submitted:', formData);
+      setFormData({
+        title: '',
+        imageURL: '',
+        description: '',
+        label: '',
+        tokenSymbol: '',
+        supply: '',
+      });
+      // Optional: Uncomment these if you need them
+      // setCurrentPage((prevPage) => prevPage + 1);
+      // showToast();
+
+      return true; // Return true if submission was successful
     }
+
+    return false; // Return false if there were errors
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -209,139 +256,20 @@ const Blinks: React.FC = () => {
         )}
       </Modal>
 
-      <Modal
-        visible={modalOpen}
-        animationType="slide"
-        onRequestClose={() => setModalOpen(false)}
-        transparent={true}>
-        <View style={styles.newModalContainer}>
-          <View style={styles.newModalContent}>
-            {/* Display content based on currentPage */}
-            {currentPage === 0 && (
-              <YStack>
-                <XStack>
-                  <Text style={styles.newModalTitle}>Blink Generator</Text>
-                </XStack>
-                <YStack marginTop={windowHeight / 4}>
-                  <XStack alignSelf="center">
-                    <Text
-                      style={{
-                        color: '#808080',
-                        padding: 10,
-                        fontFamily: 'Poppins',
-                        fontSize: 15,
-                      }}>
-                      Please choose your blink category
-                    </Text>
-                  </XStack>
-                  <Separator marginVertical={2} />
-                  <YStack
-                    justifyContent="center"
-                    alignItems="center"
-                    alignContent="center"
-                    alignSelf="center">
-                    <Picker
-                      data={blinkCategories}
-                      onChange={(item) => {
-                        setSelectedItem(item);
-                      }}
-                      initialSelectedItem={blinkCategories[0]}
-                    />
-                  </YStack>
-                  <Separator marginVertical={2} />
-                </YStack>
-              </YStack>
-            )}
-            {currentPage === 1 && (
-              <YStack>
-                <Text style={styles.newModalTitle}>Blink Generator</Text>
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Title</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.title}
-                    onChangeText={(text) => handleInputChange('title', text)}
-                    placeholder="Enter title"
-                    placeholderTextColor="gray"
-                  />
-                  {formErrors.title ? (
-                    <Text style={styles.errorText}>{formErrors.title}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Image URL</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.imageURL}
-                    onChangeText={(text) => handleInputChange('imageURL', text)}
-                    placeholder="Enter image URL"
-                    placeholderTextColor="gray"
-                  />
-                  {formErrors.imageURL ? (
-                    <Text style={styles.errorText}>{formErrors.imageURL}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Description</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.description}
-                    onChangeText={(text) => handleInputChange('description', text)}
-                    placeholder="Enter description"
-                    placeholderTextColor="gray"
-                  />
-                  {formErrors.description ? (
-                    <Text style={styles.errorText}>{formErrors.description}</Text>
-                  ) : null}
-                </View>
-
-                <View style={styles.formGroup}>
-                  <Text style={styles.formLabel}>Label</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={formData.label}
-                    onChangeText={(text) => handleInputChange('label', text)}
-                    placeholder="Enter label"
-                    placeholderTextColor="gray"
-                  />
-                  {formErrors.label ? (
-                    <Text style={styles.errorText}>{formErrors.label}</Text>
-                  ) : null}
-                </View>
-
-                <Button onPress={handleSubmit} style={styles.submitButton}>
-                  Submit
-                </Button>
-              </YStack>
-            )}
-            {currentPage === 2 && (
-              <YStack>
-                <Text style={styles.newModalTitle}>New Blink - Page {currentPage + 1}</Text>
-                <Text style={styles.pageText}>Page 1 Content</Text>
-              </YStack>
-            )}
-
-            <View style={styles.paginationButtons}>
-              {currentPage > 0 && (
-                <Button onPress={previousPage} style={styles.pageButton}>
-                  Previous
-                </Button>
-              )}
-              {currentPage < 2 && (
-                <Button onPress={nextPage} style={styles.pageButton}>
-                  Next
-                </Button>
-              )}
-            </View>
-
-            <TouchableOpacity style={styles.closeButtontwo} onPress={() => setModalOpen(false)}>
-              <Entypo name="cross" size={40} color="white" marginTop={5} />
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+      <BlinkModal
+        modalOpen={modalOpen}
+        setModalOpen={setModalOpen}
+        currentPage={currentPage}
+        setCurrentPage={setCurrentPage} // Add this prop
+        selectedItem={selectedItem}
+        setSelectedItem={setSelectedItem}
+        formData={formData}
+        formErrors={formErrors}
+        handleInputChange={handleInputChange}
+        handleSubmit={handleSubmit}
+        previousPage={previousPage}
+        nextPage={nextPage}
+      />
     </View>
   );
 };
@@ -458,37 +386,3 @@ const styles = StyleSheet.create({
 });
 
 export default Blinks;
-
-// const movieGenres = [
-//   {
-//     id: 28,
-//     name: 'Action',
-//   },
-//   {
-//     id: 12,
-//     name: 'Adventure',
-//   },
-//   {
-//     id: 16,
-//     name:
-
-const blinkCategories = [
-  {
-    id: 0,
-    name: 'Donation',
-  },
-  {
-    id: 1,
-    name: 'Token Sale',
-  },
-  {
-    id: 2,
-    name: 'NFT Mint',
-  },
-  {
-    id: 3,
-    name: 'Lottery',
-  },
-];
-
-

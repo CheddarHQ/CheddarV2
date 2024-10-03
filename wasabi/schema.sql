@@ -80,7 +80,8 @@ CREATE TABLE IF NOT EXISTS chat_rooms (
   description TEXT,
   admin_id TEXT, -- User ID of the chat room creator
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (admin_id) REFERENCES users(id)
+  FOREIGN KEY (admin_id) REFERENCES users(id),
+  avatar TEXT DEFAULT 'https://res-console.cloudinary.com/dcisswp5z/thumbnails/v1/image/upload/v1719741901/a2FhbGV6X3RodW1ibmFpbF9iZHc5NW4=/drilldown'
 );
 
 -- ROOM_PARTICIPANTS
