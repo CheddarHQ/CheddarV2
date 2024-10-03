@@ -1,8 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import Feather from '@expo/vector-icons/Feather';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { ParamListBase, RouteProp, useRoute } from '@react-navigation/native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { Image } from 'react-native';
 import {
@@ -16,26 +13,25 @@ import {
 import Animated, { useAnimatedScrollHandler, useSharedValue } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
+import { ParamListBase, RouteProp, useRoute } from '@react-navigation/native';
+import { YStack, XStack, Text, Input, Button, AnimatePresence, Avatar } from 'tamagui';
+import { Link } from 'expo-router';
+import { userAtom, messagesAtom } from '~/state/atoms';
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { PhantomBlinkIntegration } from '~/components/Blinksdemo';
+import { adapterProps } from '~/utils/adapterProps';
 
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 
-import { YStack, XStack, Text, Input, Button, AnimatePresence, Avatar } from 'tamagui';
-import { Link } from 'expo-router';
-// import GridComponent from '~/components/Grid';
-import { userAtom, messagesAtom } from '~/state/atoms';
-import { useRecoilState, useRecoilValue } from 'recoil';
-
 export interface MessageProps {
-  key: string,
-  text: string,
-  mine: boolean,
-  user: string,
-  avatar: string,
-  sent: boolean,
+  key: string;
+  text: string;
+  mine: boolean;
+  user: string;
+  avatar: string;
+  sent: boolean;
 }
-
-
 
 function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -45,17 +41,18 @@ function generateUUID() {
   });
 }
 
+const blinkUrl = 'https://dial.to';
+
+function containsBlinkUrl(str: string) {
+  return str.includes(blinkUrl);
+}
+
 export default function Chatroom() {
   const route: RouteProp<ParamListBase> = useRoute();
-
-  // const { username}  = route.params
   const userProfile = useRecoilValue(userAtom);
   const username = userProfile.username;
   const AvatarUrl = userProfile.avatar_url;
-  // this is showing undefined
-  const {chatName, chatAvatar}  = route.params;
-  
-  
+  const { chatName, chatAvatar } = route.params;
 
   const [isConnected, setIsConnected] = useState(false);
   const [messages, setMessages] = useRecoilState<MessageProps[]>(messagesAtom);
@@ -72,9 +69,6 @@ export default function Chatroom() {
 
   useEffect(() => {
     const newWs = new WebSocket(`ws://baklava.cheddar-io.workers.dev/api/room/${chatName}/websocket`);
-
-
-    // const newWs = new WebSocket(`ws://localhost:8787/api/room/p/websocket`)
 
     newWs.onopen = () => {
       console.log('WebSocket connected');
@@ -100,7 +94,7 @@ export default function Chatroom() {
             text: messageData.data || messageData.message || JSON.stringify(messageData),
             mine: messageData.sender === username,
             user: messageData.sender || 'Server',
-            avatar : messageData.avatar,
+            avatar: messageData.avatar,
             sent: true,
           };
 
@@ -143,28 +137,22 @@ export default function Chatroom() {
         text: inputText,
         mine: true,
         user: username,
-        avatar : AvatarUrl,
+        avatar: AvatarUrl,
         sent: false,
       };
 
-      // Immediately add the message to the UI
       setMessages((prevMessages) => [...prevMessages, newMessage]);
-
-      // Clear the input text
       setInputText('');
 
-      // Prepare the message to send
       const messageToSend = {
         type: 'message',
         data: inputText,
         user: username,
-        avatar : AvatarUrl,
+        avatar: AvatarUrl,
       };
 
-      // Send the message
       ws.send(JSON.stringify(messageToSend));
 
-      // Mark the message as sent after a short delay
       setTimeout(() => {
         setMessages((prevMessages) =>
           prevMessages.map((msg) => (msg.key === messageKey ? { ...msg, sent: true } : msg))
@@ -172,13 +160,14 @@ export default function Chatroom() {
       }, 500);
     }
   }
+
   const GridBackground = () => {
     return (
       <View style={styles.gridContainer}>
         {[...Array(20)].map((_, i) => (
           <LinearGradient
             key={`v${i}`}
-            colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']} // Colorful gradient
+            colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={[styles.gridLine, styles.vertical, { left: `${(i + 1) * 5}%` }]}
@@ -187,7 +176,7 @@ export default function Chatroom() {
         {[...Array(20)].map((_, i) => (
           <LinearGradient
             key={`h${i}`}
-            colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']} // Colorful gradient
+            colors={['#8A00C4', '#4D4DFF', '#ff8ad0', '#dee5fe']}
             start={{ x: 0, y: 0 }}
             end={{ x: 2, y: 1 }}
             style={[styles.gridLine, styles.horizontal, { top: `${(i + 1) * 5}%` }]}
@@ -196,6 +185,7 @@ export default function Chatroom() {
       </View>
     );
   };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -215,7 +205,7 @@ export default function Chatroom() {
         <View style={{ flex: 1, zIndex: 1 }}>
           {/* Header */}
           <XStack
-            backgroundColor="rgba(0,0,0,0.5)"
+            backgroundColor="rgba(0,0,0,1)"
             paddingTop="$8"
             paddingHorizontal="$4"
             alignItems="center"
@@ -223,7 +213,7 @@ export default function Chatroom() {
             paddingBottom="$3">
             <Link href={'/(tabs)/Chat'}>
               <XStack
-                backgroundColor={'#FFC300'}
+                backgroundColor={'black'}
                 height={35}
                 width={35}
                 alignContent="center"
@@ -233,8 +223,7 @@ export default function Chatroom() {
                 <AntDesign name="arrowleft" size={24} color="black" />
               </XStack>
             </Link>
-            {console.log("chatAvatar : ", chatAvatar)}
-            <Image source={{ uri: chatAvatar }}  style={styles.avatar}/>
+            <Image source={{ uri: chatAvatar }} style={styles.avatar} />
             <Text
               color="white"
               fontSize={30}
@@ -267,52 +256,44 @@ export default function Chatroom() {
               <MaskedView
                 maskElement={
                   <View style={{ backgroundColor: 'transparent' }}>
-                    {messages.map((item) => {
-
-                      const userAvatar = item.avatar;
-                      console.log("userAvatar : ", userAvatar)
-
-                      return (
+                    {messages.map((item) => (
                       <XStack
                         key={item.key}
                         alignItems="center"
                         justifyContent={item.mine ? 'flex-end' : 'flex-start'}
                         marginBottom="$2"
                         paddingHorizontal="$3">
-                        {item.mine ? (
-                          <></>
-                        ) : (
+                        {!item.mine && (
                           <Avatar circular size="$3" marginRight="$1">
-                           {/* this has to be changed for each incoming message from different users */}
-                            <Avatar.Image src={userAvatar} />
-                            <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
+                            <Avatar.Image src={item.avatar} />
+                            <Avatar.Fallback delayMs={600} backgroundColor="#131313" />
                           </Avatar>
                         )}
-
-                        <View
-                          style={[
-                            styles.messageItem,
-                            {
-                              backgroundColor: item.user === username ? 'white' : '#E4E7EB',
-                              alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                              opacity: item.sent ? 1 : 0.5,
-                            },
-                          ]}>
-                          <Text style={{ color: item.mine ? 'white' : '#111927' }}>
-                            {item.text}
-                          </Text>
-                          <Text
-                            style={{
-                              fontSize: 12,
-                              color: item.mine ? 'rgba(255,255,255,0.7)' : 'rgba(17,25,39,0.7)',
-                              alignSelf: 'flex-end',
-                              marginTop: 4,
-                            }}>
-                            {item.user} {!item.sent && '(Sending...)'}
-                          </Text>
-                        </View>
+                        {containsBlinkUrl(item.text) ? (
+                          <View style={styles.blinkContainer}>
+                            <PhantomBlinkIntegration urls={[item.text]} adapterProps={adapterProps} />
+                            <Text style={styles.blinkUserInfo}>
+                              {item.user} {!item.sent && '(Sending...)'}
+                            </Text>
+                          </View>
+                        ) : (
+                          <View
+                            style={[
+                              styles.messageItem,
+                              {
+                                backgroundColor: item.mine ? 'white' : '#141414',
+                                alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                                opacity:1,
+                              },
+                            ]}>
+                            <Text style={styles.messageText}>{item.text}</Text>
+                            <Text style={styles.userInfo}>
+                              {item.user} {!item.sent && '(Sending...)'}
+                            </Text>
+                          </View>
+                        )}
                       </XStack>
-                    )})}
+                    ))}
                   </View>
                 }>
                 <View style={{ flex: 1 }}>
@@ -329,55 +310,44 @@ export default function Chatroom() {
                     scrollEnabled={false}
                     data={messages}
                     keyExtractor={(item) => item.key}
-                    renderItem={({ item }) => {
-
-
-                      const userAvatar = item.avatar;
-
-                      return (
+                    renderItem={({ item }) => (
                       <XStack
                         key={item.key}
                         alignItems="center"
                         justifyContent={item.mine ? 'flex-end' : 'flex-start'}
                         marginBottom="$2"
                         paddingHorizontal="$3">
-                        {item.mine ? (
-                          <></>
-                        ) : (
+                        {!item.mine && (
                           <Avatar circular size="$3" marginRight="$1">
-                            <Avatar.Image src={userAvatar} />
-                            <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
+                            <Avatar.Image src={item.avatar} />
+                            <Avatar.Fallback delayMs={600} backgroundColor="#131313" />
                           </Avatar>
                         )}
-                        <View
-                          style={[
-                            styles.messageItem,
-                            {
-                              backgroundColor: item.mine ? 'transparent' : '#141414',
-                              alignSelf: item.mine ? 'flex-end' : 'flex-start',
-                              opacity: item.sent ? 1 : 0.5,
-                            },
-                          ]}>
-                          <YStack>
-                            <Text color={'#fff'} style={{ color: 'white' }}>
-                              {item.text}
-                            </Text>
-
-                            <Text
-                              color="white"
-                              opacity={0.5}
-                              style={{
-                                fontSize: 12,
-                                color: 'rgba(255,100,255,0.7)',
-                                alignSelf: 'flex-end',
-                                marginTop: 4,
-                              }}>
+                        {containsBlinkUrl(item.text) ? (
+                          <View style={styles.blinkContainer}>
+                            <PhantomBlinkIntegration urls={[item.text]} adapterProps={adapterProps} />
+                            <Text style={styles.blinkUserInfo}>
                               {item.user} {!item.sent && '(Sending...)'}
                             </Text>
-                          </YStack>
-                        </View>
+                          </View>
+                        ) : (
+                          <View
+                            style={[
+                              styles.messageItem,
+                              {
+                                backgroundColor: 'white',
+                                alignSelf: item.mine ? 'flex-end' : 'flex-start',
+                                opacity: 1,
+                              },
+                            ]}>
+                            <Text style={styles.messageText}>{item.text}</Text>
+                            <Text style={styles.userInfo}>
+                              {item.user} {!item.sent && '(Sending...)'}
+                            </Text>
+                          </View>
+                        )}
                       </XStack>
-                    )}}
+                    )}
                   />
                 </View>
               </MaskedView>
@@ -435,6 +405,32 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignSelf: 'flex-start',
   },
+  messageText: {
+    color: 'white',
+    fontSize: 16,
+  },
+  userInfo: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,1)',
+    alignSelf: 'flex-end',
+    marginTop: 4,
+  },
+  blinkContainer: {
+    width: '100%',
+    maxWidth: width * 0.8,
+    backgroundColor: '#141414',
+    borderRadius: 12,
+    overflow: 'hidden',
+    marginVertical: 8,
+  },
+  blinkUserInfo: {
+    fontSize: 12,
+    color: 'rgba(255,255,255,1)',
+    alignSelf: 'flex-end',
+    marginTop: 4,
+    marginRight: 8,
+    marginBottom: 4,
+  },
   avatar: {
     width: 20,
     height: 20,
@@ -452,16 +448,6 @@ const styles = StyleSheet.create({
     zIndex: -10,
     pointerEvents: 'none',
   },
-  gradientOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: 'linear-gradient(to top, #000000, transparent)',
-    zIndex: -10,
-    pointerEvents: 'none',
-  },
   bottomBackgroundLayer: {
     position: 'absolute',
     bottom: -230,
@@ -470,16 +456,6 @@ const styles = StyleSheet.create({
     height: '80%',
     backgroundColor: '#000000',
     transform: [{ perspective: 300 }, { rotateX: '40deg' }],
-    zIndex: -14,
-    pointerEvents: 'none',
-  },
-  additionalBottomGradient: {
-    position: 'absolute',
-    bottom: 100,
-    left: 0,
-    right: 0,
-    height: '50%',
-    backgroundColor: 'linear-gradient(to bottom, #000000, transparent)',
     zIndex: -14,
     pointerEvents: 'none',
   },
