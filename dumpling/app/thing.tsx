@@ -20,6 +20,10 @@ import { userAtom, messagesAtom } from '~/state/atoms';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { PhantomBlinkIntegration } from '~/components/Blinksdemo';
 import { adapterProps } from '~/utils/adapterProps';
+import axios from "axios"
+import { v5 as generateChatUUID } from 'uuid';
+
+
 
 const { width } = Dimensions.get('window');
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
@@ -66,6 +70,39 @@ export default function Chatroom() {
       scrollY.value = event.contentOffset.y;
     },
   });
+
+
+  // Define a namespace for your UUID generation
+const NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // You can use any valid UUID as a namespace
+
+  //creating a new chatRoom if it doesn't already exist
+  useEffect(()=>{
+    const createChatRoom = async () => {
+      const payload = {
+        id: generateChatUUID(chatName, NAMESPACE),
+        name: chatName,
+        description: chatName, // using the same value as the name for description
+        admin_id: '12345', // admin ID hardcoded here
+        created_at: new Date().toISOString(), // current datetime in ISO string format
+      };
+
+      try {
+        const response = await axios.post('https://wasabi.cheddar-io.workers.dev/api/chat/chat_room', payload, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        console.log('Chat room created:', response.data);
+      } catch (error) {
+        console.error("ChatRoom with this name already exists")
+        console.error('Error creating chat room:', error);
+
+      }
+    }
+
+    createChatRoom();
+  },[chatName])
 
   useEffect(() => {
     const newWs = new WebSocket(`ws://baklava.cheddar-io.workers.dev/api/room/${chatName}/websocket`);
@@ -125,6 +162,8 @@ export default function Chatroom() {
     };
   }, []);
 
+ 
+
   useEffect(() => {
     scrollRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
@@ -159,6 +198,10 @@ export default function Chatroom() {
         );
       }, 500);
     }
+  }
+
+  async function addMessageToD1(){
+    
   }
 
   const GridBackground = () => {
