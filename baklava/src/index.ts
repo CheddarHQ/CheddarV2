@@ -158,9 +158,9 @@ export class durableSocketServer extends DurableObject {
    
     console.log("Sending old messages:", oldMessages);
 
-    oldMessages.forEach(message => {
-      server.send(JSON.stringify(message));
-    });
+    // oldMessages.forEach(message => {
+    //   server.send(JSON.stringify(message));
+    // });
 
     
 
