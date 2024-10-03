@@ -10,6 +10,7 @@ import { Button } from './Button';
 import { useRecoilState } from 'recoil';
 import { userAtom } from '~/state/atoms';
 import { MyButton } from '~/app/cryptoGraph/[id]';
+import axios from "axios"
 
 export interface UserProfile {
   username: string;
@@ -17,6 +18,10 @@ export interface UserProfile {
   email: string;
   avatar_url: string;
   id: string;
+  created_at : string;
+  bio : string;
+  last_login : string
+
 }
 
 interface AuthResponse {
@@ -52,16 +57,52 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
     name: tokenPayload.user_metadata.full_name,
     email: tokenPayload.email,
     avatar_url: tokenPayload.user_metadata.avatar_url,
-    id: tokenPayload.sub,
+    id: tokenPayload.user_metadata.sub,
+    // created_at : tokenPayload.user.app_metadata.created_at,
+    // last_login : tokenPayload.user.app_metadata.last_sign_in_at,
+    created_at : "",
+    last_login : new Date().toISOString(),
+    bio : tokenPayload.user_metadata.full_name  //setting fullname as the bio for now
+    
+
   };
   console.log('Extracted user profile:', userProfile);
+
+  const createUser = async () => {
+    try {
+      const payload = {
+        id: userProfile.id,
+        username: userProfile.username,
+        bio: userProfile.bio,
+        pub_address: "",
+        last_login: userProfile.last_login,
+        profile_image_url: userProfile.avatar_url,
+        created_at: userProfile.created_at,
+      };
+
+      console.log('Creating user:', payload);  
+
+      const response = await axios.post('https://wasabi.cheddar-io.workers.dev/api/user', payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log("User created successfully")
+      console.log('Response:', response.data);
+    } catch (error) {
+      console.error("User might already exist")
+      console.error('Error creating user:', error);
+    }
+  }
+
+  createUser();
 
   // Extract info from this
   /*
 Extracted user profile: {"avatar_url": "https://pbs.twimg.com/profile_images/1809189990599127040/mti8M7jE_normal.jpg", "email": "sarthakkapila27x@gmail.com", "id": "4c75869e-1204-41f1-a051-d40861e855e3", "name": "Sarthak Kapila", "username": "sarthakkapila0"}
 */
 
-  console.log('Session Details : ', data.session);
 
   return { session: data.session, profile: userProfile };
 };
@@ -86,9 +127,14 @@ const performOAuth = async () => {
   return null;
 };
 
+
+
+
 export default function Auth() {
   const navigation = useNavigation();
   const [userProfile, setUserProfile] = useRecoilState(userAtom);
+
+  console.log("User Profile : ", userProfile);
 
   const url = Linking.useURL();
 

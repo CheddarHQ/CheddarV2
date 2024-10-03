@@ -21,7 +21,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { PhantomBlinkIntegration } from '~/components/Blinksdemo';
 import { adapterProps } from '~/utils/adapterProps';
 import axios from "axios"
-import { v5 as generateChatUUID } from 'uuid';
+import { v5 as generateCustomUUID } from 'uuid';
 
 
 
@@ -79,10 +79,10 @@ const NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // You can use any val
   useEffect(()=>{
     const createChatRoom = async () => {
       const payload = {
-        id: generateChatUUID(chatName, NAMESPACE),
+        id: generateCustomUUID(chatName, NAMESPACE),
         name: chatName,
         description: chatName, // using the same value as the name for description
-        admin_id: '12345', // admin ID hardcoded here
+        admin_id: userProfile.id,
         created_at: new Date().toISOString(), // current datetime in ISO string format
       };
 
