@@ -75,16 +75,17 @@ chatRouter.post("/chat_room", zValidator("json", z.object({
     description: z.string().max(500).optional(),
     admin_id: z.string(),
     created_at: z.string().datetime(),
+    avatar : z.string().optional(),
 })), async (c) => {
     try {
-        const { id, name, description, admin_id, created_at } = c.req.valid('json');
+        const { id, name, description, admin_id, created_at, avatar } = c.req.valid('json');
         const query = `
-        INSERT INTO chat_rooms (id, name, description, admin_id, created_at)
-        VALUES (?, ?, ?, ?, ?);
+        INSERT INTO chat_rooms(id, name, description, admin_id, created_at, avatar)
+        VALUES (?, ?, ?, ?, ?,?);
         `;
         
         await c.env.DB.prepare(query)
-            .bind(id, name, description, admin_id, created_at)
+            .bind(id, name, description, admin_id, created_at, avatar)
             .run();
 
         return c.json({ success: true, id: id }, 201);

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import telegramData from '~/data/telegramData';
@@ -7,6 +7,8 @@ import { BlurView } from 'expo-blur';
 import { Link } from 'expo-router';
 import { userAtom } from '~/state/atoms';
 import { useRecoilValue } from 'recoil';
+import { useEffect } from 'react';
+import axios from "axios"
 
 const ChatItem = ({ item }) => (
   <View style={styles.chatItem}>
@@ -61,18 +63,41 @@ const Header = () => {
 };
 
 const ChatListWithHeader = () => {
+
+  const [chatList, setChatList] = useState(null)
+
+
+  useEffect(()=>{
+    const fetchChatList = async()=>{
+      try{
+        const response = await axios.get(`https://wasabi.cheddar-io.workers.dev/api/chat/chat_rooms`)
+        
+        const chatList = response.data.chat_rooms;
+        console.log("chatList : ", chatList)
+
+        setChatList(chatList);
+      }
+      catch(error){
+        console.log("Error fetching chat list : ", error)
+      }
+    }
+
+    fetchChatList();
+  },[])
+
+
   return (
     <SafeAreaView style={styles.container}>
       <Header />
       <FlatList
-        data={telegramData}
+        data={chatList}
         renderItem={({ item }) => {
           console.log('chatlist : ');
           console.log(item);
 
           return <ChatItem item={item} />;
         }}
-        keyExtractor={(item) => item.key}
+        keyExtractor={(item) => item.id}
       />
     </SafeAreaView>
   );

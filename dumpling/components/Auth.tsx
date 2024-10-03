@@ -91,8 +91,8 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
       console.log("User created successfully")
       console.log('Response:', response.data);
     } catch (error) {
-      console.error("User might already exist")
-      console.error('Error creating user:', error);
+      console.log("User might already exist")
+      console.log('Error creating user:', error);
     }
   }
 

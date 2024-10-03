@@ -91,8 +91,9 @@ const NAMESPACE = '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // You can use any val
         id: generateCustomUUID(chatName, NAMESPACE),
         name: chatName,
         description: chatName, // using the same value as the name for description
-        admin_id: userProfile.id,
-        created_at: new Date().toISOString(), // current datetime in ISO string format
+        admin_id: "1251880341649813506",
+        created_at: new Date().toISOString(), // current datetime in ISO string format,
+        avatar : chatAvatar
       };
 
       try {
