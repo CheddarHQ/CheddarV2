@@ -266,7 +266,7 @@ export default function Chatroom() {
                         {!item.mine && (
                           <Avatar circular size="$3" marginRight="$1">
                             <Avatar.Image src={item.avatar} />
-                            <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
+                            <Avatar.Fallback delayMs={600} backgroundColor="#131313" />
                           </Avatar>
                         )}
                         {containsBlinkUrl(item.text) ? (
@@ -320,7 +320,7 @@ export default function Chatroom() {
                         {!item.mine && (
                           <Avatar circular size="$3" marginRight="$1">
                             <Avatar.Image src={item.avatar} />
-                            <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
+                            <Avatar.Fallback delayMs={600} backgroundColor="#131313" />
                           </Avatar>
                         )}
                         {containsBlinkUrl(item.text) ? (
