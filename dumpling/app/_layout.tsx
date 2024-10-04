@@ -7,8 +7,8 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TamaguiProvider } from 'tamagui';
 import { StatusBar } from 'expo-status-bar';
 import { RecoilRoot } from 'recoil';
-import { Text } from './components/Text'; // Import custom Text component globally
 import config from '../tamagui.config';
+import { OktoProvider, BuildType } from 'okto-sdk-react-native';
 
 ExpoRouterSplashScreen.preventAutoHideAsync();
 
@@ -24,6 +24,8 @@ export default function RootLayout() {
     Press2P: require('../assets/PressStart2P-Regular.ttf'),
   });
 
+  const OKTO_CLIENT_API ="212f425f-1b78-4cf1-9610-7763f7ea2ae3"
+
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
@@ -35,6 +37,7 @@ export default function RootLayout() {
   return (
     <RecoilRoot>
       <TamaguiProvider config={config}>
+      <OktoProvider apiKey={OKTO_CLIENT_API} buildType={BuildType.SANDBOX}>
         <StatusBar style="auto" />
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
@@ -51,6 +54,7 @@ export default function RootLayout() {
             />
           </Stack>
         </GestureHandlerRootView>
+    </OktoProvider>
       </TamaguiProvider>
     </RecoilRoot>
   );
