@@ -8,7 +8,8 @@ import { Container } from '~/components/Container';
 import { ScreenContent } from '~/components/ScreenContent';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Image } from 'tamagui';
-//C:\Users\Asus\Downloads\hygiene\Cheddar\dumpling\assets\CheddarLogo.png
+
+
 export default function Home() {
   return (
     <YStack
@@ -28,7 +29,7 @@ export default function Home() {
           }}
         />
       </XStack>
-      <Link href={'/loginPage'}>
+      <Link href={'/loginScreen'}>
         <XStack
           borderWidth="$1"
           borderColor={'#ffffff'}
