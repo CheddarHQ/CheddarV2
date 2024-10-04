@@ -9,6 +9,7 @@ import { StatusBar } from 'expo-status-bar';
 import { RecoilRoot } from 'recoil';
 import config from '../tamagui.config';
 import { OktoProvider, BuildType } from 'okto-sdk-react-native';
+import LoginScreen from './loginScreen';
 
 ExpoRouterSplashScreen.preventAutoHideAsync();
 
@@ -44,7 +45,7 @@ export default function RootLayout() {
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
             <Stack.Screen name="thing" options={{ headerShown: false }} />
-            <Stack.Screen name="loginPage" options={{ headerShown: false }} />
+            <Stack.Screen name="loginScreen" options={{ headerShown: false }} />
             <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="userPage" options={{ headerShown: false }} />
