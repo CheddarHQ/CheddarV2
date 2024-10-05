@@ -109,23 +109,51 @@ Extracted user profile: {"avatar_url": "https://pbs.twimg.com/profile_images/180
 
 const performOAuth = async () => {
   console.log('Redirect URL:', redirectTo);
+
   const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'twitter',
+    provider: 'google',
     options: {
       redirectTo,
-      skipBrowserRedirect: true,
+      scopes: 'openid profile email',
+      // Ensure that both 'token' and 'id_token' are requested
+      responseType: 'token id_token',
     },
   });
+
   if (error) throw error;
+
   console.log('Auth URL:', data?.url);
 
   const res = await WebBrowser.openAuthSessionAsync(data?.url ?? '', redirectTo);
 
   if (res.type === 'success' && res.url) {
-    return res.url;
+    // Extract the URL fragment (everything after the #)
+    const fragment = res.url.split('#')[1];
+
+    // Convert the fragment into an object
+    const params = new URLSearchParams(fragment);
+
+    // Extract the id_token and other tokens
+    const idToken = params.get('id_token');
+    const accessToken = params.get('access_token');
+    const refreshToken = params.get('refresh_token');
+
+    console.log('ID Token:', idToken);
+    console.log('Access Token:', accessToken);
+    console.log('Refresh Token:', refreshToken);
+
+    return {
+      idToken,
+      accessToken,
+      refreshToken,
+    };
   }
+
   return null;
 };
+
+
+
 
 
 
