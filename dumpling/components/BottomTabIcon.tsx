@@ -27,6 +27,8 @@ const BottomTabIcon = ({ route, isFocused }: Props) => {
         return <BlinksIcon />;
       case 'holdings':
         return <SettingIcon />;
+        case 'payment':
+        return <SettingIcon />;
       default:
         break;
     }

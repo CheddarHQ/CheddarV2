@@ -54,6 +54,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="payment"
+        options={{
+          title: 'payment',
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
         name="holdings"
         options={{
           title: 'Holdings',
