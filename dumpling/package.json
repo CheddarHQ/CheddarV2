@@ -13,6 +13,10 @@
   "dependencies": {
     "@dialectlabs/blinks": "^0.12.1",
     "@dialectlabs/blinks-react-native": "^0.3.3",
+    "@dynamic-labs/client": "^3.2.0",
+    "@dynamic-labs/react-hooks": "^3.2.0",
+    "@dynamic-labs/react-native-extension": "^3.2.0",
+    "@dynamic-labs/solana-extension": "^3.2.0",
     "@expo-google-fonts/goldman": "^0.2.3",
     "@expo-google-fonts/inter": "^0.2.3",
     "@expo-google-fonts/poppins": "^0.2.3",
@@ -84,6 +88,7 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-web": "~0.19.10",
     "react-native-webview": "13.8.6",
+    "react-native-webview-crypto": "^0.0.26",
     "recoil": "^0.7.7",
     "rn-okto-sdk": "^2.0.18",
     "tamagui": "1.74.8",
