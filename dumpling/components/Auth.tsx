@@ -172,11 +172,11 @@ export default function Auth() {
           <Text style={styles.title}>Welcome! {userProfile.name}</Text>
           <Link
             href={{
-              pathname: '/(tabs)/Chat',
+              pathname: '/(tabs)/analytics',
               params: { username: userProfile.username },
             }}
             asChild>
-            <Button title="Enter chat" color="#007AFF" />
+            <Button title="Enter" color="#007AFF" />
           </Link>
         </View>
       ) : (
