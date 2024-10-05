@@ -20,10 +20,7 @@ import {
   Transaction,
 } from '@solana/web3.js';
 import React, { useEffect, useCallback, useRef, useState } from 'react';
-import Toast from 'react-native-toast-message';
 import Button2 from '~/components/Button2';
-import Web3Button from '~/components/ButtonCustom';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
 
 import { phantomWallet, PhantomWallet } from '~/lib/phantomUtils';
@@ -37,8 +34,8 @@ import {
   sharedSecretAtom,
   detailedInfoAtom,
   phantomSessionAtom,
-  slippageAtom
-} from "~/state/atoms";
+  slippageAtom,
+} from '~/state/atoms';
 
 import HorizontalTabs from '~/components/HorizontalTabs';
 import { phantomSelector } from '~/state/selectors';
@@ -56,7 +53,8 @@ const MoneyEx = () => {
 
   const slippage = useRecoilValue(slippageAtom);
   const setSharedSecret = useSetRecoilState<Uint8Array>(sharedSecretAtom);
-  const { sharedSecret, session, phantomWalletPublicKey, chainId } = useRecoilValue(phantomSelector);
+  const { sharedSecret, session, phantomWalletPublicKey, chainId } =
+    useRecoilValue(phantomSelector);
   const setPhantomWalletPublicKey = useSetRecoilState(phantomPublicKey);
   const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const setSession = useSetRecoilState(phantomSessionAtom);
@@ -90,7 +88,7 @@ const MoneyEx = () => {
   const performSwap = async () => {
     try {
       const currentPhantomPublicKey = phantomWallet.getPhantomWalletPublicKey();
-      
+
       if (!currentPhantomPublicKey) {
         console.error('No connected wallet');
         return;
@@ -118,7 +116,7 @@ const MoneyEx = () => {
       if (response.ok && data.unsignedTransaction) {
         const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
         let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-        
+
         const signedTransaction = await phantomWallet.signAndSendTransaction(transaction);
 
         if (signedTransaction) {
