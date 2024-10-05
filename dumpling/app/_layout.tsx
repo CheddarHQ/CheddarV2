@@ -8,8 +8,6 @@ import { TamaguiProvider } from 'tamagui';
 import { StatusBar } from 'expo-status-bar';
 import { RecoilRoot } from 'recoil';
 import config from '../tamagui.config';
-import { OktoProvider, BuildType } from 'okto-sdk-react-native';
-import LoginScreen from './loginScreen';
 
 ExpoRouterSplashScreen.preventAutoHideAsync();
 
@@ -38,14 +36,13 @@ export default function RootLayout() {
   return (
     <RecoilRoot>
       <TamaguiProvider config={config}>
-      <OktoProvider apiKey={OKTO_CLIENT_API} buildType={BuildType.SANDBOX}>
         <StatusBar style="auto" />
         <GestureHandlerRootView style={{ flex: 1 }}>
           <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
             <Stack.Screen name="thing" options={{ headerShown: false }} />
-            <Stack.Screen name="loginScreen" options={{ headerShown: false }} />
+            <Stack.Screen name="loginPage" options={{ headerShown: false }} />
             <Stack.Screen name="crypto" options={{ headerShown: false, presentation: 'modal' }} />
             <Stack.Screen name="UserProfileScreen" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -56,7 +53,6 @@ export default function RootLayout() {
             />
           </Stack>
         </GestureHandlerRootView>
-    </OktoProvider>
       </TamaguiProvider>
     </RecoilRoot>
   );

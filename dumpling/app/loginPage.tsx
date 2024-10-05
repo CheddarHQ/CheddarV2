@@ -18,6 +18,7 @@ const loginPage = () => {
           By logging in or signing up, you agree to our Terms of Use and have read and agreed our
           Privacy Policy
         </Text>
+       
       </YStack>
     </YStack>
   );

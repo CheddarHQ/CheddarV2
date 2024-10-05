@@ -29,7 +29,7 @@ export default function Home() {
           }}
         />
       </XStack>
-      <Link href={'/loginScreen'}>
+      <Link href={'/loginPage'}>
         <XStack
           borderWidth="$1"
           borderColor={'#ffffff'}

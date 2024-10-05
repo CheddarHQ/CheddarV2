@@ -180,7 +180,9 @@ export default function Auth() {
           </Link>
         </View>
       ) : (
-        <Button onPress={handleSignIn} title="Sign in with Twitter" color="#007AFF" />
+        <View>
+          <Button onPress={handleSignIn} title="Sign in with Twitter" color="#007AFF" />
+        </View>
       )}
     </View>
   );
