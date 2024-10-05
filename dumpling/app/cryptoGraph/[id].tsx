@@ -11,8 +11,9 @@ import MyCard from '~/components/MyCard';
 import { formatValue } from '~/components/FormatValue';
 import CopyIcon from '../../assets/svg/Vector.svg';
 import { MyLoader } from '~/components/LgSkeleton';
-import { Instagram } from 'react-content-loader';
+import { WebView } from 'react-native-webview';
 import { coinDirectory } from '~/utils/directory';
+import { useRouter } from 'expo-router';
 
 interface PriceHistoryPoint {
   date: Date;
@@ -27,9 +28,10 @@ interface TokenInfo {
   marginTop: string;
   volH6: string;
   volH24: string;
+  baseAddress: string;
 }
 
-type TimeRange = '30min' | '1hour' | '6hours' | '24hours';
+type TimeRange = '1H' | '1D' | '7D' | '1M' | '6M' | '1Y';
 
 const formatCoinName = (name: string): string => {
   if (name.toLowerCase().includes('popcat')) {
@@ -50,17 +52,22 @@ const fetchCoinId = (coinName: string): string | null => {
 
   if (!coinEntry) {
     coinEntry = coinDirectory.values.find(
-      (entry) => 
+      (entry) =>
         entry[1].toLowerCase().includes(coinName.toLowerCase()) ||
         entry[2].toLowerCase().includes(coinName.toLowerCase())
     );
   }
-  
+
   return coinEntry ? coinEntry[0].toString() : null;
 };
 
-const fetchCoinData = async (coinId: string, range: string): Promise<PriceHistoryPoint[]> => {
+const fetchCoinData = async (coinId: string, range: TimeRange): Promise<PriceHistoryPoint[]> => {
   try {
+    let apiRange = range;
+    if (range === '6M') {
+      apiRange = '180D'; // Use 180D instead of 6M for the API request
+    }
+
     const response = await fetch(
       `https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=${coinId}&range=${range}`
     );
@@ -75,16 +82,17 @@ const fetchCoinData = async (coinId: string, range: string): Promise<PriceHistor
   }
 };
 
-const MyChart: React.FC = () => {
+const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykBBAP' }) => {
   const { id } = useLocalSearchParams();
   const [selectedPoint, setSelectedPoint] = useState<PriceHistoryPoint | null>(null);
-  const [timeRange, setTimeRange] = useState<TimeRange>('24hours');
+  const [timeRange, setTimeRange] = useState<TimeRange>('1D');
   const [coinId, setCoinId] = useState<string | null>(null);
+  const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
 
   const { detailedInfo } = useGlobalSearchParams<{ detailedInfo: string }>();
-  const [tokenInfo, setTokenInfo] = useState<TokenInfo | null>(null);
   const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>([]);
   const [graphLoading, setGraphLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,7 +106,6 @@ const MyChart: React.FC = () => {
           if (fetchedCoinId) {
             setCoinId(fetchedCoinId);
             const chartData = await fetchCoinData(fetchedCoinId, '1D');
-            console.log(chartData);
             setPriceHistory(chartData);
             setGraphLoading(false);
           }
@@ -112,27 +119,55 @@ const MyChart: React.FC = () => {
     fetchData();
   }, [detailedInfo]);
 
+  const getCustomHTML = (dexAddress) => `
+    <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <style>
+      body { 
+        margin: 0; 
+        padding: 0; 
+        background-color: #000000; 
+      }
+      #dexscreener-embed {
+        position: relative;
+        width: 100%;
+        padding-bottom: 125%;
+      }
+      @media(min-width: 1400px) {
+        #dexscreener-embed {
+          padding-bottom: 65%;
+        }
+      }
+      #dexscreener-embed iframe {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="dexscreener-embed">
+      <iframe 
+        width="100%" 
+        height="600" 
+        src="https://birdeye.so/tv-widget/${dexAddress}?chain=solana&viewMode=pair&chartInterval=1D&chartType=LINE&chartTimezone=Asia%2FCalcutta&theme=dark&cssCustomProperties=--tv-color-platform-background%3A%23000000&cssCustomProperties=--tv-color-pane-background%3A%23000000&chartOverrides=paneProperties.backgroundType%3Asolid&chartOverrides=paneProperties.background%3A%23000000&leftToolbar=hide&chartLeftToolbar=hide&chartTopToolbar=hide&widgetBar=hide&attribution=hide&scalesVisibility=hide&hideTopMenu=true" 
+        frameborder="0" 
+        allowfullscreen>
+      </iframe>
+    </div>
+  </body>
+</html>
+
+  `;
+
   useEffect(() => {
     if (coinId) {
       const fetchData = async () => {
-        let range: string;
-        switch (timeRange) {
-          case '30min':
-            range = '1H';
-            break;
-          case '1hour':
-            range = '1H';
-            break;
-          case '6hours':
-            range = '1D';
-            break;
-          case '24hours':
-            range = '1D';
-            break;
-          default:
-            range = '1D';
-        }
-        const chartData = await fetchCoinData(coinId, range);
+        const chartData = await fetchCoinData(coinId, timeRange);
         setPriceHistory(chartData);
       };
       fetchData();
@@ -142,14 +177,26 @@ const MyChart: React.FC = () => {
   const filteredPriceHistory = useMemo(() => {
     const now = new Date();
     switch (timeRange) {
-      case '30min':
-        return priceHistory.filter((d) => now.getTime() - d.date.getTime() <= 30 * 60 * 1000);
-      case '1hour':
+      case '1H':
         return priceHistory.filter((d) => now.getTime() - d.date.getTime() <= 60 * 60 * 1000);
-      case '6hours':
-        return priceHistory.filter((d) => now.getTime() - d.date.getTime() <= 6 * 60 * 60 * 1000);
-      case '24hours':
-        return priceHistory;
+      case '1D':
+        return priceHistory.filter((d) => now.getTime() - d.date.getTime() <= 24 * 60 * 60 * 1000);
+      case '7D':
+        return priceHistory.filter(
+          (d) => now.getTime() - d.date.getTime() <= 7 * 24 * 60 * 60 * 1000
+        );
+      case '1M':
+        return priceHistory.filter(
+          (d) => now.getTime() - d.date.getTime() <= 30 * 24 * 60 * 60 * 1000
+        );
+      case '6M':
+        return priceHistory.filter(
+          (d) => now.getTime() - d.date.getTime() <= 180 * 24 * 60 * 60 * 1000
+        );
+      case '1Y':
+        return priceHistory.filter(
+          (d) => now.getTime() - d.date.getTime() <= 365 * 24 * 60 * 60 * 1000
+        );
       default:
         return priceHistory;
     }
@@ -174,9 +221,27 @@ const MyChart: React.FC = () => {
     return `$${point.value.toFixed(10)}`;
   }, []);
 
-  const formatTimeTitle = useCallback((point: PriceHistoryPoint) => {
-    return `Time: ${point.date.toLocaleTimeString()}`;
-  }, []);
+  const formatTimeTitle = useCallback(
+    (point: PriceHistoryPoint) => {
+      const date = new Date(point.date);
+
+      // Adjust date format based on time range
+      switch (timeRange) {
+        case '1H':
+          return date.toLocaleTimeString();
+        case '1D':
+          return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+        case '7D':
+        case '1M':
+        case '6M':
+        case '1Y':
+          return date.toLocaleDateString();
+        default:
+          return date.toLocaleString();
+      }
+    },
+    [timeRange]
+  );
 
   const handlePointSelected = useCallback((point: PriceHistoryPoint) => {
     setSelectedPoint(point);
@@ -215,8 +280,12 @@ const MyChart: React.FC = () => {
                     </XStack>
                   </XStack>
                   <XStack marginBottom="$-4">
-                    <Text color={'white'} opacity={0.5} fontWeight={600} alignSelf="center" 
-                    fontFamily={'Goldman'}>
+                    <Text
+                      color={'white'}
+                      opacity={0.5}
+                      fontWeight={600}
+                      alignSelf="center"
+                      fontFamily={'Goldman'}>
                       {tokenInfo.name}
                     </Text>
                   </XStack>
@@ -233,14 +302,14 @@ const MyChart: React.FC = () => {
                 <XStack gap={4}>
                   <FontAwesome name="caret-up" size={20} color="#4caf50" />
                   <Text color={'#4caf50'} fontFamily={'Goldman'}>
-                  {percentageChange.toFixed(2)}%
+                    {percentageChange.toFixed(2)}%
                   </Text>
                 </XStack>
               ) : (
                 <XStack gap={4}>
                   <FontAwesome name="caret-down" size={20} color="#f44336" />
                   <Text color={'#f44336'} fontFamily={'Goldman'}>
-                  {percentageChange.toFixed(2)}%
+                    {percentageChange.toFixed(2)}%
                   </Text>
                 </XStack>
               )}
@@ -250,82 +319,44 @@ const MyChart: React.FC = () => {
             </YStack>
           )}
         </YStack>
-        {graphLoading ? (
-          <MyLoader />
-        ) : (
-          <LineGraph
-            points={filteredPriceHistory}
-            animated={true}
-            color={percentageChange >= 0 ? '#0FFF50' : '#f44336'}
-            style={styles.chart}
-            enablePanGesture={true}
-            panGestureDelay={300}
-            onPointSelected={handlePointSelected}
-            onGestureEnd={handleGestureEnd}
+        <View style={{ height: 400, width: '100%' }}>
+          <WebView
+            source={{ html: getCustomHTML(tokenInfo?.baseAddress || address) }}
+            style={{ flex: 1, backgroundColor: '#000000' }}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            scrollEnabled={false}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.warn('WebView error: ', nativeEvent);
+            }}
+            onLoadEnd={() => {
+              console.log('WebView loaded successfully');
+            }}
           />
-        )}
-
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={[styles.button, timeRange === '30min' && styles.activeButton]}
-            onPress={() => setTimeRange('30min')}>
-            <Text style={styles.buttonText} color={'#fff'} fontFamily={'Goldman'}>
-              30m
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, timeRange === '1hour' && styles.activeButton]}
-            onPress={() => setTimeRange('1hour')}>
-            <Text style={styles.buttonText} color={'#fff'} fontFamily={'Goldman'}>
-              1hr
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, timeRange === '6hours' && styles.activeButton]}
-            onPress={() => setTimeRange('6hours')}>
-            <Text style={styles.buttonText} color={'#fff'} fontFamily={'Goldman'}>
-              6hr
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, timeRange === '24hours' && styles.activeButton]}
-            onPress={() => setTimeRange('24hours')}>
-            <Text style={styles.buttonText} color={'#fff'} fontFamily={'Goldman'}>
-              1D
-            </Text>
-          </TouchableOpacity>
         </View>
-        {tokenInfo && (
-          <XStack
-            gap={10}
-            padding={20}
-            alignItems="center"
-            alignContent="center"
-            justifyContent="center">
-            <MyCard
-              text="liquidity"
-              value={formatValue(tokenInfo.liquidityUsd)}
-              icon={<Entypo name="drop" size={20} color="white" />}
-            />
-            <MyCard
-              text="6h Vol"
-              value={formatValue(tokenInfo.volH6)}
-              icon={<Entypo name="area-graph" size={20} color="white" />}
-            />
-            <MyCard
-              text="24h Vol"
-              value={formatValue(tokenInfo.volH24)}
-              icon={<Entypo name="bar-graph" size={20} color="white" />}
-            />
-          </XStack>
-        )}
+
         <XStack alignContent="center" justifyContent="center">
           <Text color={'white'} opacity={0.5} fontWeight={600} fontSize={14} fontFamily={'Goldman'}>
-            The pool is dry... make it rain ETH!
+            The pool is dry... make it rain {tokenInfo?.name}!
           </Text>
         </XStack>
       </YStack>
-      <MyButton title="LOCK IN" />
+      <MyButton
+        title="BUY/SELL"
+        onPress={() => {
+          if (tokenInfo) {
+            const detailedInfoString = JSON.stringify(tokenInfo);
+            console.log('detailedInfoString', detailedInfoString);
+            router.push({
+              pathname: `/crypto/${tokenInfo.baseAddress}`,
+              params: { detailedInfo: detailedInfoString },
+            });
+          } else {
+            console.log(`No detailed info available for this token.`);
+          }
+        }}
+      />
     </YStack>
   );
 };
@@ -365,19 +396,25 @@ const styles = StyleSheet.create({
 
 export default MyChart;
 
-export const MyButton = (title: { title: string }) => {
+interface MyButtonProps {
+  title: string;
+  onPress: () => void;
+}
+
+export const MyButton: React.FC<MyButtonProps> = ({ title, onPress }) => {
   return (
     <Button
+      onPress={onPress}
       marginBottom="$6"
-      backgroundColor={'#FEF503'}
+      backgroundColor="#FEF503"
       justifyContent="center"
       alignSelf="center"
-      borderRadius={'$10'}
+      borderRadius="$10"
       width={180}
       height={50}>
       <XStack alignContent="center" alignItems="center">
-        <Text color={'#0B0A0F'} fontFamily={'Goldman'} fontWeight={900} fontSize={24}>
-          {title.title}
+        <Text color="#0B0A0F" fontFamily="Goldman" fontWeight="900" fontSize={24}>
+          {title}
         </Text>
       </XStack>
     </Button>
