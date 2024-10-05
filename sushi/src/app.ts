@@ -7,7 +7,7 @@ import { logger } from "hono/logger";
 import { memoRouter } from "./actions/memo";
 import { dynamicTransferRouter } from "./actions/dynamic";
 import { pumpRouter } from "./pump";
-import { tokenRouter } from "./createSPL";
+import { walletRouter } from "./createwallet";
 // import { proxyRouter } from "./proxy";
 // import { serveStatic } from "hono/bun";
 
@@ -21,7 +21,7 @@ const apiRoutes = app.basePath("/api")
                 .route("data", dataRouter)
                 .route("chart", chartRouter)
                 .route("pump", pumpRouter)
-                .route("createtoken", tokenRouter)
+                .route("creatwallet", walletRouter)
                 .basePath("/actions")
                     .route("donate", donateRouter)
                     .route("memo", memoRouter)
