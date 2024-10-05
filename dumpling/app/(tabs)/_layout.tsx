@@ -40,20 +40,6 @@ export default function TabLayout() {
   return (
     <Tabs tabBar={CustomBottomTabs}>
       <Tabs.Screen
-        name="Chat"
-        options={{
-          title: 'Chat',
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
-        name="modal"
-        options={{
-          title: 'CryptoSwap',
-          headerShown: false,
-        }}
-      />
-      <Tabs.Screen
         name="analytics"
         options={{
           title: 'Analytics',
@@ -61,6 +47,23 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="rewards"
+        options={{
+          title: 'Rewards',
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="holdings"
+        options={{
+          title: 'Holdings',
+          headerShown: true,
+          headerTransparent: true,
+          headerBackground: () => <BlurView intensity={100} style={{ flex: 1 }} />,
+          headerTitleStyle: { color: '#ffffff', fontFamily: 'Goldman' },
+        }}
+      />
+      {/* <Tabs.Screen
         name="Blinks"
         options={{
           title: 'Blinks',
@@ -69,7 +72,7 @@ export default function TabLayout() {
           headerBackground: () => <BlurView intensity={100} style={{ flex: 1 }} />,
           headerTitleStyle: { color: '#ffffff', fontFamily: 'Goldman' },
         }}
-      />
+      /> */}
     </Tabs>
   );
 }
