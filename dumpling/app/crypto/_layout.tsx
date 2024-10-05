@@ -11,6 +11,22 @@ export default function CryptoLayout() {
           presentation: 'modal',
         }}
       />
+      <Stack.Screen
+        name="buy"
+        options={{
+          title: 'Crypto Details', // This can be dynamic as well if you want to set the title based on the crypto
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen
+        name="sell"
+        options={{
+          title: 'Crypto Details', // This can be dynamic as well if you want to set the title based on the crypto
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      />
     </Stack>
   );
 }

@@ -271,7 +271,7 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
                         color={'white'}
                         fontWeight={'bold'}
                         fontSize={32}
-                        fontFamily={'Goldman'}>
+                        fontFamily={'Poppins'}>
                         {tokenInfo.symbol}
                       </Text>
                       <XStack marginBottom="$2">
@@ -285,7 +285,7 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
                       opacity={0.5}
                       fontWeight={600}
                       alignSelf="center"
-                      fontFamily={'Goldman'}>
+                      fontFamily={'Poppins'}>
                       {tokenInfo.name}
                     </Text>
                   </XStack>
@@ -295,25 +295,25 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
           </Card>
           {displayPoint && (
             <YStack alignItems="flex-start" marginLeft="$4" marginBottom="$2">
-              <Text color={'#fff'} fontSize={32} fontWeight={'bold'} fontFamily={'Goldman'}>
+              <Text color={'#fff'} fontSize={32} fontWeight={'bold'} fontFamily={'Poppins'}>
                 {formatPriceTitle(displayPoint)}
               </Text>
               {percentageChange >= 0 ? (
                 <XStack gap={4}>
                   <FontAwesome name="caret-up" size={20} color="#4caf50" />
-                  <Text color={'#4caf50'} fontFamily={'Goldman'}>
+                  <Text color={'#4caf50'} fontFamily={'Poppins'}>
                     {percentageChange.toFixed(2)}%
                   </Text>
                 </XStack>
               ) : (
                 <XStack gap={4}>
                   <FontAwesome name="caret-down" size={20} color="#f44336" />
-                  <Text color={'#f44336'} fontFamily={'Goldman'}>
+                  <Text color={'#f44336'} fontFamily={'Poppins'}>
                     {percentageChange.toFixed(2)}%
                   </Text>
                 </XStack>
               )}
-              <Text style={styles.infoText} color={'#fff'} fontFamily={'Goldman'}>
+              <Text style={styles.infoText} color={'#fff'} fontFamily={'Poppins'}>
                 {formatTimeTitle(displayPoint)}
               </Text>
             </YStack>
@@ -337,26 +337,45 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
         </View>
 
         <XStack alignContent="center" justifyContent="center">
-          <Text color={'white'} opacity={0.5} fontWeight={600} fontSize={14} fontFamily={'Goldman'}>
+          <Text color={'white'} opacity={0.5} fontWeight={600} fontSize={14} fontFamily={'Poppins'}>
             The pool is dry... make it rain {tokenInfo?.name}!
           </Text>
         </XStack>
       </YStack>
-      <MyButton
-        title="BUY/SELL"
-        onPress={() => {
-          if (tokenInfo) {
-            const detailedInfoString = JSON.stringify(tokenInfo);
-            console.log('detailedInfoString', detailedInfoString);
-            router.push({
-              pathname: `/crypto/${tokenInfo.baseAddress}`,
-              params: { detailedInfo: detailedInfoString },
-            });
-          } else {
-            console.log(`No detailed info available for this token.`);
-          }
-        }}
-      />
+      <XStack gap={30}>
+        <MyButton
+          title="BUY"
+          color="#39ef0f"
+          onPress={() => {
+            if (tokenInfo) {
+              const detailedInfoString = JSON.stringify(tokenInfo);
+              console.log('detailedInfoString', detailedInfoString);
+              router.push({
+                pathname: `/crypto/buy/${tokenInfo.baseAddress}`,
+                params: { detailedInfo: detailedInfoString },
+              });
+            } else {
+              console.log(`No detailed info available for this token.`);
+            }
+          }}
+        />
+        <MyButton
+          title="SELL"
+          color="red"
+          onPress={() => {
+            if (tokenInfo) {
+              const detailedInfoString = JSON.stringify(tokenInfo);
+              console.log('detailedInfoString', detailedInfoString);
+              router.push({
+                pathname: `/crypto/sell/${tokenInfo.baseAddress}`,
+                params: { detailedInfo: detailedInfoString },
+              });
+            } else {
+              console.log(`No detailed info available for this token.`);
+            }
+          }}
+        />
+      </XStack>
     </YStack>
   );
 };
@@ -398,22 +417,23 @@ export default MyChart;
 
 interface MyButtonProps {
   title: string;
-  onPress: () => void;
+  onPress?: () => void;
+  color?: string;
 }
 
-export const MyButton: React.FC<MyButtonProps> = ({ title, onPress }) => {
+export const MyButton: React.FC<MyButtonProps> = ({ title, onPress, color }) => {
   return (
     <Button
       onPress={onPress}
       marginBottom="$6"
-      backgroundColor="#FEF503"
+      backgroundColor={color}
       justifyContent="center"
       alignSelf="center"
       borderRadius="$10"
       width={180}
       height={50}>
       <XStack alignContent="center" alignItems="center">
-        <Text color="#0B0A0F" fontFamily="Goldman" fontWeight="900" fontSize={24}>
+        <Text color="#0B0A0F" fontFamily="Poppins" fontWeight="900" fontSize={24}>
           {title}
         </Text>
       </XStack>
