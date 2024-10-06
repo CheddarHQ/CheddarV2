@@ -81,12 +81,15 @@ export default function Layout() {
     <View
       style={{
         flex: 1,
+
+        backgroundColor: 'black',
+        justifyContent: 'center',
       }}>
       <dynamicClient.reactNative.WebView />
       {/* <PolyfillCrypto /> */}
       {!wallets.primary && (
         <View style={styles.LoginContainer}>
-        <Slider/>
+          <Slider />
           <Text style={styles.HeaderLoginTxt}>Cheddar 🧀</Text>
           <TouchableOpacity style={styles.loginButton} onPress={() => dynamicClient.ui.auth.show()}>
             <Text style={styles.loginButtonText}>Create a Wallet</Text>
@@ -216,15 +219,15 @@ const styles = StyleSheet.create({
   loginButton: {
     paddingVertical: 12,
     color: '#000',
-    backgroundColor: '#000',
+    backgroundColor: '#fff',
     paddingHorizontal: 24,
     borderRadius: 8,
     width: '50%',
     display: 'flex',
     justifyContent: 'center',
+    marginBottom: 60,
   },
   loginButtonText: {
-    color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -235,6 +238,7 @@ const styles = StyleSheet.create({
   },
   HeaderLoginTxt: {
     fontSize: 24,
+    color: 'white',
     marginBottom: 0,
     paddingBottom: 0,
   },

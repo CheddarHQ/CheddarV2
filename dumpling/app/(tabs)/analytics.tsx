@@ -27,12 +27,13 @@ import Constants from 'expo-constants';
 const { width, height } = Dimensions.get('screen');
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
-import { useRecoilValue } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import { balanceAtom } from '~/state/atoms';
 import { useDynamic } from '~/client';
 import { getTokenData, getWalletBalance } from '~/utils/getBalance';
 import { G } from 'react-native-svg';
 import axios from "axios"
+import { FontAwesome5 } from '@expo/vector-icons';
 
 interface TokenBasicInfo {
   name: string;
@@ -73,7 +74,7 @@ export default function Modal() {
 
   const router = useRouter();
 
-  const [balance, setBalance] = useState(0)
+  const [balance , setBalance] = useRecoilState(balanceAtom)
   const [walletTokenData, setWalletTokenData] = useState("")
   const { auth, wallets, ui } = useDynamic();
   
@@ -454,7 +455,7 @@ export default function Modal() {
               <Animated.View style={[styles.balanceContainer, balanceStylez]}>
                 {/* <Text style={[styles.regular, { fontSize: 42, color: _colors.text }]}>$4650</Text> */}
                 <Text fontSize={42} color={'#fff'}>
-                  {balance} SOL
+                <FontAwesome5 name="rupee-sign" size={32} color="white" /> {balance} 
                 </Text>
                 {/* <Text style={[styles.regular, { color: _colors.text, opacity: 0.6 }]}> */}
                 <Text color={'#808080'} opacity={0.6}>

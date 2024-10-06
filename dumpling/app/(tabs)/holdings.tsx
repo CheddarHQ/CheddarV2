@@ -5,11 +5,12 @@ import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { DynamicContextProvider, useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useDynamic } from '~/client';
 import { getWalletBalance } from '~/utils/getBalance';
 import { useRecoilState } from 'recoil';
 import { balanceAtom } from '~/state/atoms';
+// import Balances from '~/components/Holdings';
 
 
 const { width } = Dimensions.get('window');
@@ -130,16 +131,16 @@ const holdings = () => {
       <XStack marginBottom={10}>
         
         <Text fontSize={40} fontWeight={'bold'} color="#FFFFFF">
-          {balance} SOL
+        <FontAwesome5 name="rupee-sign" size={32} color="white" /> {balance}
         </Text>
         
         
       </XStack>
       <XStack marginBottom={20}>
-        <Text color={'#00FF00'} fontWeight={'bold'} paddingRight={5}>
+        {/* <Text color={'#00FF00'} fontWeight={'bold'} paddingRight={5}>
           5.38%
         </Text>
-        <Text color={'#B0B0B0'}>All Time</Text>
+        <Text color={'#B0B0B0'}>All Time</Text> */}
       </XStack>
 
       <XStack justifyContent="space-around" marginVertical={20} width={width * 0.8}>
@@ -175,26 +176,18 @@ const holdings = () => {
 
       <XStack padding={8} justifyContent="space-between" width={width * 0.9}>
         <XStack alignItems="center">
-          <Text fontWeight={'bold'} fontSize={25} color="#FFFFFF">
-            Cash*
+          {/* <Text fontWeight={'bold'} fontSize={25} color="#FFFFFF">
+            Cash
           </Text>
           <Text color={'#B0B0B0'} fontSize={20} paddingLeft={10}>
-            $23
-          </Text>
+            
+          </Text> */}
         </XStack>
         <AntDesign name="plus" size={24} color="white" />
       </XStack>
 
       <Separator marginVertical={10} backgroundColor="#808080" />
-
-      {/* FlatList for holdings */}
-      <FlatList
-        data={data}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.key}
-        showsVerticalScrollIndicator={false}
-        style={{ marginTop: 20 }}
-      />
+    {/* <Balances/> */}
     </YStack>
   );
 };

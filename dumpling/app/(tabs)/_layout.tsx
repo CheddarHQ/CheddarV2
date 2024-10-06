@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { SplashScreen } from 'expo-router';
 import { Tabs } from 'expo-router';
 import CustomBottomTab from '~/components/CustomBottomTab';
-import { BottomTabBarProps, createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { BlurView } from 'expo-blur';
 import {
   useFonts,
@@ -11,6 +11,13 @@ import {
   Poppins_400Regular,
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
+import { Ionicons } from '@expo/vector-icons';
+import { useDynamic } from '~/client';
+import * as Linking from 'expo-linking';
+import { createSessionFromUrl } from '~/components/Auth';
+import { useRecoilState } from 'recoil';
+import { userAtom } from '~/state/atoms';
+
 export type BottomTabParamList = {
   Home: undefined;
   Search: undefined;
@@ -23,6 +30,28 @@ const CustomBottomTabs = (props: BottomTabBarProps) => {
 };
 
 export default function TabLayout() {
+  const [userProfile, setUserProfile] = useRecoilState(userAtom);
+
+  const { auth, wallets, ui } = useDynamic();
+  const url = Linking.useURL();
+
+  useEffect(() => {
+    if (url) {
+      createSessionFromUrl(url)
+        .then((response) => {
+          console.log('User Profile:', response);
+          if (response) {
+            setUserProfile(response.profile);
+          }
+        })
+        .catch((error) => console.error(error));
+    }
+  }, [url]);
+
+  const showUserProfile = () => {
+    ui.userProfile.show();
+  };
+
   const [loaded] = useFonts({
     Poppins_100Thin,
     Poppins_400Regular,
@@ -59,8 +88,19 @@ export default function TabLayout() {
           title: 'Holdings',
           headerShown: true,
           headerTransparent: true,
-          headerBackground: () => <BlurView intensity={100} style={{ flex: 1 }} />,
-          headerTitleStyle: { color: '#ffffff', fontFamily: 'Poppins' },
+          headerTitleStyle: { color: '#ffffff', fontFamily: 'Goldman' },
+          headerRight: () => (
+            <Ionicons
+              name="wallet-outline"
+              size={24}
+              color="white"
+              style={{ marginRight: 15 }}
+              onPress={() => {
+                showUserProfile(); // Correctly calling the function
+                console.log('Wallet icon pressed');
+              }}
+            />
+          ),
         }}
       />
       {/* <Tabs.Screen
