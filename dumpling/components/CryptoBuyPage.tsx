@@ -68,62 +68,74 @@ const CryptoBuyPage = () => {
   const connect = () => phantomWallet.connect(setConnectionStatus);
   const disconnect = () => phantomWallet.disconnect(setConnectionStatus);
 
-  const performBuy = async () => {
-    try {
-      const currentPhantomPublicKey = phantomWallet.getPhantomWalletPublicKey();
 
-      if (!currentPhantomPublicKey) {
-        console.error('No connected wallet');
-        return;
-      }
-
-      // Implement the buy logic here
-      // This should be similar to the performSwap function in the original component,
-      // but tailored specifically for buying
-
-      // After successful buy
-      navigation.navigate('crypto');
-    } catch (error) {
-      console.error('Error performing buy:', error);
-    }
-  };
-
-  function handleToggle() {
-    performBuy();
-  }
-
-  const {wallets} = useDynamic();
+  const {wallets, sdk} = useDynamic();
   const wallet = wallets.userWallets[0];
   console.log("Wallet : ", wallet.address)
   console.log("Wallet : ", wallet)
 
-  const isDisconnected = connectionStatus !== 'connected';
-  const currentPhantomPublicKey = phantomWallet.getPhantomWalletPublicKey();
+
+  const performSwap = async () => {
+    try {
+
+      const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quoteResponse: {
+            inputMint: inputMintAddress,
+            outputMint: outputMintAddress,
+            amount: 1000,
+            slippage: slippage,
+            platformFees: 10,
+          },
+          userPubkey: wallet.address.toString(),
+          wrapAndUnwrapSol: true,
+          feeAccount: '44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.unsignedTransaction) {
+        const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
+        let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+
+        const signedTransaction = await sdk.wallet.SignTransaction(transaction);
+
+        if (signedTransaction) {
+          const latestBlockHash = await connection.getLatestBlockhash();
+          const txid = await connection.sendRawTransaction(signedTransaction, {
+            skipPreflight: true,
+            maxRetries: 2,
+          });
+
+          await connection.confirmTransaction({
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+            signature: txid,
+          });
+          console.log(`https://solscan.io/tx/${txid}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error performing swap:', error);
+    } finally {
+      navigation.navigate('crypto');
+    }
+  };
+
+  function handleToggle() {
+    performSwap();
+  }
 
   return (
     <YStack flex={1} backgroundColor="#111314" paddingHorizontal={20}>
       <LinearGradient colors={['transparent', 'rgba(63,43,150,0.6)']} style={styles.background} />
       <BuyPage />
-      <XStack alignSelf="center" marginTop={'$2'}>
+      <XStack alignSelf="center" marginTop={'$2'} padding={'$8'}>
         <SwipeButton onToggle={handleToggle} />
       </XStack>
-      <XStack width="100%" justifyContent="space-between" marginBottom={10}>
-        <Link href="/settings" asChild>
-          <Button
-            icon={<Feather name="settings" size={24} color="white" />}
-            backgroundColor="transparent"
-          />
-        </Link>
-      </XStack>
-      {currentPhantomPublicKey && (
-        <View style={styles.wallet}>
-          <View style={styles.greenDot} />
-          <Text style={styles.text} numberOfLines={1} ellipsizeMode="middle">
-            {`Connected to: ${currentPhantomPublicKey.toString()}`}
-          </Text>
-        </View>
-      )}
-      <Text style={styles.statusText}>Status: {connectionStatus}</Text>
     </YStack>
   );
 };
