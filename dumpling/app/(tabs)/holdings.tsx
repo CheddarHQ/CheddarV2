@@ -1,15 +1,25 @@
 import { View, Dimensions, FlatList, TouchableOpacity } from 'react-native';
-import React from 'react';
+import React, {useEffect} from 'react';
 import { YStack, Text, XStack, Separator, Button, Avatar, Card } from 'tamagui';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { useDynamic } from '~/client';
+import { getWalletBalance } from '~/utils/getBalance';
+import { useRecoilState } from 'recoil';
+import { balanceAtom } from '~/state/atoms';
+
 
 const { width } = Dimensions.get('window');
 
 const holdings = () => {
   // Hardcoded data for the flat list
+
+
+  const [balance , setBalance] = useRecoilState(balanceAtom)
+
   const data = [
     {
       key: '1',
@@ -36,6 +46,28 @@ const holdings = () => {
       imageUrl: 'https://cryptoicons.org/api/icon/ltc/200',
     },
   ];
+
+  const { auth, wallets, ui } = useDynamic();
+
+  const wallet = wallets.userWallets[0];
+  console.log("Wallet : ", wallet.address)
+
+  // const fetchedBalance = getWalletBalance(wallet.address.toString)
+
+  // setBalance(fetchedBalance)
+
+
+
+  useEffect(()=>{
+    const fetchBalance = async ()=>{
+      const data = await getWalletBalance(wallet.address)
+    
+      setBalance(data)
+    }
+
+    fetchBalance()
+  },[])
+
 
   // Render each item as a Card
   const renderItem = ({ item }) => (
@@ -96,9 +128,12 @@ const holdings = () => {
         </Text>
       </XStack>
       <XStack marginBottom={10}>
+        
         <Text fontSize={40} fontWeight={'bold'} color="#FFFFFF">
-          $4089
+          {balance} SOL
         </Text>
+        
+        
       </XStack>
       <XStack marginBottom={20}>
         <Text color={'#00FF00'} fontWeight={'bold'} paddingRight={5}>

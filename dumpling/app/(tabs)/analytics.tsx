@@ -27,6 +27,11 @@ import Constants from 'expo-constants';
 const { width, height } = Dimensions.get('screen');
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const AnimatedSectionList = Animated.createAnimatedComponent(SectionList);
+import { useRecoilValue } from 'recoil';
+import { balanceAtom } from '~/state/atoms';
+import { useDynamic } from '~/client';
+import { getTokenData, getWalletBalance } from '~/utils/getBalance';
+import { G } from 'react-native-svg';
 
 interface TokenBasicInfo {
   name: string;
@@ -59,6 +64,28 @@ export default function Modal() {
   const initialIds =
     'GfihScsf95v8G4TR73k2EcwXM2DrX63J7GX1i79GNbGs,FpjYwNjCStVE2Rvk9yVZsV46YwgNTFjp7ktJUDcZdyyk,HQQrpzTmt7KcGMf5E7RYgbDmz5izRxtHFCU9sZK6XANQ,HcPgh6B2yHNvT6JsEmkrHYT8pVHu9Xiaoxm4Mmn2ibWw,4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,6DowxaYxUdjNJknq9Cjfc5dy4Mq8Vv4BHXXY4zn6LTQy,5eLRsN6qDQTQSBF8KdW4B8mVpeeAzHCCwaDptzMyszxH,9uWW4C36HiCTGr6pZW9VFhr9vdXktZ8NA8jVnzQU35pJ,FvMZrD1qC66Zw8VPrW15xN1N5owUPqpQgNQ5oH18mR4E,H6fxtvWLFYSJ66mPJqoz7cg6tk32Pcgc9vXrywu4LEWk,AB1eu2L1Jr3nfEft85AuD2zGksUbam1Kr8MR3uM2sjwt,2qWwU2UxvGnKKMKFysoX81F4wDhGB8EThZrV9noLXVFL,Fv6LxMh9DZZ2Xc1yzkKKLeqEkPkdv1jmKjrJg2vE2HBg,6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp,2M8mTcrAMf7nrBbex2SNzzUfiBd8YXs7t3yS1dRvheyA';
   const router = useRouter();
+
+  const [balance, setBalance] = useState(0)
+  const [walletTokenData, setWalletTokenData] = useState("")
+  const { auth, wallets, ui } = useDynamic();
+
+  useEffect(()=>{
+    const fetchData = async ()=>{
+      const response = await getTokenData(wallets.userWallets[0].address);
+      console.log("TokenData :", response)
+      setWalletTokenData(response)
+    }
+
+    const getBalance = async()=>{
+      const data = await getWalletBalance(wallets.userWallets[0].address)
+      setBalance(data)
+
+    }
+
+      getBalance
+
+    fetchData();
+  },[])
 
   useEffect(() => {
     async function fetchMetadata(ids: string) {
@@ -249,8 +276,8 @@ export default function Modal() {
               }}>
               <Animated.View style={[styles.balanceContainer, balanceStylez]}>
                 {/* <Text style={[styles.regular, { fontSize: 42, color: _colors.text }]}>$4650</Text> */}
-                <Text fontSize={42} color={'#fff'} fontFamily={'Poppins'}>
-                  $4650
+                <Text fontSize={42} color={'#fff'}>
+                  {balance} SOL
                 </Text>
                 {/* <Text style={[styles.regular, { color: _colors.text, opacity: 0.6 }]}> */}
                 <Text color={'#808080'} opacity={0.6} fontFamily={'Poppins'}>
