@@ -76,6 +76,7 @@ export default function AnimatedText({
           flex: 1,
           overflow: 'hidden',
         }}>
+        <Text style={[styles.text, { fontSize }]}>₹</Text>
         {formattedNumbers.map((formattedNumber) => (
           <Animated.Text
             layout={LinearTransition.duration(animationDuration)}
@@ -91,7 +92,6 @@ export default function AnimatedText({
           </Animated.Text>
         ))}
         {/* Static SOL text */}
-        <Text style={[styles.text, { fontSize }]}> SOL</Text>
       </Animated.View>
     </Animated.View>
   );
