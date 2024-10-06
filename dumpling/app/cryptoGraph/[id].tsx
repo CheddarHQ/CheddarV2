@@ -15,6 +15,7 @@ import { WebView } from 'react-native-webview';
 import { coinDirectory } from '~/utils/directory';
 import { useRouter } from 'expo-router';
 import CurrencyConverter from '~/components/CurrencyConverter';
+import axios from 'axios';
 
 interface PriceHistoryPoint {
   date: Date;
@@ -66,13 +67,14 @@ const fetchCoinData = async (coinId: string, range: TimeRange): Promise<PriceHis
   try {
     let apiRange = range;
     if (range === '6M') {
-      apiRange = '180D'; // Use 180D instead of 6M for the API request
+      apiRange = '6M'; // Use 180D instead of 6M for the API request
     }
 
-    const response = await fetch(
-      `https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=${coinId}&range=${range}`
+    const response = await axios.get(
+      `https://api.coinmarketcap.com/data-api/v3/cryptocurrency/detail/chart?id=${coinId}&range=${range}`  
     );
-    const data = await response.json();
+    const data = await response.data;
+   
     return Object.entries(data.data.points).map(([timestamp, point]: [string, any]) => ({
       date: new Date(parseInt(timestamp) * 1000),
       value: point.v[0],
@@ -108,7 +110,7 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
           const fetchedCoinId = fetchCoinId(parsedDetailedInfo.name);
           if (fetchedCoinId) {
             setCoinId(fetchedCoinId);
-            const chartData =  fetchCoinData(fetchedCoinId, '1D');
+            const chartData =  await fetchCoinData(fetchedCoinId, '1D');
             setPriceHistory(chartData);
             setGraphLoading(false);
           }
