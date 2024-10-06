@@ -6,17 +6,23 @@ export async function getWalletBalance(walletAddress) {
     const balance = await connection.getBalance(publicKey);
     console.log(`Balance: ${balance / Math.pow(10, 9)} SOL`);
     const balanceInSol = balance / Math.pow(10, 9);
-    return balanceInSol;
+
+    const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=inr');
+    const priceData = await response.json();
+    const solPriceInInr = priceData.solana.inr;
+
+    const balanceInInr = balanceInSol * solPriceInInr;
+
+    console.log(`Balance: ${balanceInSol} SOL (${balanceInInr} INR)`);
+    return balanceInInr;
 }
 
 export const getTokenData = async (walletAddress) => {
     const connection = new Connection(clusterApiUrl("devnet"), "confirmed");
     
     try {
-      // Fetch token accounts by owner
       const tokenAccounts = await connection.getTokenAccountsByOwner(new PublicKey(walletAddress));
       
-      // Log token accounts and balances
       for (const { pubkey, account } of tokenAccounts.value) {
         const data = account.data;
         const balance = data.parsed.info.tokenAmount.uiAmount; // Adjust based on your SPL token structure

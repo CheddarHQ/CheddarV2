@@ -34,7 +34,7 @@ const redirectTo = makeRedirectUri({
   path: 'auth/callback',
 });
 
-const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefined> => {
+export const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefined> => {
   const params = new URLSearchParams(url.split('#')[1]);
 
   const access_token = params.get('access_token');
@@ -150,20 +150,20 @@ export default function Auth() {
     }
   };
 
-  const fetchBalance = async () => {
-    if (wallet && wallet.getBalance()) {
-      try {
-        const walletBalance = await wallet.getBalance();
-        console.log("Balance :", walletBalance)// Update state with the balance
-      } catch (error) {
-        console.error('Error fetching balance:', error);
-      }
-    }
-  };
+  // const fetchBalance = async () => {
+  //   if (wallet && wallet.getBalance()) {
+  //     try {
+  //       const walletBalance = await wallet.getBalance();
+  //       console.log("Balance :", walletBalance)// Update state with the balance
+  //     } catch (error) {
+  //       console.error('Error fetching balance:', error);
+  //     }
+  //   }
+  // };
 
   const { auth, wallets, ui } = useDynamic();
 
-  const showUserProfile = ()=> {
+const showUserProfile = ()=> {
     ui.userProfile.show()
   }
   const wallet = wallets.userWallets[0];
@@ -194,7 +194,6 @@ export default function Auth() {
   // }, [wallet]);
 
 
-  
 
   return (
     <View>
@@ -203,8 +202,7 @@ export default function Auth() {
           <View>
             {wallet && wallets.embedded.hasWallet ? (
               <View>
-                <Text style={{color : "white"}}>Your wallet address: {wallet.address}</Text>
-               <Text style={{color : "white"}}>Your wallet balance: {}</Text>
+                {/* <Text style={{color : "white"}}>Logged in as: {wallet.address}</Text> */}
              </View>
             ) : (
               <Button onPress={() => wallets.embedded.createWallet()}>
@@ -224,7 +222,7 @@ export default function Auth() {
           <Button title= "showProfile" onPress={showUserProfile}/>
         </View>
       ) : (
-        <Button onPress={handleSignIn} title="Sign in with Twitter" color="#007AFF" />
+        <Button onPress={handleSignIn} title="Sign in" color="#007AFF" />
       )}
     </View>
   );
