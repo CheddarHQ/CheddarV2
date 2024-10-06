@@ -82,8 +82,6 @@ export default function Modal() {
   function getFirst20Ids(pools) {
     // Get the first 20 pools and map to their ids
     const first20Ids = pools.slice(0, 20).map(pool => pool.attributes.address);
-    console.log("First 20 Ids :", first20Ids) 
-    setInitialIds(first20Ids.join(","))
   
     return first20Ids;
   }
@@ -120,38 +118,36 @@ export default function Modal() {
       const top10Addresses = getTop10Addresses(data)
       const first20Addresses = getFirst20Ids(data)
 
-      console.log("Top 10 Addresses :", top10Addresses)
-      setTrendingIds(top10Addresses.join(","))
       setInitialIds(first20Addresses.join(","))
     }
     fetchTrendingIds()
 
   },[])
 
-  useEffect(()=>{
-    const fetchGainers = async()=>{
-      const response = await axios.get("https://api.moonshot.cc/trades/v2/latest/solana?minVolumeUsd=5&limit=30")
+  // useEffect(()=>{
+  //   const fetchGainers = async()=>{
+  //     const response = await axios.get("https://api.moonshot.cc/trades/v2/latest/solana?minVolumeUsd=5&limit=30")
 
-      const data = response.data;
+  //     const data = response.data;
 
-      const tokens = data.map((token)=>{
-        const baseToken = token.baseToken;
-        const progress = token.metadata.progress
-        return {
-          key : baseToken.address,
-          name: baseToken.name,
-          symbol: baseToken.symbol,
-          avatar: baseToken.icon,
-          address : baseToken.address,
-          progress : progress
-        }
-      })  
+  //     const tokens = data.map((token)=>{
+  //       const baseToken = token.baseToken;
+  //       const progress = token.metadata.progress
+  //       return {
+  //         key : baseToken.address,
+  //         name: baseToken.name,
+  //         symbol: baseToken.symbol,
+  //         avatar: baseToken.icon,
+  //         address : baseToken.address,
+  //         progress : progress
+  //       }
+  //     })  
 
-      setHeaderData(tokens);
-    }
+  //     setHeaderData(tokens);
+  //   }
 
-    fetchGainers();
-  }, [initialIds, headerData, trendingIds])
+  //   fetchGainers();
+  // }, [initialIds, headerData, trendingIds])
 
   const [topGainers, setTopGainers] = useState([]);
 
@@ -186,6 +182,7 @@ export default function Modal() {
             return {
               key: pool.id,
               name: pool.attributes.name,
+              baseAddress: pool.attributes.address,
               symbol: pool.attributes.name.split(' / ')[0],
               priceChange: priceChange || '0%',
               changeNum: changeNum || 0,
@@ -197,6 +194,8 @@ export default function Modal() {
           .sort((a, b) => b.Num - a.changeNum)
           .slice(0, 10);
 
+        
+     
         setTopGainers(processedData);
         setLoading(false);
       } catch (error) {
@@ -258,7 +257,7 @@ export default function Modal() {
     }, 300000);
 
     return () => clearInterval(intervalId);
-  }, [initialIds, trendingIds]);
+  }, [initialIds]);
 
   // useEffect(() => {
   //   async function fetchMetadata(ids: string) {
@@ -469,6 +468,27 @@ export default function Modal() {
                 style={[{ flexGrow: 0 }, headerStylez]}
                 showsHorizontalScrollIndicator={false}
                 renderItem={({ item, index }) => (
+                  <Pressable
+                    onPress={() => {
+                      
+                      if (item.baseAddress) {
+
+
+                        const detailedInfo = topGainers.find(
+                          (detail) => detail.baseAddress === item.baseAddress
+                        );
+                        console.log("Detailed Info topGainers :", detailedInfo)
+                        if (detailedInfo) {
+                          const detailedInfoString = JSON.stringify(detailedInfo);
+                          router.push({
+                            pathname: `/cryptoGraph/${item.baseAddress}`,
+                            params: { detailedInfo: detailedInfoString },
+                          });
+                        } else {
+                          console.log(`No detailed info found for ${item.baseAddress}`);
+                        }
+                      }
+                    }}>
                   <XStack
                     padding={10}
                     borderColor={'#808080'}
@@ -489,6 +509,7 @@ export default function Modal() {
                       </Text>
                     </XStack>
                   </XStack>
+                  </Pressable>
                 )}
               />
             </View>

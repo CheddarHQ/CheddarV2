@@ -103,11 +103,12 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
         console.log('Parsed detailedInfo:', parsedDetailedInfo);
         setTokenInfo(parsedDetailedInfo);
 
+
         if (parsedDetailedInfo && parsedDetailedInfo.name) {
-          const fetchedCoinId = await fetchCoinId(parsedDetailedInfo.name);
+          const fetchedCoinId = fetchCoinId(parsedDetailedInfo.name);
           if (fetchedCoinId) {
             setCoinId(fetchedCoinId);
-            const chartData = await fetchCoinData(fetchedCoinId, '1D');
+            const chartData =  fetchCoinData(fetchedCoinId, '1D');
             setPriceHistory(chartData);
             setGraphLoading(false);
           }
@@ -120,6 +121,7 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
 
     fetchData();
   }, [detailedInfo]);
+
 
   const getCustomHTML = (dexAddress) => `
     <html>
@@ -279,6 +281,7 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
                         fontFamily={'Poppins'}>
                         {tokenInfo.symbol}
                       </Text>
+                      {console.log("tokenInfo.symbol", tokenInfo.symbol)}
                       <XStack marginBottom="$2">
                         <CopyIcon />
                       </XStack>
