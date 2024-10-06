@@ -5,10 +5,10 @@ import { useReactiveClient } from '@dynamic-labs/react-hooks'
 
 
 export const dynamicClient = createClient({
-  environmentId: "329c33c2-f35f-428c-89b8-32c4c36c2cd6",
+  environmentId: "0673ae5a-5cbb-4d60-8b13-5edb62181b0a",
   // Optional:
   appLogoUrl: "https://demo.dynamic.xyz/favicon-32x32.png",
-  appName: "GoPilot APP",
+  appName: "Cheddar 🧀",
   // }).extend(SolanaExtension());
 }).extend(ReactNativeExtension());
 

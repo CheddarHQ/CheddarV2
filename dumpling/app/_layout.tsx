@@ -15,6 +15,7 @@ import { RecoilRoot } from 'recoil';
 import { TamaguiProvider } from 'tamagui';
 import config from '../tamagui.config';
 import { Stack, SplashScreen as ExpoRouterSplashScreen } from 'expo-router';
+import Slider from '~/components/Slider';
 // import LogoImg from "../assets/logos/GoPilotToken_BG.png";
 // import { Colors } from "@/constants/Colors";
 
@@ -85,10 +86,10 @@ export default function Layout() {
       {/* <PolyfillCrypto /> */}
       {!wallets.primary && (
         <View style={styles.LoginContainer}>
-          <Text style={styles.HeaderLoginTxt}>Get started with $GO</Text>
-          {/* <Text>The Governance framework for modern mobility</Text> */}
+        <Slider/>
+          <Text style={styles.HeaderLoginTxt}>Cheddar 🧀</Text>
           <TouchableOpacity style={styles.loginButton} onPress={() => dynamicClient.ui.auth.show()}>
-            <Text style={styles.loginButtonText}>Login</Text>
+            <Text style={styles.loginButtonText}>Create a Wallet</Text>
           </TouchableOpacity>
         </View>
       )}
