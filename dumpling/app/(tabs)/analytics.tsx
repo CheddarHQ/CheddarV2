@@ -68,7 +68,7 @@ export default function Modal() {
   const initialIdsDummy =
     'GfihScsf95v8G4TR73k2EcwXM2DrX63J7GX1i79GNbGs,FpjYwNjCStVE2Rvk9yVZsV46YwgNTFjp7ktJUDcZdyyk,HQQrpzTmt7KcGMf5E7RYgbDmz5izRxtHFCU9sZK6XANQ,HcPgh6B2yHNvT6JsEmkrHYT8pVHu9Xiaoxm4Mmn2ibWw,4xxM4cdb6MEsCxM52xvYqkNbzvdeWWsPDZrBcTqVGUar,zcdAw3jpcqEY8JYVxNVMqs2cU35cyDdy4ot7V8edNhz,6DowxaYxUdjNJknq9Cjfc5dy4Mq8Vv4BHXXY4zn6LTQy,5eLRsN6qDQTQSBF8KdW4B8mVpeeAzHCCwaDptzMyszxH,9uWW4C36HiCTGr6pZW9VFhr9vdXktZ8NA8jVnzQU35pJ,FvMZrD1qC66Zw8VPrW15xN1N5owUPqpQgNQ5oH18mR4E,H6fxtvWLFYSJ66mPJqoz7cg6tk32Pcgc9vXrywu4LEWk,AB1eu2L1Jr3nfEft85AuD2zGksUbam1Kr8MR3uM2sjwt,2qWwU2UxvGnKKMKFysoX81F4wDhGB8EThZrV9noLXVFL,Fv6LxMh9DZZ2Xc1yzkKKLeqEkPkdv1jmKjrJg2vE2HBg,6oFWm7KPLfxnwMb3z5xwBoXNSPP3JJyirAPqPSiVcnsp,2M8mTcrAMf7nrBbex2SNzzUfiBd8YXs7t3yS1dRvheyA';
 
-  const [initialIds, setInitialIds] = useState(initialIdsDummy)
+  const [initialIds, setInitialIds] = useState(null)
   const [trendingIds, setTrendingIds] = useState("")
 
 
@@ -82,22 +82,11 @@ export default function Modal() {
   function getFirst20Ids(pools) {
     // Get the first 20 pools and map to their ids
     const first20Ids = pools.slice(0, 20).map(pool => pool.attributes.address);
-  
+
     return first20Ids;
   }
   
 
-  function getTop10Addresses(pools) {
-    // Sort the pools based on from_volume_in_usd in descending order
-    const sortedPools = pools.sort((a, b) => {
-      return parseFloat(b.attributes.from_volume_in_usd) - parseFloat(a.attributes.from_volume_in_usd);
-    });
-
-    // Get the top 10 pools and map to their addresses
-    const top10Addresses = sortedPools.slice(0, 10).map(pool => pool.attributes.address);
-
-    return top10Addresses;
-  }
 
   const transformMetadata = (data) => {
     return data.basicInfo.map((token) => ({
@@ -112,10 +101,9 @@ export default function Modal() {
 
   useEffect(()=>{
     const fetchTrendingIds = async()=>{
-      const response = await axios.get("https://app.geckoterminal.com/api/p1/pools?page=1&include_network_metrics=true&include_meta=1&include=dex%2Cdex.network%2Ctokens%2Ctokens.tags&fields%5Btoken%5D=tags%2Cname%2Csymbol%2Caddress%2Cimage_url&fields%5Btag%5D=name%2Cidentifier%2Cvolume_percent_changes")
+      const response = await axios.get("https://app.geckoterminal.com/api/p1/solana/pools?page=1&include_network_metrics=true&include_meta=1&include=dex%2Cdex.network%2Cdex.network.network_metric%2Ctokens&networks=solana")
 
       const data = response.data.data;
-      const top10Addresses = getTop10Addresses(data)
       const first20Addresses = getFirst20Ids(data)
 
       setInitialIds(first20Addresses.join(","))
@@ -155,7 +143,7 @@ export default function Modal() {
     const fetchTopGainers = async () => {
       try {
         const response = await fetch(
-          'https://app.geckoterminal.com/api/p1/pools?page=1&include_network_metrics=true&Y=1&include=dex%2Cdex.network%2Ctokens%2Ctokens.tags&fields%5Btoken%5D=tags%2Cname%2Csymbol%2Caddress%2Cimage_url&fields%5Btag%5D=name%2Cidentifier%2Cvolume_percent_changes'
+          'https://app.geckoterminal.com/api/p1/solana/pools?page=1&include_network_metrics=true&include_meta=1&include=dex%2Cdex.network%2Cdex.network.network_metric%2Ctokens&networks=solana'
         );
         const data = await response.json();
 
@@ -239,6 +227,7 @@ export default function Modal() {
           `https://sushi.cheddar-io.workers.dev/api/data/fetchmetadata?ids=${ids}`
         );
         const data: TokenData = await response.json();
+        console.log("MetaData :", data)
 
         setTokenData(data);
 
