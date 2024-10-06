@@ -14,6 +14,7 @@ import { MyLoader } from '~/components/LgSkeleton';
 import { WebView } from 'react-native-webview';
 import { coinDirectory } from '~/utils/directory';
 import { useRouter } from 'expo-router';
+import CurrencyConverter from '~/components/CurrencyConverter';
 
 interface PriceHistoryPoint {
   date: Date;
@@ -93,6 +94,7 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
   const [priceHistory, setPriceHistory] = useState<PriceHistoryPoint[]>([]);
   const [graphLoading, setGraphLoading] = useState(true);
   const router = useRouter();
+  const { convertUSDtoINR, exchangeRate, lastUpdated } = CurrencyConverter();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -217,9 +219,12 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
     return ((lastPrice - firstPrice) / firstPrice) * 100;
   }, [filteredPriceHistory]);
 
-  const formatPriceTitle = useCallback((point: PriceHistoryPoint) => {
-    return `$${point.value.toFixed(10)}`;
-  }, []);
+  const formatPriceTitle = useCallback(
+    (point: PriceHistoryPoint) => {
+      return `₹ ${convertUSDtoINR(point.value.toFixed(10))}`;
+    },
+    [convertUSDtoINR]
+  );
 
   const formatTimeTitle = useCallback(
     (point: PriceHistoryPoint) => {
@@ -295,7 +300,7 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
           </Card>
           {displayPoint && (
             <YStack alignItems="flex-start" marginLeft="$4" marginBottom="$2">
-              <Text color={'#fff'} fontSize={32} fontWeight={'bold'} fontFamily={'Poppins'}>
+              <Text color={'#fff'} fontSize={32} fontWeight={'bold'}>
                 {formatPriceTitle(displayPoint)}
               </Text>
               {percentageChange >= 0 ? (
