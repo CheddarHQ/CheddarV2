@@ -8,6 +8,7 @@ import { memoRouter } from "./actions/memo";
 import { dynamicTransferRouter } from "./actions/dynamic";
 import { pumpRouter } from "./pump";
 import { walletRouter } from "./wallet";
+import { upiRouter } from "./upi";
 // import { proxyRouter } from "./proxy";
 // import { serveStatic } from "hono/bun";
 
@@ -22,6 +23,7 @@ const apiRoutes = app.basePath("/api")
                 .route("chart", chartRouter)
                 .route("pump", pumpRouter)
                 .route("wallet", walletRouter)
+                .route("upi", upiRouter)
                 .basePath("/actions")
                     .route("donate", donateRouter)
                     .route("memo", memoRouter)

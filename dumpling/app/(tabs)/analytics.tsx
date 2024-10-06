@@ -280,10 +280,20 @@ export default function Modal() {
                   {balance} SOL
                 </Text>
                 {/* <Text style={[styles.regular, { color: _colors.text, opacity: 0.6 }]}> */}
-                <Text color={'#808080'} opacity={0.6}>
+                <Text color={'#808080'} opacity={0.6} fontFamily={'Poppins'}>
                   Total Balance
                 </Text>
               </Animated.View>
+              <XStack
+                marginBottom={10}
+                borderColor={'#141414'}
+                borderTopWidth={2}
+                paddingTop={20}
+                paddingBottom={10}>
+                <Text color={'white'} fontSize={25} fontWeight={600}>
+                  Top Gainers
+                </Text>
+              </XStack>
               <AnimatedFlatList
                 data={_headerData}
                 keyExtractor={(item: any) => item.key}
@@ -293,26 +303,35 @@ export default function Modal() {
                 renderItem={({ item, index }) => (
                   <XStack
                     padding={10}
-                    borderColor={'#808080'}
+                    marginBottom={20}
+                    borderColor={'rgba(30,30,30,1)'}
                     borderWidth={1}
                     borderRadius={50}
                     alignItems="center"
                     marginHorizontal={6}
+                    backgroundColor={'rgba(20,20,20,0.9)'}
                     space>
                     <Avatar circular size={40}>
                       <Avatar.Image src={item.avatar} />
                     </Avatar>
                     <XStack gap={8}>
-                      <Text color={'white'} fontWeight="bold">
+                      <Text color={'white'} fontWeight="bold" fontFamily={'Poppins'}>
                         {item.symbol}
                       </Text>
-                      <Text color={item.priceChange.startsWith('+') ? 'green' : 'red'}>
+                      <Text
+                        color={item.priceChange.startsWith('+') ? 'green' : 'red'}
+                        fontFamily={'Poppins'}>
                         {item.priceChange}
                       </Text>
                     </XStack>
                   </XStack>
                 )}
               />
+              <XStack borderColor={'#141414'} borderTopWidth={2} paddingTop={20}>
+                <Text color={'white'} fontSize={25} fontWeight={600}>
+                  Trending
+                </Text>
+              </XStack>
             </View>
           </View>
         }
@@ -349,17 +368,17 @@ export default function Modal() {
                     <Avatar.Fallback delayMs={600} backgroundColor="$blue10" />
                   </Avatar>
                   <YStack gap={4}>
-                    <Text fontFamily="Goldman" color={'white'} fontWeight={700} fontSize={16}>
+                    <Text fontFamily="Poppins" color={'white'} fontWeight={700} fontSize={16}>
                       {item.symbol}
                     </Text>
-                    <Text fontFamily="Goldman" color={'#5D5D5D'} fontWeight={400} fontSize={14}>
+                    <Text fontFamily="Poppins" color={'#5D5D5D'} fontWeight={400} fontSize={14}>
                       {item.baseAddress.slice(0, 4)}...${item.baseAddress.slice(-4)}
                     </Text>
                   </YStack>
                 </XStack>
                 <YStack gap={4}>
                   <Text
-                    fontFamily="Goldman"
+                    fontFamily="Poppins"
                     color={'white'}
                     fontWeight={700}
                     fontSize={14}
@@ -367,7 +386,7 @@ export default function Modal() {
                     ${item.priceUsd}
                   </Text>
                   <Text
-                    fontFamily="Goldman"
+                    fontFamily="Poppins"
                     color={item.priceChange >= 0 ? '#00FF00' : '#FF0000'}
                     fontSize={14}
                     fontWeight={400}

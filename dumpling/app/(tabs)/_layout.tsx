@@ -110,7 +110,7 @@ export default function TabLayout() {
           headerShown: true,
           headerTransparent: true,
           headerBackground: () => <BlurView intensity={100} style={{ flex: 1 }} />,
-          headerTitleStyle: { color: '#ffffff', fontFamily: 'Goldman' },
+          headerTitleStyle: { color: '#ffffff', fontFamily: 'Poppins' },
         }}
       /> */}
     </Tabs>
