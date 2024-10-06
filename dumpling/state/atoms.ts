@@ -68,3 +68,9 @@ export const slippageAtom = atom({
   key : "slippageAtom",
   default : 50
 })
+
+
+export const balanceAtom = atom({
+  key : "balanceAtom",
+  default : 0
+})

@@ -5,12 +5,11 @@ import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { supabase } from '~/lib/supabase';
 import { Link, useNavigation } from 'expo-router';
-import { Image } from 'tamagui';
 import { Button } from './Button';
 import { useRecoilState } from 'recoil';
 import { userAtom } from '~/state/atoms';
-import { MyButton } from '~/app/cryptoGraph/[id]';
 import axios from "axios"
+import { useDynamic } from '~/client';
 
 export interface UserProfile {
   username: string;
@@ -18,10 +17,9 @@ export interface UserProfile {
   email: string;
   avatar_url: string;
   id: string;
-  created_at : string;
-  bio : string;
-  last_login : string
-
+  created_at: string;
+  bio: string;
+  last_login: string;
 }
 
 interface AuthResponse {
@@ -58,13 +56,9 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
     email: tokenPayload.email,
     avatar_url: tokenPayload.user_metadata.avatar_url,
     id: tokenPayload.user_metadata.sub,
-    // created_at : tokenPayload.user.app_metadata.created_at,
-    // last_login : tokenPayload.user.app_metadata.last_sign_in_at,
-    created_at : "",
-    last_login : new Date().toISOString(),
-    bio : tokenPayload.user_metadata.full_name  //setting fullname as the bio for now
-    
-
+    created_at: "",
+    last_login: new Date().toISOString(),
+    bio: tokenPayload.user_metadata.full_name,
   };
   console.log('Extracted user profile:', userProfile);
 
@@ -80,7 +74,7 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
         created_at: userProfile.created_at,
       };
 
-      console.log('Creating user:', payload);  
+      console.log('Creating user:', payload);
 
       const response = await axios.post('https://wasabi.cheddar-io.workers.dev/api/user', payload, {
         headers: {
@@ -88,21 +82,15 @@ const createSessionFromUrl = async (url: string): Promise<AuthResponse | undefin
         },
       });
 
-      console.log("User created successfully")
+      console.log("User created successfully");
       console.log('Response:', response.data);
     } catch (error) {
-      console.log("User might already exist")
+      console.log("User might already exist");
       console.log('Error creating user:', error);
     }
-  }
+  };
 
   createUser();
-
-  // Extract info from this
-  /*
-Extracted user profile: {"avatar_url": "https://pbs.twimg.com/profile_images/1809189990599127040/mti8M7jE_normal.jpg", "email": "sarthakkapila27x@gmail.com", "id": "4c75869e-1204-41f1-a051-d40861e855e3", "name": "Sarthak Kapila", "username": "sarthakkapila0"}
-*/
-
 
   return { session: data.session, profile: userProfile };
 };
@@ -127,14 +115,11 @@ const performOAuth = async () => {
   return null;
 };
 
-
-
-
 export default function Auth() {
   const navigation = useNavigation();
   const [userProfile, setUserProfile] = useRecoilState(userAtom);
 
-  console.log("User Profile : ", userProfile);
+  console.log("User Profile: ", userProfile);
 
   const url = Linking.useURL();
 
@@ -142,7 +127,7 @@ export default function Auth() {
     if (url) {
       createSessionFromUrl(url)
         .then((response) => {
-          console.log('User Profile :', response);
+          console.log('User Profile:', response);
           if (response) {
             setUserProfile(response.profile);
           }
@@ -159,16 +144,74 @@ export default function Auth() {
         if (sessionData && sessionData.profile) {
           setUserProfile(sessionData.profile);
         }
-        //@ts-ignore
       }
     } catch (error) {
       console.error('Error during sign in:', error);
     }
   };
+
+  const fetchBalance = async () => {
+    if (wallet && wallet.getBalance()) {
+      try {
+        const walletBalance = await wallet.getBalance();
+        console.log("Balance :", walletBalance)// Update state with the balance
+      } catch (error) {
+        console.error('Error fetching balance:', error);
+      }
+    }
+  };
+
+  const { auth, wallets, ui } = useDynamic();
+
+  const showUserProfile = ()=> {
+    ui.userProfile.show()
+  }
+  const wallet = wallets.userWallets[0];
+  console.log("Wallet : ", wallet)
+
+  console.log("Embedded wallet : ", wallets.embedded.hasWallet)
+
+  // useEffect(()=>{
+  //   if(wallet.chain){
+  //     fetchBalance()
+      
+  //   }
+  // })
+
+  // useEffect(() => {
+  //   const fetchBalance = async () => {
+  //     if (wallet && wallet.getBalance) {
+  //       try {
+  //         const walletBalance = await wallet.getBalance();
+  //         setBalance(walletBalance); // Update the state with the balance
+  //       } catch (error) {
+  //         console.error('Error fetching balance:', error);
+  //       }
+  //     }
+  //   };
+
+  //   fetchBalance(); // Call the function to fetch balance when the component mounts
+  // }, [wallet]);
+
+
+  
+
   return (
     <View>
-      {userProfile.name ? (
+      {userProfile ? (
         <View style={styles.container}>
+          <View>
+            {wallet && wallets.embedded.hasWallet ? (
+              <View>
+                <Text style={{color : "white"}}>Your wallet address: {wallet.address}</Text>
+               <Text style={{color : "white"}}>Your wallet balance: {}</Text>
+             </View>
+            ) : (
+              <Button onPress={() => wallets.embedded.createWallet()}>
+                <Text  style={{color : "white"}}>Create Wallet</Text>
+              </Button>
+            )}
+          </View>
           <Text style={styles.title}>Welcome! {userProfile.name}</Text>
           <Link
             href={{
@@ -178,6 +221,7 @@ export default function Auth() {
             asChild>
             <Button title="Enter" color="#007AFF" />
           </Link>
+          <Button title= "showProfile" onPress={showUserProfile}/>
         </View>
       ) : (
         <Button onPress={handleSignIn} title="Sign in with Twitter" color="#007AFF" />
@@ -193,25 +237,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  logo: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
-  },
   title: {
     color: 'white',
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 20,
     fontFamily: 'Goldman',
-  },
-  profileContainer: {
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 20,
   },
 });
