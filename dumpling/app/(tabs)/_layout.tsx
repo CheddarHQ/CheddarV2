@@ -39,7 +39,7 @@ export default function TabLayout() {
     if (url) {
       createSessionFromUrl(url)
         .then((response) => {
-          console.log('User Profile:', response);
+          
           if (response) {
             setUserProfile(response.profile);
           }

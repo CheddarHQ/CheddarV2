@@ -51,7 +51,7 @@ const holdings = () => {
   const { auth, wallets, ui } = useDynamic();
 
   const wallet = wallets.userWallets[0];
-  console.log("Wallet : ", wallet.address)
+
 
   // const fetchedBalance = getWalletBalance(wallet.address.toString)
 

@@ -41,6 +41,7 @@ import HorizontalTabs from '~/components/HorizontalTabs';
 import { phantomSelector } from '~/state/selectors';
 import SwipeButton from '~/components/SwipeButton';
 import { BlurView } from 'expo-blur';
+import { useDynamic } from '~/client';
 
 const connection = new Connection('https://api.mainnet-beta.solana.com');
 
@@ -81,6 +82,10 @@ const MoneyEx = () => {
     const listener = Linking.addEventListener('url', handleDeepLink);
     return () => listener.remove();
   }, []);
+
+  const {wallets} = useDynamic();
+  const wallet = wallets.userWallets[0];
+  console.log("Wallet : ", wallet.address)
 
   const connect = () => phantomWallet.connect(setConnectionStatus);
   const disconnect = () => phantomWallet.disconnect(setConnectionStatus);
@@ -162,11 +167,7 @@ const MoneyEx = () => {
             backgroundColor="transparent"
           />
         </Link>
-        <Button2
-          title={connectionStatus === 'connected' ? 'Disconnect' : 'Connect Phantom'}
-          onPress={connectionStatus === 'connected' ? disconnect : connect}
-          disabled={['connecting', 'disconnecting'].includes(connectionStatus)}
-        />
+       
       </XStack>
       {currentPhantomPublicKey && (
         <View style={styles.wallet}>
@@ -178,11 +179,7 @@ const MoneyEx = () => {
       )}
       <Text style={styles.statusText}>Status: {connectionStatus}</Text>
 
-      {isDisconnected && (
-        <BlurView intensity={50} style={styles.absolute} overlayColor="rgba(0, 0, 0, 0.5)">
-          <Button onPress={connect}>Connect Phantom</Button>
-        </BlurView>
-      )}
+     
     </YStack>
   );
 };

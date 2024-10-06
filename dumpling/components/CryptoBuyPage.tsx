@@ -24,6 +24,7 @@ import {
 import { phantomSelector } from '~/state/selectors';
 import SwipeButton from '~/components/SwipeButton';
 import BuyPage from './BuyPageComp'; // Import the BuyPage component
+import { useDynamic } from '~/client';
 
 const connection = new Connection('https://api.mainnet-beta.solana.com');
 
@@ -91,6 +92,11 @@ const CryptoBuyPage = () => {
     performBuy();
   }
 
+  const {wallets} = useDynamic();
+  const wallet = wallets.userWallets[0];
+  console.log("Wallet : ", wallet.address)
+  console.log("Wallet : ", wallet)
+
   const isDisconnected = connectionStatus !== 'connected';
   const currentPhantomPublicKey = phantomWallet.getPhantomWalletPublicKey();
 
@@ -108,11 +114,6 @@ const CryptoBuyPage = () => {
             backgroundColor="transparent"
           />
         </Link>
-        <Button2
-          title={connectionStatus === 'connected' ? 'Disconnect' : 'Connect Phantom'}
-          onPress={connectionStatus === 'connected' ? disconnect : connect}
-          disabled={['connecting', 'disconnecting'].includes(connectionStatus)}
-        />
       </XStack>
       {currentPhantomPublicKey && (
         <View style={styles.wallet}>
@@ -123,12 +124,6 @@ const CryptoBuyPage = () => {
         </View>
       )}
       <Text style={styles.statusText}>Status: {connectionStatus}</Text>
-
-      {isDisconnected && (
-        <BlurView intensity={50} style={styles.absolute} overlayColor="rgba(0, 0, 0, 0.5)">
-          <Button onPress={connect}>Connect Phantom</Button>
-        </BlurView>
-      )}
     </YStack>
   );
 };
