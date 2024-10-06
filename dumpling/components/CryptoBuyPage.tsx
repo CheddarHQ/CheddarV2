@@ -1,52 +1,35 @@
-import { Buffer } from 'buffer';
-global.Buffer = Buffer;
-import { Dimensions, Pressable } from 'react-native';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import type { TabsContentProps } from 'tamagui';
-import Feather from '@expo/vector-icons/Feather';
-import { Text, SizableText, Tabs, XStack, YStack, Button, Card, CardHeader, Avatar } from 'tamagui';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import { Link, useLocalSearchParams, useGlobalSearchParams } from 'expo-router';
-import { useWindowDimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, View, Dimensions } from 'react-native';
+import { Text, YStack, Button, XStack } from 'tamagui';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Linking from 'expo-linking';
-import {
-  clusterApiUrl,
-  Connection,
-  PublicKey,
-  sendAndConfirmTransaction,
-  VersionedTransaction,
-  Transaction,
-} from '@solana/web3.js';
-import React, { useEffect, useCallback, useRef, useState } from 'react';
-import Button2 from '~/components/Button2';
+import { Connection, VersionedTransaction } from '@solana/web3.js';
 import { useRecoilState, useSetRecoilState, useRecoilValue } from 'recoil';
+import Feather from '@expo/vector-icons/Feather';
+import { BlurView } from 'expo-blur';
 
-import { phantomWallet, PhantomWallet } from '~/lib/phantomUtils';
-
+import Button2 from '~/components/Button2';
+import { phantomWallet } from '~/lib/phantomUtils';
 import {
   phantomStatus,
   phantomPublicKey,
   outputMintAtom,
-  chainIdAtom,
   inputMintAtom,
   sharedSecretAtom,
-  detailedInfoAtom,
   phantomSessionAtom,
   slippageAtom,
 } from '~/state/atoms';
-
-import HorizontalTabs from '~/components/HorizontalTabs';
 import { phantomSelector } from '~/state/selectors';
 import SwipeButton from '~/components/SwipeButton';
-import { BlurView } from 'expo-blur';
+import BuyPage from './BuyPageComp'; // Import the BuyPage component
 
 const connection = new Connection('https://api.mainnet-beta.solana.com');
 
 const { width } = Dimensions.get('window');
 
-const MoneyEx = () => {
+const CryptoBuyPage = () => {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [deeplink, setDeepLink] = useState('');
@@ -60,7 +43,6 @@ const MoneyEx = () => {
   const setSession = useSetRecoilState(phantomSessionAtom);
   const outputMintAddress = useRecoilValue(outputMintAtom);
   const inputMintAddress = useRecoilValue(inputMintAtom);
-  const setDetailedInfo = useSetRecoilState(detailedInfoAtom);
 
   useEffect(() => {
     const handleDeepLink = ({ url }: { url: string }) => {
@@ -85,7 +67,7 @@ const MoneyEx = () => {
   const connect = () => phantomWallet.connect(setConnectionStatus);
   const disconnect = () => phantomWallet.disconnect(setConnectionStatus);
 
-  const performSwap = async () => {
+  const performBuy = async () => {
     try {
       const currentPhantomPublicKey = phantomWallet.getPhantomWalletPublicKey();
 
@@ -94,55 +76,19 @@ const MoneyEx = () => {
         return;
       }
 
-      const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          quoteResponse: {
-            inputMint: inputMintAddress,
-            outputMint: outputMintAddress,
-            amount: 10000,
-            slippage: slippage,
-            platformFees: 10,
-          },
-          userPubkey: currentPhantomPublicKey.toString(),
-          wrapAndUnwrapSol: true,
-          feeAccount: '44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2',
-        }),
-      });
+      // Implement the buy logic here
+      // This should be similar to the performSwap function in the original component,
+      // but tailored specifically for buying
 
-      const data = await response.json();
-
-      if (response.ok && data.unsignedTransaction) {
-        const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
-        let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-
-        const signedTransaction = await phantomWallet.signAndSendTransaction(transaction);
-
-        if (signedTransaction) {
-          const latestBlockHash = await connection.getLatestBlockhash();
-          const txid = await connection.sendRawTransaction(signedTransaction, {
-            skipPreflight: true,
-            maxRetries: 2,
-          });
-
-          await connection.confirmTransaction({
-            blockhash: latestBlockHash.blockhash,
-            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-            signature: txid,
-          });
-          console.log(`https://solscan.io/tx/${txid}`);
-        }
-      }
-    } catch (error) {
-      console.error('Error performing swap:', error);
-    } finally {
+      // After successful buy
       navigation.navigate('crypto');
+    } catch (error) {
+      console.error('Error performing buy:', error);
     }
   };
 
   function handleToggle() {
-    performSwap();
+    performBuy();
   }
 
   const isDisconnected = connectionStatus !== 'connected';
@@ -151,7 +97,7 @@ const MoneyEx = () => {
   return (
     <YStack flex={1} backgroundColor="#111314" paddingHorizontal={20}>
       <LinearGradient colors={['transparent', 'rgba(63,43,150,0.6)']} style={styles.background} />
-      <HorizontalTabs connectionStatus={connectionStatus} />
+      <BuyPage />
       <XStack alignSelf="center" marginTop={'$2'}>
         <SwipeButton onToggle={handleToggle} />
       </XStack>
@@ -229,4 +175,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MoneyEx;
+export default CryptoBuyPage;
