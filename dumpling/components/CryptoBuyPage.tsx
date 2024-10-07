@@ -68,14 +68,9 @@ const CryptoBuyPage = () => {
   const connect = () => phantomWallet.connect(setConnectionStatus);
   const disconnect = () => phantomWallet.disconnect(setConnectionStatus);
 
-  const { wallets, sdk } = useDynamic();
-  // const wallet = useDynamic.wallets.primary;
-  // console.log("Wallet : ", wallet.address)
-  // console.log("Wallet : ", wallet)
-
   // const signer = useDynamic?.solana?.getSigner({ wallet });
   const {wallets, sdk} = useDynamic();
-  const wallet = useDynamic.wallets.primary;
+  // const wallet = useDynamic.wallets.primary;
   // console.log("Wallet : ", wallet.address)
   // console.log("Wallet : ", wallet)
 
