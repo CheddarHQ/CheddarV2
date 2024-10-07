@@ -86,7 +86,6 @@ const MoneyEx = () => {
   const {wallets} = useDynamic();
   const wallet = wallets.userWallets[0];
   console.log("Wallet : ", wallet.address)
-
   const connect = () => phantomWallet.connect(setConnectionStatus);
   const disconnect = () => phantomWallet.disconnect(setConnectionStatus);
 

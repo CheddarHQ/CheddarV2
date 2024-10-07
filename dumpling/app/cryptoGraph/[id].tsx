@@ -16,6 +16,11 @@ import { coinDirectory } from '~/utils/directory';
 import { useRouter } from 'expo-router';
 import CurrencyConverter from '~/components/CurrencyConverter';
 import axios from 'axios';
+import { ISolana, isSolanaWallet } from '@dynamic-labs/solana-core';
+import { Connection } from "@solana/web3.js";
+import { useDynamic } from '~/client';
+
+
 
 interface PriceHistoryPoint {
   date: Date;
@@ -67,7 +72,7 @@ const fetchCoinData = async (coinId: string, range: TimeRange): Promise<PriceHis
   try {
     let apiRange = range;
     if (range === '6M') {
-      apiRange = '6M'; // Use 180D instead of 6M for the API request
+      apiRange = '180D'; // Use 180D instead of 6M for the API request
     }
 
     const response = await axios.get(
@@ -98,10 +103,15 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
   const router = useRouter();
   const { convertUSDtoINR, exchangeRate, lastUpdated } = CurrencyConverter();
 
+  const {wallets} = useDynamic()
+  const wallet = wallets.userWallets[0]
+  // console.log("Wallet : ", isSolanaWallet(wallet))
+
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const parsedDetailedInfo = JSON.parse(detailedInfo || 'null');
+        const parsedDetailedInfo = JSON.parse(detailedInfo  || 'null');
         console.log('Parsed detailedInfo:', parsedDetailedInfo);
         setTokenInfo(parsedDetailedInfo);
 
@@ -110,8 +120,8 @@ const MyChart: React.FC = ({ address = 'GKBt8MZRhKPgKtdKT1fxHGZb5n7YZXZz72YDiykB
           const fetchedCoinId = fetchCoinId(parsedDetailedInfo.name);
           if (fetchedCoinId) {
             setCoinId(fetchedCoinId);
-            const chartData =  await fetchCoinData(fetchedCoinId, '1D');
-            setPriceHistory(chartData);
+            // const chartData =  await fetchCoinData(fetchedCoinId, '1D');
+            // setPriceHistory(chartData);
             setGraphLoading(false);
           }
         }

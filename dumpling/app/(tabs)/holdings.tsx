@@ -1,16 +1,18 @@
 import { View, Dimensions, FlatList, TouchableOpacity } from 'react-native';
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import { YStack, Text, XStack, Separator, Button, Avatar, Card } from 'tamagui';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { DynamicContextProvider, useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { DynamicContextProvider, useDynamicContext, useMultiWalletPromptState } from "@dynamic-labs/sdk-react-core";
 import { useDynamic } from '~/client';
-import { getWalletBalance } from '~/utils/getBalance';
+import { getTokenData, getWalletBalance } from '~/utils/getBalance';
 import { useRecoilState } from 'recoil';
 import { balanceAtom } from '~/state/atoms';
-// import Balances from '~/components/Holdings';
+import { TokenData } from './analytics';
+import { TokenBasicInfo } from './analytics';
+
 
 
 const { width } = Dimensions.get('window');
@@ -20,6 +22,9 @@ const holdings = () => {
 
 
   const [balance , setBalance] = useRecoilState(balanceAtom)
+  const [tokenData, setTokenData] = useState(null)
+  const [loading, setLoading ] = useState(false)
+  const [pubkeyIds, setPubkeyIds] = useState('');
 
   const data = [
     {
@@ -48,7 +53,9 @@ const holdings = () => {
     },
   ];
 
-  const { auth, wallets, ui } = useDynamic();
+
+
+  const { auth, wallets, ui} = useDynamic();
 
   const wallet = wallets.userWallets[0];
 
@@ -56,6 +63,36 @@ const holdings = () => {
   // const fetchedBalance = getWalletBalance(wallet.address.toString)
 
   // setBalance(fetchedBalance)
+
+  useEffect(() => {
+    async function fetchMetadata(ids: string) {
+      try {
+        setLoading(true);
+        console.log('Fetching data...');
+        const response = await fetch(
+          `https://sushi.cheddar-io.workers.dev/api/data/fetchmetadata?ids=${ids}`
+        );
+        const data: TokenData = await response.json();
+        console.log("Pubkey data : ", data)
+
+        setTokenData(data);
+
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    console.log("Pubkeys extracted: ", pubkeyIds)
+    fetchMetadata(pubkeyIds);
+
+    const intervalId = setInterval(() => {
+      fetchMetadata(pubkeyIds);
+    }, 300000);
+
+    return () => clearInterval(intervalId);
+  }, [pubkeyIds]);
 
 
 
@@ -65,8 +102,21 @@ const holdings = () => {
     
       setBalance(data)
     }
+    console.log(`Balance: ${balance / Math.pow(10, 9)} SOL`);
 
     fetchBalance()
+  },[])
+
+  useEffect(()=>{
+    const fetchTokenData = async ()=>{
+      const {tokenData, pubkeys} = await getTokenData(wallet.address)
+
+      setTokenData(tokenData)
+      setPubkeyIds(pubkeys)
+    }
+  
+
+    fetchTokenData()
   },[])
 
 
@@ -188,6 +238,14 @@ const holdings = () => {
 
       <Separator marginVertical={10} backgroundColor="#808080" />
     {/* <Balances/> */}
+      {/* FlatList for holdings */}
+      <FlatList
+        data={data}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.key}
+        showsVerticalScrollIndicator={false}
+        style={{ marginTop: 20 }}
+      />
     </YStack>
   );
 };
