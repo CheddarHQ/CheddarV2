@@ -68,7 +68,12 @@ const CryptoBuyPage = () => {
   const connect = () => phantomWallet.connect(setConnectionStatus);
   const disconnect = () => phantomWallet.disconnect(setConnectionStatus);
 
+  const { wallets, sdk } = useDynamic();
+  // const wallet = useDynamic.wallets.primary;
+  // console.log("Wallet : ", wallet.address)
+  // console.log("Wallet : ", wallet)
 
+  // const signer = useDynamic?.solana?.getSigner({ wallet });
   const {wallets, sdk} = useDynamic();
   const wallet = useDynamic.wallets.primary;
   // console.log("Wallet : ", wallet.address)
@@ -108,10 +113,8 @@ const CryptoBuyPage = () => {
     }
   };
 
-
   const performSwap = async () => {
     try {
-
       const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -119,11 +122,11 @@ const CryptoBuyPage = () => {
           quoteResponse: {
             inputMint: inputMintAddress,
             outputMint: outputMintAddress,
-            amount: 1000,
+            amount: 10000,
             slippage: slippage,
             platformFees: 10,
           },
-          userPubkey: wallet.address.toString(),
+          userPubkey: "",
           wrapAndUnwrapSol: true,
           feeAccount: '44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2',
         }),
@@ -159,10 +162,24 @@ const CryptoBuyPage = () => {
   //   }
   // };
       if (response.ok && data.unsignedTransaction) {
-        const signature = await createAndSendTransaction(data);
-        
-        if (signature) {
-          console.log(`https://solscan.io/tx/${signature}`);
+        const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
+        let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+
+        const signedTransaction = await phantomWallet.signAndSendTransaction(transaction);
+
+        if (signedTransaction) {
+          const latestBlockHash = await connection.getLatestBlockhash();
+          const txid = await connection.sendRawTransaction(signedTransaction, {
+            skipPreflight: true,
+            maxRetries: 2,
+          });
+
+          await connection.confirmTransaction({
+            blockhash: latestBlockHash.blockhash,
+            lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+            signature: txid,
+          });
+          console.log(`https://solscan.io/tx/${txid}`);
         }
       }
     } catch (error) {
@@ -171,6 +188,7 @@ const CryptoBuyPage = () => {
       navigation.navigate('crypto');
     }
     };
+
 
   function handleToggle() {
     performSwap();

@@ -7,6 +7,7 @@ import AnimatedText from './AnimateMoney';
 import { chainIdAtom, outputMintAtom, inputMintAtom } from '~/state/atoms';
 import { phantomSelector } from '~/state/selectors';
 import { TokenBasicInfo } from '~/app/crypto/sell/[id]';
+import { Buttonv1 } from './BuyPageComp';
 
 const SellPage = () => {
   const [sellInput, setSellInput] = useState('');
@@ -107,8 +108,8 @@ const SellPage = () => {
   const { width } = useWindowDimensions();
 
   return (
-    <YStack flex={1} alignItems="center" justifyContent="center" gap={'$10'} width={width - 40}>
-      <XStack justifyContent="center" alignItems="center" top={50}>
+    <YStack flex={1} alignItems="center" justifyContent="flex-start" gap={'$10'} width={width - 40}>
+      <XStack justifyContent="center" alignItems="center" marginTop={40}>
         {tokenInfo && (
           <Avatar circular size={100}>
             <Avatar.Image accessibilityLabel={tokenInfo.name} src={tokenInfo.imageUrl} />
@@ -119,17 +120,21 @@ const SellPage = () => {
       <XStack
         justifyContent="center"
         alignItems="center"
+        marginTop={'$-8'}
         width="100%"
         maxWidth={360}
-        marginBottom={'$-18'}>
+        marginBottom={'$-16'}>
         <AnimatedText
-          style={{ fontSize: 32, color: 'white', fontFamily: 'Poppins' }}
-          displayValue={`-${sellInput || '0'}`}
+          style={{ fontSize: 50, color: 'white', fontFamily: 'Poppins' }}
+          displayValue={`${sellInput || '0'}`}
         />
       </XStack>
       {tokenInfo && (
-        <XStack marginBottom={'$-4'}>
-          <CryptoCard item={tokenInfo} input={sellInput} />
+        <XStack marginBottom={'$-6'} gap={20}>
+          <Buttonv1 title="10%" />
+          <Buttonv1 title="20%" />
+          <Buttonv1 title="50%" />
+          <Buttonv1 title="MAX" />
         </XStack>
       )}
       {renderNumpad()}
