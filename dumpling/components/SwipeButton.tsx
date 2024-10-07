@@ -1,6 +1,5 @@
 import React from 'react';
 import { StyleSheet } from 'react-native';
-
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack } from 'tamagui';
 import { PanGestureHandler, TextInput } from 'react-native-gesture-handler';
@@ -25,15 +24,11 @@ const SWIPEABLE_DIMENSIONS = BUTTON_HEIGHT - 2 * BUTTON_PADDING;
 const H_WAVE_RANGE = SWIPEABLE_DIMENSIONS + 2 * BUTTON_PADDING;
 const H_SWIPE_RANGE = BUTTON_WIDTH - 2 * BUTTON_PADDING - SWIPEABLE_DIMENSIONS;
 const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
-//@ts-ignore
-const SwipeButton = ({ onToggle }) => {
-  // Animated value for X translation
+
+const SwipeButton = ({ onToggle, isLoading = false }) => {
   const X = useSharedValue(0);
-  // Toggled State
   const [toggled, setToggled] = useState(false);
 
-  // Fires when animation ends
-  //@ts-ignore
   const handleComplete = (isToggled) => {
     if (isToggled !== toggled) {
       setToggled(isToggled);
@@ -41,12 +36,12 @@ const SwipeButton = ({ onToggle }) => {
     }
   };
 
-  // Gesture Handler Events
   const animatedGestureHandler = useAnimatedGestureHandler({
     onStart: (_, ctx) => {
       ctx.completed = toggled;
     },
     onActive: (e, ctx) => {
+      if (isLoading) return; // Prevent gesture handling when loading
       let newValue;
       if (ctx.completed) {
         newValue = H_SWIPE_RANGE + e.translationX;
@@ -59,6 +54,7 @@ const SwipeButton = ({ onToggle }) => {
       }
     },
     onEnd: () => {
+      if (isLoading) return; // Prevent completion when loading
       if (X.value < BUTTON_WIDTH / 2 - SWIPEABLE_DIMENSIONS / 2) {
         X.value = withSpring(0);
         runOnJS(handleComplete)(false);
@@ -72,12 +68,13 @@ const SwipeButton = ({ onToggle }) => {
   const InterpolateXInput = [0, H_SWIPE_RANGE];
   const AnimatedStyles = {
     swipeCont: useAnimatedStyle(() => {
-      return {};
+      return {
+        opacity: isLoading ? 0.6 : 1, // Reduce opacity when loading
+      };
     }),
     colorWave: useAnimatedStyle(() => {
       return {
         width: H_WAVE_RANGE + X.value,
-
         opacity: interpolate(X.value, InterpolateXInput, [0, 1]),
       };
     }),
@@ -126,7 +123,7 @@ const SwipeButton = ({ onToggle }) => {
         <></>
       )}
 
-      <PanGestureHandler onGestureEvent={animatedGestureHandler}>
+      <PanGestureHandler onGestureEvent={animatedGestureHandler} enabled={!isLoading}>
         <Animated.View style={[styles.swipeable, AnimatedStyles.swipeable]}>
           <XStack justifyContent="center" marginTop={2}>
             <TickArrow />
@@ -134,7 +131,7 @@ const SwipeButton = ({ onToggle }) => {
         </Animated.View>
       </PanGestureHandler>
       <Animated.Text style={[styles.swipeText, AnimatedStyles.swipeText]}>
-        Slide to Purchase
+        {isLoading ? 'Processing...' : 'Slide to Purchase'}
       </Animated.Text>
     </Animated.View>
   );
