@@ -74,35 +74,42 @@ const CryptoBuyPage = () => {
   // console.log("Wallet : ", wallet)
 
   // const signer = useDynamic?.solana?.getSigner({ wallet });
+  const {wallets, sdk} = useDynamic();
+  const wallet = useDynamic.wallets.primary;
+  // console.log("Wallet : ", wallet.address)
+  // console.log("Wallet : ", wallet)
+
+  // const signer = useDynamic?.solana?.getSigner({ wallet });
 
   const createAndSendTransaction = async (data: { unsignedTransaction: string }) => {
+  
     try {
       const connection = useDynamic?.solana?.getConnection();
       const signer = useDynamic?.solana?.getSigner({ wallet });
-
+      
       // Deserialize the transaction from base64
       const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
       let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-
+      
       // Sign the transaction
       const { signature } = await signer.signAndSendTransaction(transaction);
-
+      
       // Get latest blockhash for confirmation
       const latestBlockHash = await connection.getLatestBlockhash();
-
+      
       // Confirm the transaction
       await connection.confirmTransaction({
         blockhash: latestBlockHash.blockhash,
         lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
         signature: signature,
       });
-
-      console.log('Successful transaction signature:', signature);
+  
+      console.log("Successful transaction signature:", signature);
       console.log(`https://solscan.io/tx/${signature}`);
-
+      
       return signature;
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
     }
   };
 
@@ -127,6 +134,33 @@ const CryptoBuyPage = () => {
 
       const data = await response.json();
 
+  //     if (response.ok && data.unsignedTransaction) {
+  //       const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
+  //       let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+
+  //       const signedTransaction = await sdk.wallet.SignTransaction(transaction);
+
+  //       if (signedTransaction) {
+  //         const latestBlockHash = await connection.getLatestBlockhash();
+  //         const txid = await connection.sendRawTransaction(signedTransaction, {
+  //           skipPreflight: true,
+  //           maxRetries: 2,
+  //         });
+
+  //         await connection.confirmTransaction({
+  //           blockhash: latestBlockHash.blockhash,
+  //           lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+  //           signature: txid,
+  //         });
+  //         console.log(`https://solscan.io/tx/${txid}`);
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Error performing swap:', error);
+  //   } finally {
+  //     navigation.navigate('crypto');
+  //   }
+  // };
       if (response.ok && data.unsignedTransaction) {
         const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
         let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
@@ -153,7 +187,7 @@ const CryptoBuyPage = () => {
     } finally {
       navigation.navigate('crypto');
     }
-  };
+    };
 
 
   function handleToggle() {
