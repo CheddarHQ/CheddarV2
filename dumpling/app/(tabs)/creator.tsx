@@ -1,11 +1,16 @@
-import { View, Text } from 'react-native';
+import { View } from 'react-native';
 import React from 'react';
 import CreateCoinForm from '~/components/CreateSPL';
-import { YStack } from 'tamagui';
+import { XStack, YStack, Text } from 'tamagui';
 
 const creator = () => {
   return (
-    <YStack paddingTop={50} flex={1} height={'screen'}>
+    <YStack flex={1} height={'screen'} backgroundColor="#0a0b0f" paddingTop={50}>
+      <XStack justifyContent="center">
+        <Text textAlign="center" fontWeight={'bold'} fontSize={30} color={'white'}>
+          Launch Pad
+        </Text>
+      </XStack>
       <CreateCoinForm />
     </YStack>
   );
