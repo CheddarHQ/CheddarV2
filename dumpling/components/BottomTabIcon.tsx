@@ -18,15 +18,14 @@ const BottomTabIcon = ({ route, isFocused }: Props) => {
     let width: number = 34;
 
     switch (route) {
-      // case 'Chat':
-      //   return <HomeIcon />;
-
       case 'analytics':
         return <ProfileIcon />;
       case 'rewards':
         return <BlinksIcon />;
       case 'holdings':
         return <SettingIcon />;
+      case 'creator':
+        return <HomeIcon />;
       default:
         break;
     }

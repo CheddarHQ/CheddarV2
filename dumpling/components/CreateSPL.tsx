@@ -4,7 +4,7 @@ import { VersionedTransaction, Connection, Keypair } from '@solana/web3.js';
 import bs58 from 'bs58';
 import * as ImagePicker from 'expo-image-picker';
 
-const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=b7ff1b34-84d3-44de-a638-9b99150febc8";
+const RPC_ENDPOINT = 'https://mainnet.helius-rpc.com/?api-key=b7ff1b34-84d3-44de-a638-9b99150febc8';
 const web3Connection = new Connection(RPC_ENDPOINT, 'confirmed');
 
 const CreateCoinForm = ({ navigation }) => {
@@ -20,9 +20,9 @@ const CreateCoinForm = ({ navigation }) => {
   const [showMoreOptions, setShowMoreOptions] = useState(false);
 
   const handleInputChange = (name, value) => {
-    setFormData(prevState => ({
+    setFormData((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -35,9 +35,9 @@ const CreateCoinForm = ({ navigation }) => {
     });
 
     if (!result.canceled) {
-      setFormData(prevState => ({
+      setFormData((prevState) => ({
         ...prevState,
-        image: result.assets[0]
+        image: result.assets[0],
       }));
     }
   };
@@ -49,9 +49,8 @@ const CreateCoinForm = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()}>
-      </TouchableOpacity>
-      
+      <TouchableOpacity onPress={() => navigation.goBack()}></TouchableOpacity>
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>name</Text>
         <TextInput
@@ -61,7 +60,7 @@ const CreateCoinForm = ({ navigation }) => {
           placeholderTextColor="#808080"
         />
       </View>
-      
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>ticker</Text>
         <TextInput
@@ -71,7 +70,7 @@ const CreateCoinForm = ({ navigation }) => {
           placeholderTextColor="#808080"
         />
       </View>
-      
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>description</Text>
         <TextInput
@@ -82,7 +81,7 @@ const CreateCoinForm = ({ navigation }) => {
           placeholderTextColor="#808080"
         />
       </View>
-      
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>image</Text>
         <View style={styles.fileInputContainer}>
@@ -94,13 +93,13 @@ const CreateCoinForm = ({ navigation }) => {
           </Text>
         </View>
       </View>
-      
+
       <TouchableOpacity onPress={() => setShowMoreOptions(!showMoreOptions)}>
         <Text style={styles.hideMoreOptions}>
           {showMoreOptions ? 'Hide more options ▲' : 'Show more options ▼'}
         </Text>
       </TouchableOpacity>
-      
+
       {showMoreOptions && (
         <>
           <View style={styles.inputContainer}>
@@ -113,7 +112,7 @@ const CreateCoinForm = ({ navigation }) => {
               placeholderTextColor="#808080"
             />
           </View>
-          
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>telegram link</Text>
             <TextInput
@@ -124,7 +123,7 @@ const CreateCoinForm = ({ navigation }) => {
               placeholderTextColor="#808080"
             />
           </View>
-          
+
           <View style={styles.inputContainer}>
             <Text style={styles.label}>website</Text>
             <TextInput
@@ -137,13 +136,13 @@ const CreateCoinForm = ({ navigation }) => {
           </View>
         </>
       )}
-      
+
       <Text style={styles.tip}>Tip: coin data cannot be changed after creation</Text>
-      
+
       <TouchableOpacity style={styles.createButton} onPress={handleSubmit}>
         <Text style={styles.createButtonText}>Create coin</Text>
       </TouchableOpacity>
-      
+
       <Text style={styles.rewardText}>
         When your coin completes its bonding curve you receive 0.5 SOL
       </Text>
@@ -155,7 +154,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: '#1E1E1E',
   },
   goBack: {
     color: '#FFFFFF',

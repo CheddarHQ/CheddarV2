@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   slidingTab: {
-    width: 100,
+    width: 80,
     height: 44,
     borderRadius: 100,
     backgroundColor: '#FEF503',

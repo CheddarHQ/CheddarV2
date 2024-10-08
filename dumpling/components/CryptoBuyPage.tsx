@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, View, Dimensions, Animated, Easing, Image } from 'react-native';
 import { Text, YStack, Button, XStack } from 'tamagui';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { useNavigation } from '@react-navigation/native';
@@ -30,10 +30,42 @@ const connection = new Connection('https://api.mainnet-beta.solana.com');
 
 const { width } = Dimensions.get('window');
 
+const LoadingOverlay = () => {
+  const spinValue = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(spinValue, {
+        toValue: 1,
+        duration: 1000,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const spin = spinValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+  return (
+    <View style={styles.overlay}>
+      <BlurView intensity={100} style={StyleSheet.absoluteFill} />
+      <Animated.View style={{ transform: [{ rotate: spin }] }}>
+        <Feather name="loader" size={50} color="white" />
+      </Animated.View>
+      <Text color="white" fontSize={18} marginTop={20}>
+        Processing Transaction...
+      </Text>
+    </View>
+  );
+};
 const CryptoBuyPage = () => {
   const navigation = useNavigation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [deeplink, setDeepLink] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const slippage = useRecoilValue(slippageAtom);
   const setSharedSecret = useSetRecoilState<Uint8Array>(sharedSecretAtom);
@@ -69,7 +101,7 @@ const CryptoBuyPage = () => {
   const disconnect = () => phantomWallet.disconnect(setConnectionStatus);
 
   // const signer = useDynamic?.solana?.getSigner({ wallet });
-  const {wallets, sdk} = useDynamic();
+  const { wallets, sdk } = useDynamic();
   // const wallet = useDynamic.wallets.primary;
   // console.log("Wallet : ", wallet.address)
   // console.log("Wallet : ", wallet)
@@ -77,38 +109,42 @@ const CryptoBuyPage = () => {
   // const signer = useDynamic?.solana?.getSigner({ wallet });
 
   const createAndSendTransaction = async (data: { unsignedTransaction: string }) => {
-  
     try {
       const connection = useDynamic?.solana?.getConnection();
       const signer = useDynamic?.solana?.getSigner({ wallet });
-      
+
       // Deserialize the transaction from base64
       const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
       let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
-      
+
       // Sign the transaction
       const { signature } = await signer.signAndSendTransaction(transaction);
-      
+
       // Get latest blockhash for confirmation
       const latestBlockHash = await connection.getLatestBlockhash();
-      
+
       // Confirm the transaction
       await connection.confirmTransaction({
         blockhash: latestBlockHash.blockhash,
         lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
         signature: signature,
       });
-  
-      console.log("Successful transaction signature:", signature);
+
+      console.log('Successful transaction signature:', signature);
       console.log(`https://solscan.io/tx/${signature}`);
-      
+
       return signature;
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
     }
   };
 
   const performSwap = async () => {
+    setIsLoading(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
     try {
       const response = await fetch('https://sushi.cheddar-io.workers.dev/api/buy/swap', {
         method: 'POST',
@@ -121,7 +157,7 @@ const CryptoBuyPage = () => {
             slippage: slippage,
             platformFees: 10,
           },
-          userPubkey: "",
+          userPubkey: '',
           wrapAndUnwrapSol: true,
           feeAccount: '44LfWhS3PSYf7GxUE2evtTXvT5nYRe6jEMvTZd3YJ9E2',
         }),
@@ -129,33 +165,33 @@ const CryptoBuyPage = () => {
 
       const data = await response.json();
 
-  //     if (response.ok && data.unsignedTransaction) {
-  //       const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
-  //       let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
+      //     if (response.ok && data.unsignedTransaction) {
+      //       const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
+      //       let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
 
-  //       const signedTransaction = await sdk.wallet.SignTransaction(transaction);
+      //       const signedTransaction = await sdk.wallet.SignTransaction(transaction);
 
-  //       if (signedTransaction) {
-  //         const latestBlockHash = await connection.getLatestBlockhash();
-  //         const txid = await connection.sendRawTransaction(signedTransaction, {
-  //           skipPreflight: true,
-  //           maxRetries: 2,
-  //         });
+      //       if (signedTransaction) {
+      //         const latestBlockHash = await connection.getLatestBlockhash();
+      //         const txid = await connection.sendRawTransaction(signedTransaction, {
+      //           skipPreflight: true,
+      //           maxRetries: 2,
+      //         });
 
-  //         await connection.confirmTransaction({
-  //           blockhash: latestBlockHash.blockhash,
-  //           lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-  //           signature: txid,
-  //         });
-  //         console.log(`https://solscan.io/tx/${txid}`);
-  //       }
-  //     }
-  //   } catch (error) {
-  //     console.error('Error performing swap:', error);
-  //   } finally {
-  //     navigation.navigate('crypto');
-  //   }
-  // };
+      //         await connection.confirmTransaction({
+      //           blockhash: latestBlockHash.blockhash,
+      //           lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      //           signature: txid,
+      //         });
+      //         console.log(`https://solscan.io/tx/${txid}`);
+      //       }
+      //     }
+      //   } catch (error) {
+      //     console.error('Error performing swap:', error);
+      //   } finally {
+      //     navigation.navigate('crypto');
+      //   }
+      // };
       if (response.ok && data.unsignedTransaction) {
         const swapTransactionBuf = Buffer.from(data.unsignedTransaction, 'base64');
         let transaction = VersionedTransaction.deserialize(swapTransactionBuf);
@@ -182,8 +218,7 @@ const CryptoBuyPage = () => {
     } finally {
       navigation.navigate('crypto');
     }
-    };
-
+  };
 
   function handleToggle() {
     performSwap();
@@ -196,6 +231,7 @@ const CryptoBuyPage = () => {
       <XStack alignSelf="center" marginTop={'$2'} padding={'$8'}>
         <SwipeButton onToggle={handleToggle} />
       </XStack>
+      {isLoading && <LoadingOverlay />}
     </YStack>
   );
 };
@@ -239,6 +275,21 @@ const styles = StyleSheet.create({
     color: 'white',
     textAlign: 'center',
     marginTop: 10,
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  image: {
+    width: 100, // Adjust as needed
+    height: 100, // Adjust as needed
+    resizeMode: 'contain',
   },
 });
 
