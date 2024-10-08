@@ -9,7 +9,6 @@ import { ScreenContent } from '~/components/ScreenContent';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { Image } from 'tamagui';
 
-
 export default function Home() {
   return (
     <YStack
@@ -29,7 +28,7 @@ export default function Home() {
           }}
         />
       </XStack>
-      <Link href={'/loginPage'}>
+      <Link href={'/(tabs)/analytics'}>
         <XStack
           borderWidth="$1"
           borderColor={'#ffffff'}

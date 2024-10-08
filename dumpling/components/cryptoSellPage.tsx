@@ -81,7 +81,7 @@ const CryptoSellPage = () => {
       // but tailored specifically for selling
 
       // After successful sell
-      navigation.navigate('crypto');
+      navigation.navigate('crypto/sell');
     } catch (error) {
       console.error('Error performing sell:', error);
     }

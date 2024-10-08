@@ -76,7 +76,7 @@ const BuyPage = () => {
     <YStack
       borderRadius={50}
       width={328}
-      height={395}
+      height={340}
       paddingTop={50}
       alignItems="center"
       backgroundColor={'black'}>
@@ -107,8 +107,8 @@ const BuyPage = () => {
   const { width } = useWindowDimensions();
 
   return (
-    <YStack flex={1} alignItems="center" justifyContent="center" gap={'$10'} width={width - 40}>
-      <XStack justifyContent="center" alignItems="center" top={50}>
+    <YStack flex={1} alignItems="center" justifyContent="flex-start" gap={'$10'} width={width - 40}>
+      <XStack justifyContent="center" alignItems="center" marginTop={40}>
         {tokenInfo && (
           <Avatar circular size={100}>
             <Avatar.Image accessibilityLabel={tokenInfo.name} src={tokenInfo.imageUrl} />
@@ -119,17 +119,22 @@ const BuyPage = () => {
       <XStack
         justifyContent="center"
         alignItems="center"
+        marginTop={'$-8'}
         width="100%"
         maxWidth={360}
-        marginBottom={'$-18'}>
+        marginBottom={'$-16'}>
         <AnimatedText
-          style={{ fontSize: 30, color: 'white', fontFamily: 'Poppins' }}
-          displayValue={`+${buyInput || '0'}`}
+          style={{ fontSize: 50, color: 'white', fontFamily: 'Poppins' }}
+          displayValue={`${buyInput || '0'}`}
         />
       </XStack>
       {tokenInfo && (
-        <XStack marginBottom={'$-4'}>
-          <CryptoCard item={tokenInfo} input={buyInput} />
+        <XStack marginBottom={'$-6'} gap={20}>
+          {/* <CryptoCard item={tokenInfo} input={buyInput} /> */}
+          <Buttonv1 title="10%" />
+          <Buttonv1 title="20%" />
+          <Buttonv1 title="50%" />
+          <Buttonv1 title="MAX" />
         </XStack>
       )}
       {renderNumpad()}
@@ -138,3 +143,16 @@ const BuyPage = () => {
 };
 
 export default BuyPage;
+
+interface ButtonProps {
+  onPress?: () => void; // Function for handling button press
+  title: string; // Text for the button label
+}
+
+export function Buttonv1({ onPress, title }: ButtonProps) {
+  return (
+    <Button onPress={onPress} borderRadius={50} backgroundColor={'rgba(255,255,255,0.1)'}>
+      <Text color={'#fff'}>{title}</Text>
+    </Button>
+  );
+}

@@ -88,7 +88,6 @@ export default function Layout() {
       {!wallets.primary && (
         <View style={styles.LoginContainer}>
           <Slider />
-          <Text style={styles.HeaderLoginTxt}>Cheddar 🧀</Text>
           <TouchableOpacity style={styles.loginButton} onPress={() => dynamicClient.ui.auth.show()}>
             <Text style={styles.loginButtonText}>Create a Wallet</Text>
           </TouchableOpacity>
@@ -113,6 +112,8 @@ export default function Layout() {
                 <Stack.Screen name="loginPage" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="userPage" options={{ headerShown: false }} />
+                <Stack.Screen name="addMoney" options={{ headerShown: false }} />
+                <Stack.Screen name="addMoneyUpi" options={{ headerShown: false }} />
                 <Stack.Screen
                   name="cryptoGraph"
                   options={{ headerShown: false, presentation: 'modal' }}
