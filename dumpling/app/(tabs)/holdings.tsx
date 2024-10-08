@@ -1,44 +1,45 @@
 import { View, Dimensions, FlatList, TouchableOpacity } from 'react-native';
-import React, {useEffect, useState} from 'react';
-import { YStack, Text, XStack, Separator, Button, Avatar, Card } from 'tamagui';
+import React, { useEffect, useState } from 'react';
+import { YStack, Text, XStack, Separator, Button, Avatar, Card, Dialog } from 'tamagui';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { DynamicContextProvider, useDynamicContext, useMultiWalletPromptState } from "@dynamic-labs/sdk-react-core";
+import { Link } from 'expo-router';
+import {
+  DynamicContextProvider,
+  useDynamicContext,
+  useMultiWalletPromptState,
+} from '@dynamic-labs/sdk-react-core';
 import { useDynamic } from '~/client';
 import { getTokenData, getWalletBalance } from '~/utils/getBalance';
 import { useRecoilState } from 'recoil';
 import { balanceAtom } from '~/state/atoms';
 import { TokenData } from './analytics';
 import { TokenBasicInfo } from './analytics';
-import axios from "axios"
-
+import axios from 'axios';
 
 const { width } = Dimensions.get('window');
 
-
-interface mergedDataProps{
-    balance: number,
-    mint: string,
-    pubkey: string,
-    name: string,
-    symbol: string,
-    logoURI: string
-    verified: true
+interface mergedDataProps {
+  balance: number;
+  mint: string;
+  pubkey: string;
+  name: string;
+  symbol: string;
+  logoURI: string;
+  verified: true;
 }
-
 
 const holdings = () => {
   // Hardcoded data for the flat list
 
-
-  const [balance , setBalance] = useRecoilState(balanceAtom)
-  const [tokenData, setTokenData] = useState()
-  const [loading, setLoading ] = useState(false)
+  const [balance, setBalance] = useRecoilState(balanceAtom);
+  const [tokenData, setTokenData] = useState();
+  const [loading, setLoading] = useState(false);
   const [pubkeyIds, setPubkeyIds] = useState('');
   const [mintIds, setMintIds] = useState([]);
-  const [mergedData, setMergedData] = useState<mergedDataProps[]>([])
+  const [mergedData, setMergedData] = useState<mergedDataProps[]>([]);
 
   const data = [
     {
@@ -67,32 +68,28 @@ const holdings = () => {
     },
   ];
 
+  const { auth, wallets, ui } = useDynamic();
 
-  
-  
-  
-  const { auth, wallets, ui} = useDynamic();
-  
   const wallet = wallets.userWallets[0];
-  
-  
+
   const mergeTokenAndMintData = (tokenData, mintData) => {
-    return tokenData.map(token => {
-      const mintInfo = mintData.content.find(mint => mint.address === token.mint);
+    return tokenData.map((token) => {
+      const mintInfo = mintData.content.find((mint) => mint.address === token.mint);
       return {
         ...token,
-        ...(mintInfo ? {
-          name: mintInfo.name,
-          symbol: mintInfo.symbol,
-          decimals: mintInfo.decimals,
-          holders: mintInfo.holders,
-          logoURI: mintInfo.logoURI,
-          verified: mintInfo.verified
-        } : {})
+        ...(mintInfo
+          ? {
+              name: mintInfo.name,
+              symbol: mintInfo.symbol,
+              decimals: mintInfo.decimals,
+              holders: mintInfo.holders,
+              logoURI: mintInfo.logoURI,
+              verified: mintInfo.verified,
+            }
+          : {}),
       };
     });
   };
-
 
   // const fetchedBalance = getWalletBalance(wallet.address.toString)
 
@@ -100,68 +97,64 @@ const holdings = () => {
 
   useEffect(() => {
     async function fetchMetadata(ids: string) {
-      if(ids.length === 0) return;
-        try {
-          setLoading(true);
-          console.log('Fetching data...');
-          
-          const payload = {
-            addresses : ids
-          } //convert this into an array first
-          
-          const response = await axios.post(
-          `https://token-list-api.solana.cloud/v1/mints?chainId=101`, payload);
+      if (ids.length === 0) return;
+      try {
+        setLoading(true);
+        console.log('Fetching data...');
 
-          const data = response.data
-          const mergedData = mergeTokenAndMintData(tokenData, data);
-          
-          setMergedData(mergedData);
-          
-        } catch (error) {
-          console.error('Error fetching data:', error);
-        } finally {
-          setLoading(false);
-        }
+        const payload = {
+          addresses: ids,
+        }; //convert this into an array first
+
+        const response = await axios.post(
+          `https://token-list-api.solana.cloud/v1/mints?chainId=101`,
+          payload
+        );
+
+        const data = response.data;
+        const mergedData = mergeTokenAndMintData(tokenData, data);
+
+        setMergedData(mergedData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
       }
-      
+    }
+
+    fetchMetadata(mintIds);
+
+    const intervalId = setInterval(() => {
       fetchMetadata(mintIds);
-    
-      
-      const intervalId = setInterval(() => {
-        fetchMetadata(mintIds);
-      }, 300000);
+    }, 300000);
 
     return () => clearInterval(intervalId);
   }, [mintIds]);
 
-  
+  useEffect(() => {
+    const fetchBalance = async () => {
+      const data = await getWalletBalance(wallet.address);
 
+      setBalance(data);
+    };
 
-  useEffect(()=>{
-    const fetchBalance = async ()=>{
-      const data = await getWalletBalance(wallet.address)
-    
-      setBalance(data)
-    }
+    fetchBalance();
+  }, []);
 
-    fetchBalance()
-  },[])
+  useEffect(() => {
+    const fetchTokenData = async () => {
+      const { tokenData, pubkeys, mints } = await getTokenData(wallet.address);
 
-  useEffect(()=>{
-    const fetchTokenData = async ()=>{
-      const {tokenData, pubkeys, mints} = await getTokenData(wallet.address)
-
-      setTokenData(tokenData)
-      setPubkeyIds(pubkeys)
-      setMintIds(mints)
-    }
-    fetchTokenData()
-  },[])
-
+      setTokenData(tokenData);
+      setPubkeyIds(pubkeys);
+      setMintIds(mints);
+    };
+    fetchTokenData();
+  }, []);
 
   // Render each item as a Card
   const renderItem = ({ item }) => (
-    <Card 
+    <Card
       elevate
       paddingVertical={20}
       borderRadius={0}
@@ -177,11 +170,14 @@ const holdings = () => {
               {item.symbol}
             </Text>
             <Text fontFamily="Goldman" color={'#5D5D5D'} fontWeight={400} fontSize={14}>
-              {item.balance}
+              {item.name}
             </Text>
           </YStack>
         </XStack>
-        <YStack gap={4}> 
+        <YStack gap={4} style={{ marginLeft: 'auto', alignItems: 'flex-end' }}>
+          <Text color={'#FFEF00'} fontWeight={400} fontSize={14}>
+            {item.balance}
+          </Text>
         </YStack>
       </XStack>
     </Card>
@@ -194,7 +190,7 @@ const holdings = () => {
       alignItems="center"
       padding={16}
       paddingTop={100}
-      backgroundColor="#121212">
+      backgroundColor="#0a0b0f">
       {/* Total Cheddar Section */}
       <XStack marginBottom={10}>
         <Text color={'#B0B0B0'} fontWeight={600}>
@@ -202,12 +198,9 @@ const holdings = () => {
         </Text>
       </XStack>
       <XStack marginBottom={10}>
-        
         <Text fontSize={40} fontWeight={'bold'} color="#FFFFFF">
-        <FontAwesome5 name="rupee-sign" size={32} color="white" /> {balance}
+          <FontAwesome5 name="rupee-sign" size={32} color="white" /> {balance}
         </Text>
-        
-        
       </XStack>
       <XStack marginBottom={20}>
         {/* <Text color={'#00FF00'} fontWeight={'bold'} paddingRight={5}>
@@ -217,14 +210,69 @@ const holdings = () => {
       </XStack>
 
       <XStack justifyContent="space-around" marginVertical={20} width={width * 0.8}>
-        <YStack justifyContent="center" alignItems="center" gap={8}>
-          <TouchableOpacity>
-            <FontAwesome5 name="rupee-sign" size={24} color="white" />
-          </TouchableOpacity>
-          <Text color={'white'} fontWeight={600}>
-            Add Cash
-          </Text>
-        </YStack>
+        <Dialog>
+          <Dialog.Trigger asChild>
+            <TouchableOpacity>
+              <YStack justifyContent="center" alignItems="center" gap={8}>
+                <FontAwesome5 name="rupee-sign" size={24} color="white" />
+                <Text color={'white'} fontWeight={600}>
+                  Add Cash
+                </Text>
+              </YStack>
+            </TouchableOpacity>
+          </Dialog.Trigger>
+          <Dialog.Portal>
+            <Dialog.Overlay
+              key="overlay"
+              animation="quick"
+              opacity={0.5}
+              enterStyle={{ opacity: 0 }}
+              exitStyle={{ opacity: 0 }}
+            />
+            <Dialog.Content
+              bordered
+              elevate
+              key="content"
+              animation={[
+                'quick',
+                {
+                  opacity: {
+                    overshootClamping: true,
+                  },
+                },
+              ]}
+              enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
+              exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
+              x={0}
+              scale={1}
+              opacity={1}
+              y={0}
+              backgroundColor="black">
+              <YStack space>
+                <Dialog.Title alignSelf="center">Add Cash</Dialog.Title>
+                <Dialog.Description color={'#808080'} marginTop={-10}>
+                  Choose a method to add cash to your account
+                </Dialog.Description>
+                <XStack space justifyContent="center">
+                  <Link href="/addMoney" asChild>
+                    <Dialog.Close asChild>
+                      <Button backgroundColor="white" color="black">
+                        <Text fontWeight={'bold'}>Card</Text>
+                      </Button>
+                    </Dialog.Close>
+                  </Link>
+                  <Link href="/addMoneyUpi" asChild>
+                    <Dialog.Close asChild>
+                      <Button backgroundColor="white" color="black">
+                        <Text fontWeight={'bold'}>UPI</Text>
+                      </Button>
+                    </Dialog.Close>
+                  </Link>
+                </XStack>
+              </YStack>
+            </Dialog.Content>
+          </Dialog.Portal>
+        </Dialog>
         <YStack justifyContent="center" alignItems="center" gap={8}>
           <TouchableOpacity>
             <Feather name="send" size={24} color="white" />
@@ -247,20 +295,24 @@ const holdings = () => {
 
       <Separator marginVertical={10} backgroundColor="#808080" />
 
-      <XStack padding={8} justifyContent="space-between" width={width * 0.9}>
+      <XStack
+        justifyContent="space-between"
+        width={width * 0.9}
+        paddingBottom={10}
+        borderColor={'#808080'}
+        borderBottomWidth={2}>
         <XStack alignItems="center">
-          {/* <Text fontWeight={'bold'} fontSize={25} color="#FFFFFF">
-            Cash
+          <Text fontWeight={'bold'} fontSize={25} color="#FFFFFF">
+            tokens
           </Text>
-          <Text color={'#B0B0B0'} fontSize={20} paddingLeft={10}>
-            
-          </Text> */}
+          <Text color={'#B0B0B0'} fontSize={20} paddingLeft={10}></Text>
         </XStack>
-        <AntDesign name="plus" size={24} color="white" />
+        <XStack>
+          <AntDesign name="plus" size={24} color="white" />
+        </XStack>
       </XStack>
 
-      <Separator marginVertical={10} backgroundColor="#808080" />
-    {/* <Balances/> */}
+      {/* <Balances/> */}
       {/* FlatList for holdings */}
       <FlatList
         data={mergedData}
