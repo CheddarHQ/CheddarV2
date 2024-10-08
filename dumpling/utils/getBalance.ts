@@ -3,7 +3,7 @@ import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 
 export async function getWalletBalance(walletAddress: string){
     const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
-    const publicKey = new PublicKey("FTSsVAgdwpkDTe4Ypre4deuqs3JnFPPECeBV8yfu5xw7");
+    const publicKey = new PublicKey("7huZdFjqcDdArw7bcLPQudcUfyt5by84vNkwyX34FU3M");
     
     try {
         const balance = await connection.getBalance(publicKey);
@@ -40,7 +40,7 @@ export const getTokenData = async (walletAddress: string) => {
 
       const publicKey = new PublicKey(walletAddress)
 
-        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(new PublicKey('FTSsVAgdwpkDTe4Ypre4deuqs3JnFPPECeBV8yfu5xw7'),filter, "processed");
+        const tokenAccounts = await connection.getParsedTokenAccountsByOwner(new PublicKey('7huZdFjqcDdArw7bcLPQudcUfyt5by84vNkwyX34FU3M'),filter, "processed");
 
 
 

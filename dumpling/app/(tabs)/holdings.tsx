@@ -13,11 +13,11 @@ import { balanceAtom } from '~/state/atoms';
 import { TokenData } from './analytics';
 import { TokenBasicInfo } from './analytics';
 import axios from "axios"
-import { useNavigation } from '@react-navigation/native';
-import { Link } from 'expo-router';
-// import Balances from '~/components/Holdings';
+
 
 const { width } = Dimensions.get('window');
+
+
 interface mergedDataProps{
     balance: number,
     mint: string,
@@ -32,12 +32,14 @@ interface mergedDataProps{
 const holdings = () => {
   // Hardcoded data for the flat list
 
+
   const [balance , setBalance] = useRecoilState(balanceAtom)
   const [tokenData, setTokenData] = useState()
   const [loading, setLoading ] = useState(false)
   const [pubkeyIds, setPubkeyIds] = useState('');
   const [mintIds, setMintIds] = useState([]);
   const [mergedData, setMergedData] = useState<mergedDataProps[]>([])
+
   const data = [
     {
       key: '1',
@@ -65,11 +67,14 @@ const holdings = () => {
     },
   ];
 
-  const navigation = useNavigation();
+
+  
+  
   
   const { auth, wallets, ui} = useDynamic();
   
   const wallet = wallets.userWallets[0];
+  
   
   const mergeTokenAndMintData = (tokenData, mintData) => {
     return tokenData.map(token => {
@@ -87,6 +92,7 @@ const holdings = () => {
       };
     });
   };
+
 
   // const fetchedBalance = getWalletBalance(wallet.address.toString)
 
@@ -128,8 +134,8 @@ const holdings = () => {
     return () => clearInterval(intervalId);
   }, [mintIds]);
 
-      setBalance(data);
-    };
+  
+
 
   useEffect(()=>{
     const fetchBalance = async ()=>{
@@ -151,6 +157,7 @@ const holdings = () => {
     }
     fetchTokenData()
   },[])
+
 
   // Render each item as a Card
   const renderItem = ({ item }) => (
@@ -183,11 +190,11 @@ const holdings = () => {
   return (
     <YStack
       flex={1}
-      justifyContent="flex-start"
+      justifyContent="center"
       alignItems="center"
       padding={16}
       paddingTop={100}
-      backgroundColor="#0a0b0f">
+      backgroundColor="#121212">
       {/* Total Cheddar Section */}
       <XStack marginBottom={10}>
         <Text color={'#B0B0B0'} fontWeight={600}>
@@ -195,9 +202,12 @@ const holdings = () => {
         </Text>
       </XStack>
       <XStack marginBottom={10}>
+        
         <Text fontSize={40} fontWeight={'bold'} color="#FFFFFF">
-          <FontAwesome5 name="rupee-sign" size={32} color="white" /> {balance}
+        <FontAwesome5 name="rupee-sign" size={32} color="white" /> {balance}
         </Text>
+        
+        
       </XStack>
       <XStack marginBottom={20}>
         {/* <Text color={'#00FF00'} fontWeight={'bold'} paddingRight={5}>
@@ -207,69 +217,14 @@ const holdings = () => {
       </XStack>
 
       <XStack justifyContent="space-around" marginVertical={20} width={width * 0.8}>
-        <Dialog>
-          <Dialog.Trigger asChild>
-            <TouchableOpacity>
-              <YStack justifyContent="center" alignItems="center" gap={8}>
-                <FontAwesome5 name="rupee-sign" size={24} color="white" />
-                <Text color={'white'} fontWeight={600}>
-                  Add Cash
-                </Text>
-              </YStack>
-            </TouchableOpacity>
-          </Dialog.Trigger>
-          <Dialog.Portal>
-            <Dialog.Overlay
-              key="overlay"
-              animation="quick"
-              opacity={0.5}
-              enterStyle={{ opacity: 0 }}
-              exitStyle={{ opacity: 0 }}
-            />
-            <Dialog.Content
-              bordered
-              elevate
-              key="content"
-              animation={[
-                'quick',
-                {
-                  opacity: {
-                    overshootClamping: true,
-                  },
-                },
-              ]}
-              enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
-              exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-              x={0}
-              scale={1}
-              opacity={1}
-              y={0}
-              backgroundColor="black">
-              <YStack space>
-                <Dialog.Title alignSelf="center">Add Cash</Dialog.Title>
-                <Dialog.Description color={'#808080'} marginTop={-10}>
-                  Choose a method to add cash to your account
-                </Dialog.Description>
-                <XStack space justifyContent="center">
-                  <Link href="/addMoney" asChild>
-                    <Dialog.Close asChild>
-                      <Button backgroundColor="white" color="black">
-                        <Text fontWeight={'bold'}>Card</Text>
-                      </Button>
-                    </Dialog.Close>
-                  </Link>
-                  <Link href="/addMoneyUpi" asChild>
-                    <Dialog.Close asChild>
-                      <Button backgroundColor="white" color="black">
-                        <Text fontWeight={'bold'}>UPI</Text>
-                      </Button>
-                    </Dialog.Close>
-                  </Link>
-                </XStack>
-              </YStack>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog>
+        <YStack justifyContent="center" alignItems="center" gap={8}>
+          <TouchableOpacity>
+            <FontAwesome5 name="rupee-sign" size={24} color="white" />
+          </TouchableOpacity>
+          <Text color={'white'} fontWeight={600}>
+            Add Cash
+          </Text>
+        </YStack>
         <YStack justifyContent="center" alignItems="center" gap={8}>
           <TouchableOpacity>
             <Feather name="send" size={24} color="white" />
