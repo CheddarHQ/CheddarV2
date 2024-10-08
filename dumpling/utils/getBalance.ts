@@ -1,7 +1,7 @@
 import 'react-native-get-random-values'; // Ensure the polyfill is imported first
 import { Connection, PublicKey, clusterApiUrl } from '@solana/web3.js';
 
-export async function getWalletBalance(walletAddress: string): Promise<number> {
+export async function getWalletBalance(walletAddress: string){
     const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
     const publicKey = new PublicKey("FTSsVAgdwpkDTe4Ypre4deuqs3JnFPPECeBV8yfu5xw7");
     
@@ -11,7 +11,6 @@ export async function getWalletBalance(walletAddress: string): Promise<number> {
 
         // Format to two decimal points
         const formattedBalanceInSol = balanceInSol.toFixed(2);
-        console.log(`Balance: ${formattedBalanceInSol} SOL`);
 
         const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=inr');
         const priceData: { solana: { inr: number } } = await response.json();
@@ -19,7 +18,7 @@ export async function getWalletBalance(walletAddress: string): Promise<number> {
 
         const balanceInInr = balanceInSol * solPriceInInr;
         const formattedBalanceInInr = balanceInInr.toFixed(2); // Format to two decimal points
-        console.log(`Balance: ${formattedBalanceInSol} SOL (${formattedBalanceInInr} INR)`);
+        console.log(`Balance: ${formattedBalanceInSol} SOL :  (${formattedBalanceInInr} INR)`);
         
         return parseFloat(formattedBalanceInInr); // Return as a number
     } catch (error) {
@@ -43,28 +42,27 @@ export const getTokenData = async (walletAddress: string) => {
 
         const tokenAccounts = await connection.getParsedTokenAccountsByOwner(new PublicKey('FTSsVAgdwpkDTe4Ypre4deuqs3JnFPPECeBV8yfu5xw7'),filter, "processed");
 
-        console.log("Token Accounts: ", tokenAccounts.value);
 
-        for (const {pubkey ,account } of tokenAccounts.value) {
-            const data = account.data.parsed.info;
-            const balance = data.tokenAmount.uiAmount; // Adjust based on your SPL token structure
-            console.log(`Token Account: ${pubkey.toBase58()}, Balance: ${balance}`);
-        }
+
 
         const tokenData = tokenAccounts.value.map(({ pubkey, account }) => {
-          const data = account.data.parsed.info;
+            const data = account.data.parsed.info;
+            const mint = data.mint;
+            console.log("Data : ", data)
           const balance = data.tokenAmount.uiAmount; // Adjust based on your SPL token structure
           return {
               pubkey: pubkey.toBase58(),
-              balance: balance
+              balance: balance,
+              mint : mint
           };
         });
 
-        const pubkeys = tokenData.map(item=>item.pubkey).join(',');
+        const pubkeys = tokenData.map(item=>item.pubkey).join(', ');
+        const mints = tokenData.map(item => item.mint);
 
-        console.log("Pubkeys :", pubkeys)
 
-        return {tokenData, pubkeys};
+
+        return {tokenData, pubkeys, mints};
 
     } catch (error) {
         console.error("Error fetching token data:", error);

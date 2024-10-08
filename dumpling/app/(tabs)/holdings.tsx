@@ -12,19 +12,33 @@ import { useRecoilState } from 'recoil';
 import { balanceAtom } from '~/state/atoms';
 import { TokenData } from './analytics';
 import { TokenBasicInfo } from './analytics';
-
+import axios from "axios"
 
 
 const { width } = Dimensions.get('window');
+
+
+interface mergedDataProps{
+    balance: number,
+    mint: string,
+    pubkey: string,
+    name: string,
+    symbol: string,
+    logoURI: string
+    verified: true
+}
+
 
 const holdings = () => {
   // Hardcoded data for the flat list
 
 
   const [balance , setBalance] = useRecoilState(balanceAtom)
-  const [tokenData, setTokenData] = useState(null)
+  const [tokenData, setTokenData] = useState()
   const [loading, setLoading ] = useState(false)
   const [pubkeyIds, setPubkeyIds] = useState('');
+  const [mintIds, setMintIds] = useState([]);
+  const [mergedData, setMergedData] = useState<mergedDataProps[]>([])
 
   const data = [
     {
@@ -54,10 +68,30 @@ const holdings = () => {
   ];
 
 
-
+  
+  
+  
   const { auth, wallets, ui} = useDynamic();
-
+  
   const wallet = wallets.userWallets[0];
+  
+  
+  const mergeTokenAndMintData = (tokenData, mintData) => {
+    return tokenData.map(token => {
+      const mintInfo = mintData.content.find(mint => mint.address === token.mint);
+      return {
+        ...token,
+        ...(mintInfo ? {
+          name: mintInfo.name,
+          symbol: mintInfo.symbol,
+          decimals: mintInfo.decimals,
+          holders: mintInfo.holders,
+          logoURI: mintInfo.logoURI,
+          verified: mintInfo.verified
+        } : {})
+      };
+    });
+  };
 
 
   // const fetchedBalance = getWalletBalance(wallet.address.toString)
@@ -66,34 +100,41 @@ const holdings = () => {
 
   useEffect(() => {
     async function fetchMetadata(ids: string) {
-      try {
-        setLoading(true);
-        console.log('Fetching data...');
-        const response = await fetch(
-          `https://sushi.cheddar-io.workers.dev/api/data/fetchmetadata?ids=${ids}`
-        );
-        const data: TokenData = await response.json();
-        console.log("Pubkey data : ", data)
+      if(ids.length === 0) return;
+        try {
+          setLoading(true);
+          console.log('Fetching data...');
+          
+          const payload = {
+            addresses : ids
+          } //convert this into an array first
+          
+          const response = await axios.post(
+          `https://token-list-api.solana.cloud/v1/mints?chainId=101`, payload);
 
-        setTokenData(data);
-
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        setLoading(false);
+          const data = response.data
+          const mergedData = mergeTokenAndMintData(tokenData, data);
+          
+          setMergedData(mergedData);
+          
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setLoading(false);
+        }
       }
-    }
-
-    console.log("Pubkeys extracted: ", pubkeyIds)
-    fetchMetadata(pubkeyIds);
-
-    const intervalId = setInterval(() => {
-      fetchMetadata(pubkeyIds);
-    }, 300000);
+      
+      fetchMetadata(mintIds);
+    
+      
+      const intervalId = setInterval(() => {
+        fetchMetadata(mintIds);
+      }, 300000);
 
     return () => clearInterval(intervalId);
-  }, [pubkeyIds]);
+  }, [mintIds]);
 
+  
 
 
   useEffect(()=>{
@@ -102,27 +143,25 @@ const holdings = () => {
     
       setBalance(data)
     }
-    console.log(`Balance: ${balance / Math.pow(10, 9)} SOL`);
 
     fetchBalance()
   },[])
 
   useEffect(()=>{
     const fetchTokenData = async ()=>{
-      const {tokenData, pubkeys} = await getTokenData(wallet.address)
+      const {tokenData, pubkeys, mints} = await getTokenData(wallet.address)
 
       setTokenData(tokenData)
       setPubkeyIds(pubkeys)
+      setMintIds(mints)
     }
-  
-
     fetchTokenData()
   },[])
 
 
   // Render each item as a Card
   const renderItem = ({ item }) => (
-    <Card
+    <Card 
       elevate
       paddingVertical={20}
       borderRadius={0}
@@ -130,7 +169,7 @@ const holdings = () => {
       <XStack alignItems="center" alignContent="center" justifyContent="space-between">
         <XStack gap={10}>
           <Avatar circular height={60}>
-            <Avatar.Image accessibilityLabel={`Token ${item.symbol}`} src={item.imageUrl} />
+            <Avatar.Image accessibilityLabel={`Token ${item.symbol}`} src={item.logoURI} />
             <Avatar.Fallback delayMs={600} backgroundColor="#808080" />
           </Avatar>
           <YStack gap={4}>
@@ -138,27 +177,11 @@ const holdings = () => {
               {item.symbol}
             </Text>
             <Text fontFamily="Goldman" color={'#5D5D5D'} fontWeight={400} fontSize={14}>
-              {item.baseAddress.slice(0, 4)}...{item.baseAddress.slice(-4)}
+              {item.balance}
             </Text>
           </YStack>
         </XStack>
-        <YStack gap={4}>
-          <Text
-            fontFamily="Goldman"
-            color={'white'}
-            fontWeight={700}
-            fontSize={14}
-            alignSelf="flex-end">
-            ${item.priceUsd}
-          </Text>
-          <Text
-            fontFamily="Goldman"
-            color={item.priceChange >= 0 ? '#00FF00' : '#FF0000'}
-            fontSize={14}
-            fontWeight={400}
-            alignSelf="flex-end">
-            {item.priceChange.toFixed(2)}%
-          </Text>
+        <YStack gap={4}> 
         </YStack>
       </XStack>
     </Card>
@@ -240,9 +263,9 @@ const holdings = () => {
     {/* <Balances/> */}
       {/* FlatList for holdings */}
       <FlatList
-        data={data}
+        data={mergedData}
         renderItem={renderItem}
-        keyExtractor={(item) => item.key}
+        keyExtractor={(item) => item.mint}
         showsVerticalScrollIndicator={false}
         style={{ marginTop: 20 }}
       />
