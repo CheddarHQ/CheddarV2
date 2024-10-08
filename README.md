@@ -12,6 +12,8 @@ Cheddar is India's first UPI-integrated meme coin trading platform and launchpad
 - 🚀 Meme coin launchpad platform
 - 📱 Cross-platform mobile app optimized for both iOS and Android
 
+> **Important:** The chat & inbuilt blinks feature was not included in the deck to make it simple and straightforward!
+
 ## 🏗 Project Structure
 
 ### 1. Churro (Web Application)
