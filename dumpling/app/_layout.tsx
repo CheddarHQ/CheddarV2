@@ -43,8 +43,6 @@ export default function Layout() {
     dynamicClient.ui.userProfile.show();
   }, []);
 
-  console.log(wallets);
-
   useFocusEffect(
     useCallback(() => {
       if (shouldOpenModal) {

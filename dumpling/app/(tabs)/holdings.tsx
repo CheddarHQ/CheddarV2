@@ -1,25 +1,44 @@
 import { View, Dimensions, FlatList, TouchableOpacity } from 'react-native';
-import React, { useEffect } from 'react';
-import { YStack, Text, XStack, Separator, Button, Avatar, Card, Dialog } from 'tamagui';
+import React, {useEffect, useState} from 'react';
+import { YStack, Text, XStack, Separator, Button, Avatar, Card } from 'tamagui';
 import FontAwesome5 from '@expo/vector-icons/FontAwesome5';
 import Feather from '@expo/vector-icons/Feather';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import AntDesign from '@expo/vector-icons/AntDesign';
-import { DynamicContextProvider, useDynamicContext } from '@dynamic-labs/sdk-react-core';
+import { DynamicContextProvider, useDynamicContext, useMultiWalletPromptState } from "@dynamic-labs/sdk-react-core";
 import { useDynamic } from '~/client';
-import { getWalletBalance } from '~/utils/getBalance';
+import { getTokenData, getWalletBalance } from '~/utils/getBalance';
 import { useRecoilState } from 'recoil';
 import { balanceAtom } from '~/state/atoms';
-import { useNavigation } from '@react-navigation/native';
-import { Link } from 'expo-router';
-// import Balances from '~/components/Holdings';
+import { TokenData } from './analytics';
+import { TokenBasicInfo } from './analytics';
+import axios from "axios"
+
 
 const { width } = Dimensions.get('window');
+
+
+interface mergedDataProps{
+    balance: number,
+    mint: string,
+    pubkey: string,
+    name: string,
+    symbol: string,
+    logoURI: string
+    verified: true
+}
+
 
 const holdings = () => {
   // Hardcoded data for the flat list
 
-  const [balance, setBalance] = useRecoilState(balanceAtom);
+
+  const [balance , setBalance] = useRecoilState(balanceAtom)
+  const [tokenData, setTokenData] = useState()
+  const [loading, setLoading ] = useState(false)
+  const [pubkeyIds, setPubkeyIds] = useState('');
+  const [mintIds, setMintIds] = useState([]);
+  const [mergedData, setMergedData] = useState<mergedDataProps[]>([])
 
   const data = [
     {
@@ -48,28 +67,101 @@ const holdings = () => {
     },
   ];
 
-  const { auth, wallets, ui } = useDynamic();
-  const navigation = useNavigation();
 
+  
+  
+  
+  const { auth, wallets, ui} = useDynamic();
+  
   const wallet = wallets.userWallets[0];
+  
+  
+  const mergeTokenAndMintData = (tokenData, mintData) => {
+    return tokenData.map(token => {
+      const mintInfo = mintData.content.find(mint => mint.address === token.mint);
+      return {
+        ...token,
+        ...(mintInfo ? {
+          name: mintInfo.name,
+          symbol: mintInfo.symbol,
+          decimals: mintInfo.decimals,
+          holders: mintInfo.holders,
+          logoURI: mintInfo.logoURI,
+          verified: mintInfo.verified
+        } : {})
+      };
+    });
+  };
+
 
   // const fetchedBalance = getWalletBalance(wallet.address.toString)
 
   // setBalance(fetchedBalance)
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      const data = await getWalletBalance(wallet.address);
+    async function fetchMetadata(ids: string) {
+      if(ids.length === 0) return;
+        try {
+          setLoading(true);
+          console.log('Fetching data...');
+          
+          const payload = {
+            addresses : ids
+          } //convert this into an array first
+          
+          const response = await axios.post(
+          `https://token-list-api.solana.cloud/v1/mints?chainId=101`, payload);
 
-      setBalance(data);
-    };
+          const data = response.data
+          const mergedData = mergeTokenAndMintData(tokenData, data);
+          
+          setMergedData(mergedData);
+          
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        } finally {
+          setLoading(false);
+        }
+      }
+      
+      fetchMetadata(mintIds);
+    
+      
+      const intervalId = setInterval(() => {
+        fetchMetadata(mintIds);
+      }, 300000);
 
-    fetchBalance();
-  }, []);
+    return () => clearInterval(intervalId);
+  }, [mintIds]);
+
+  
+
+
+  useEffect(()=>{
+    const fetchBalance = async ()=>{
+      const data = await getWalletBalance(wallet.address)
+    
+      setBalance(data)
+    }
+
+    fetchBalance()
+  },[])
+
+  useEffect(()=>{
+    const fetchTokenData = async ()=>{
+      const {tokenData, pubkeys, mints} = await getTokenData(wallet.address)
+
+      setTokenData(tokenData)
+      setPubkeyIds(pubkeys)
+      setMintIds(mints)
+    }
+    fetchTokenData()
+  },[])
+
 
   // Render each item as a Card
   const renderItem = ({ item }) => (
-    <Card
+    <Card 
       elevate
       paddingVertical={20}
       borderRadius={0}
@@ -77,7 +169,7 @@ const holdings = () => {
       <XStack alignItems="center" alignContent="center" justifyContent="space-between">
         <XStack gap={10}>
           <Avatar circular height={60}>
-            <Avatar.Image accessibilityLabel={`Token ${item.symbol}`} src={item.imageUrl} />
+            <Avatar.Image accessibilityLabel={`Token ${item.symbol}`} src={item.logoURI} />
             <Avatar.Fallback delayMs={600} backgroundColor="#808080" />
           </Avatar>
           <YStack gap={4}>
@@ -85,27 +177,11 @@ const holdings = () => {
               {item.symbol}
             </Text>
             <Text fontFamily="Goldman" color={'#5D5D5D'} fontWeight={400} fontSize={14}>
-              {item.baseAddress.slice(0, 4)}...{item.baseAddress.slice(-4)}
+              {item.balance}
             </Text>
           </YStack>
         </XStack>
-        <YStack gap={4}>
-          <Text
-            fontFamily="Goldman"
-            color={'white'}
-            fontWeight={700}
-            fontSize={14}
-            alignSelf="flex-end">
-            ${item.priceUsd}
-          </Text>
-          <Text
-            fontFamily="Goldman"
-            color={item.priceChange >= 0 ? '#00FF00' : '#FF0000'}
-            fontSize={14}
-            fontWeight={400}
-            alignSelf="flex-end">
-            {item.priceChange.toFixed(2)}%
-          </Text>
+        <YStack gap={4}> 
         </YStack>
       </XStack>
     </Card>
@@ -114,11 +190,11 @@ const holdings = () => {
   return (
     <YStack
       flex={1}
-      justifyContent="flex-start"
+      justifyContent="center"
       alignItems="center"
       padding={16}
       paddingTop={100}
-      backgroundColor="#0a0b0f">
+      backgroundColor="#121212">
       {/* Total Cheddar Section */}
       <XStack marginBottom={10}>
         <Text color={'#B0B0B0'} fontWeight={600}>
@@ -126,9 +202,12 @@ const holdings = () => {
         </Text>
       </XStack>
       <XStack marginBottom={10}>
+        
         <Text fontSize={40} fontWeight={'bold'} color="#FFFFFF">
-          <FontAwesome5 name="rupee-sign" size={32} color="white" /> {balance}
+        <FontAwesome5 name="rupee-sign" size={32} color="white" /> {balance}
         </Text>
+        
+        
       </XStack>
       <XStack marginBottom={20}>
         {/* <Text color={'#00FF00'} fontWeight={'bold'} paddingRight={5}>
@@ -138,69 +217,14 @@ const holdings = () => {
       </XStack>
 
       <XStack justifyContent="space-around" marginVertical={20} width={width * 0.8}>
-        <Dialog>
-          <Dialog.Trigger asChild>
-            <TouchableOpacity>
-              <YStack justifyContent="center" alignItems="center" gap={8}>
-                <FontAwesome5 name="rupee-sign" size={24} color="white" />
-                <Text color={'white'} fontWeight={600}>
-                  Add Cash
-                </Text>
-              </YStack>
-            </TouchableOpacity>
-          </Dialog.Trigger>
-          <Dialog.Portal>
-            <Dialog.Overlay
-              key="overlay"
-              animation="quick"
-              opacity={0.5}
-              enterStyle={{ opacity: 0 }}
-              exitStyle={{ opacity: 0 }}
-            />
-            <Dialog.Content
-              bordered
-              elevate
-              key="content"
-              animation={[
-                'quick',
-                {
-                  opacity: {
-                    overshootClamping: true,
-                  },
-                },
-              ]}
-              enterStyle={{ x: 0, y: -20, opacity: 0, scale: 0.9 }}
-              exitStyle={{ x: 0, y: 10, opacity: 0, scale: 0.95 }}
-              x={0}
-              scale={1}
-              opacity={1}
-              y={0}
-              backgroundColor="black">
-              <YStack space>
-                <Dialog.Title alignSelf="center">Add Cash</Dialog.Title>
-                <Dialog.Description color={'#808080'} marginTop={-10}>
-                  Choose a method to add cash to your account
-                </Dialog.Description>
-                <XStack space justifyContent="center">
-                  <Link href="/addMoney" asChild>
-                    <Dialog.Close asChild>
-                      <Button backgroundColor="white" color="black">
-                        <Text fontWeight={'bold'}>Card</Text>
-                      </Button>
-                    </Dialog.Close>
-                  </Link>
-                  <Link href="/addMoneyUpi" asChild>
-                    <Dialog.Close asChild>
-                      <Button backgroundColor="white" color="black">
-                        <Text fontWeight={'bold'}>UPI</Text>
-                      </Button>
-                    </Dialog.Close>
-                  </Link>
-                </XStack>
-              </YStack>
-            </Dialog.Content>
-          </Dialog.Portal>
-        </Dialog>
+        <YStack justifyContent="center" alignItems="center" gap={8}>
+          <TouchableOpacity>
+            <FontAwesome5 name="rupee-sign" size={24} color="white" />
+          </TouchableOpacity>
+          <Text color={'white'} fontWeight={600}>
+            Add Cash
+          </Text>
+        </YStack>
         <YStack justifyContent="center" alignItems="center" gap={8}>
           <TouchableOpacity>
             <Feather name="send" size={24} color="white" />
@@ -236,7 +260,15 @@ const holdings = () => {
       </XStack>
 
       <Separator marginVertical={10} backgroundColor="#808080" />
-      {/* <Balances/> */}
+    {/* <Balances/> */}
+      {/* FlatList for holdings */}
+      <FlatList
+        data={mergedData}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.mint}
+        showsVerticalScrollIndicator={false}
+        style={{ marginTop: 20 }}
+      />
     </YStack>
   );
 };
