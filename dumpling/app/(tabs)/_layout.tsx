@@ -39,7 +39,6 @@ export default function TabLayout() {
     if (url) {
       createSessionFromUrl(url)
         .then((response) => {
-          
           if (response) {
             setUserProfile(response.profile);
           }
@@ -79,6 +78,13 @@ export default function TabLayout() {
         name="rewards"
         options={{
           title: 'Rewards',
+          headerShown: false,
+        }}
+      />
+      <Tabs.Screen
+        name="creator"
+        options={{
+          title: 'LaunchPad',
           headerShown: false,
         }}
       />
