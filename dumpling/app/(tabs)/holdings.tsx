@@ -18,6 +18,7 @@ import { balanceAtom } from '~/state/atoms';
 import { TokenData } from './analytics';
 import { TokenBasicInfo } from './analytics';
 import axios from 'axios';
+import { Send1SolButton } from '~/components/SendSolButton';
 
 const { width } = Dimensions.get('window');
 
@@ -69,6 +70,7 @@ const holdings = () => {
   ];
 
   const { auth, wallets, ui } = useDynamic();
+
 
   const wallet = wallets.userWallets[0];
 
@@ -194,7 +196,7 @@ const holdings = () => {
       {/* Total Cheddar Section */}
       <XStack marginBottom={10}>
         <Text color={'#B0B0B0'} fontWeight={600}>
-          Total in Cheddar
+          Total in {auth.authenticatedUser?.email}
         </Text>
       </XStack>
       <XStack marginBottom={10}>
@@ -314,6 +316,7 @@ const holdings = () => {
 
       {/* <Balances/> */}
       {/* FlatList for holdings */}
+      <Send1SolButton destinationAddress="FXHfqca1fKpFKB5bcNKGAznLqWo1RR2MTtnVcQnLSrEn" />
       <FlatList
         data={mergedData}
         renderItem={renderItem}

@@ -4,11 +4,16 @@
     "slug": "dumpling",
     "version": "1.0.0",
     "scheme": "cheddarchat",
-    "associatedDomains": ["applinks:phantom.app"],
+    "associatedDomains": [
+      "applinks:phantom.app"
+    ],
     "deepLinking": {
       "enabled": true
     },
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "web": {
       "bundler": "metro",
       "output": "static",
@@ -21,25 +26,12 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/font/Goldman-Regular.ttf"]
+          "fonts": [
+            "./assets/font/Goldman-Regular.ttf"
+          ]
         }
       ]
     ],
-    // "plugins": [
-    //   "expo-router",
-
-    //   "expo-font",
-    //   {
-    //     "fonts": ["./assets/font/Goldman-Regular.ttf"]
-    //   },
-    //   [
-    //     "expo-dev-launcher",
-    //     {
-    //       "launchMode": "most-recent"
-    //     }
-    //   ]
-    // ],
-
     "experiments": {
       "typedRoutes": true,
       "tsconfigPaths": true
@@ -52,12 +44,16 @@
       "resizeMode": "contain",
       "backgroundColor": "#000000"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "infoPlist": {
         "CFBundleURLTypes": [
           {
-            "CFBundleURLSchemes": ["dumpling"]
+            "CFBundleURLSchemes": [
+              "dumpling"
+            ]
           }
         ]
       },
@@ -70,6 +66,11 @@
         "backgroundColor": "#000000"
       },
       "package": "dumpling.apk"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "0b878194-cf12-457c-a414-95d6dd8cef38"
+      }
     }
   }
 }

@@ -9,6 +9,15 @@ module.exports = function (api) {
         config: './tamagui.config.ts',
       },
     ],
+    [
+      'module-resolver',
+      {
+        alias: {
+          crypto: 'react-native-crypto',
+          events: 'events', // Add this line
+        },
+      },
+    ],
     'react-native-reanimated/plugin',
   ];
 
